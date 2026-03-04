@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { arduinoAPI } from '../../../api/arduino';
 import { usePolling, useMutation } from '../../../hooks/useAsync';
 import { useMode } from '../../../context/ModeContext';
-import styles from './styles/StyleDashboard/Dashindex';
+import styles from './styles/StyleDashboard/DashIndex';
 
 const RELAY_LABELS = [
   'Anaquel 1', 'Anaquel 2', 'Anaquel 3', 'Anaquel 4',
