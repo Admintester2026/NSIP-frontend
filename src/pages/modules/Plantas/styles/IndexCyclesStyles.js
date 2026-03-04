@@ -1,13 +1,13 @@
-import base from './cycles/base.module.css';
-import header from './cycles/header.module.css';
-import status from './cycles/status.module.css';
-import cards from './cycles/cards.module.css';
-import editor from './cycles/editor.module.css';
-import table from './cycles/table.module.css';
-import actions from './cycles/actions.module.css';
-import loading from './cycles/loading.module.css';
-import responsive from './cycles/responsive.module.css';
-import newStyles from './cycles/new-styles.module.css';
+import base from './Cycles/base.module.css';
+import header from './Cycles/header.module.css';
+import status from './Cycles/status.module.css';
+import cards from './Cycles/cards.module.css';
+import editor from './Cycles/editor.module.css';
+import table from './Cycles/table.module.css';
+import actions from './Cycles/actions.module.css';
+import loading from './Cycles/loading.module.css';
+import responsive from './Cycles/responsive.module.css';
+import newStyles from './Cycles/new-styles.module.css';
 
 // Combinar todos los estilos
 const styles = {
