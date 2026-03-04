@@ -71,12 +71,14 @@ function LightMeter({ lux }) {
   );
 }
 
-// Barra de confirmación - SIEMPRE FIJA
+// ==========================================
+// BARRA DE CONFIRMACIÓN MEJORADA - VERSIÓN 2.0
+// ==========================================
 function ConfirmationBar({ lastAction }) {
   const defaultMessage = '⚪ Sistema listo - Esperando acciones...';
   
   const getStatusColor = () => {
-    if (!lastAction) return 'var(--text-muted)';
+    if (!lastAction || lastAction.status === 'idle') return 'var(--text-muted)';
     switch(lastAction.status) {
       case 'success': return 'var(--green)';
       case 'error': return 'var(--red)';
@@ -86,13 +88,21 @@ function ConfirmationBar({ lastAction }) {
   };
 
   const getStatusIcon = () => {
-    if (!lastAction) return '⚪';
+    if (!lastAction || lastAction.status === 'idle') return '⚪';
     switch(lastAction.status) {
       case 'success': return '✅';
       case 'error': return '❌';
       case 'pending': return '⏳';
       default: return '⚪';
     }
+  };
+
+  // Calcular tiempo transcurrido para acciones pendientes
+  const getElapsedTime = () => {
+    if (!lastAction || lastAction.status !== 'pending' || !lastAction.timestamp) return '';
+    const elapsed = Date.now() - lastAction.timestamp;
+    if (elapsed < 1000) return `${elapsed}ms`;
+    return `${(elapsed/1000).toFixed(1)}s`;
   };
 
   const getMessage = () => {
@@ -105,16 +115,21 @@ function ConfirmationBar({ lastAction }) {
       <span className={styles.confirmationIcon}>{getStatusIcon()}</span>
       <span className={styles.confirmationText}>
         {getMessage()}
+        {lastAction?.responseTime && (
+          <span className={styles.responseTime}> ({lastAction.responseTime}ms)</span>
+        )}
       </span>
       <span className={styles.confirmationTime}>
         {new Date().toLocaleTimeString()}
+        {lastAction?.status === 'pending' && (
+          <span className={styles.elapsedTime}> ⏱️ {getElapsedTime()}</span>
+        )}
       </span>
     </div>
   );
 }
 
 function ModeControl({ mode, onSwitchToAuto, onSwitchToManual, loading }) {
-  // Aceptar tanto 'auto' como 'automatic' (lo que envía el Arduino)
   const isAuto = mode === 'auto' || mode === 'automatic';
   const isManual = mode === 'manual';
   
@@ -188,12 +203,15 @@ function SDStatus({ sdOK, sdFails }) {
 // ─── Componente principal ─────────────────────────────────────────────────
 
 export default function Dashboard() {
-  // Usar el contexto para el modo
   const { mode, switchToAuto, switchToManual, loading: modeLoading, fetchMode } = useMode();
   
   const [relayState, setRelayState] = useState(null);
   const [sdInfo, setSdInfo] = useState({ ok: true, fails: 0 });
-  const [lastAction, setLastAction] = useState(null);
+  const [lastAction, setLastAction] = useState({ 
+    status: 'idle', 
+    message: '⚪ Sistema listo - Esperando acciones...',
+    timestamp: Date.now()
+  });
   
   // Polling de datos
   const fetchStatus = useCallback(() => arduinoAPI.getStatus(), []);
@@ -223,16 +241,18 @@ export default function Dashboard() {
     : Array(8).fill(false));
 
   // ==========================================
-  // MUTACIONES CON RESPUESTA INMEDIATA
+  // MUTACIONES CON RESPUESTA INMEDIATA (MEJORADAS)
   // ==========================================
   
   // Cambiar modo MANUAL
   const handleManualClick = () => {
     switchToManual();
+    const actionId = Date.now();
     
     setLastAction({
       status: 'pending',
-      message: '⏳ Cambiando a modo manual...'
+      message: '⏳ Cambiando a modo manual...',
+      timestamp: actionId
     });
     
     fetch(`http://192.168.3.124:3000/api/arduino-plantas/mode`, {
@@ -243,9 +263,12 @@ export default function Dashboard() {
     .then(response => response.json())
     .then(data => {
       console.log('✅ Modo manual confirmado:', data);
+      const responseTime = Date.now() - actionId;
       setLastAction({
         status: 'success',
-        message: '✅ Modo manual activado'
+        message: `✅ Modo manual activado (${responseTime}ms)`,
+        responseTime,
+        timestamp: Date.now()
       });
       setTimeout(() => fetchMode(), 500);
     })
@@ -253,7 +276,8 @@ export default function Dashboard() {
       console.error('❌ Error cambiando a manual:', error);
       setLastAction({
         status: 'error',
-        message: '❌ Error al cambiar a modo manual'
+        message: '❌ Error al cambiar a modo manual',
+        timestamp: Date.now()
       });
     });
   };
@@ -261,10 +285,12 @@ export default function Dashboard() {
   // Cambiar modo AUTO
   const handleAutoClick = () => {
     switchToAuto();
+    const actionId = Date.now();
     
     setLastAction({
       status: 'pending',
-      message: '⏳ Cambiando a modo automático...'
+      message: '⏳ Cambiando a modo automático...',
+      timestamp: actionId
     });
     
     fetch(`http://192.168.3.124:3000/api/arduino-plantas/mode`, {
@@ -275,9 +301,12 @@ export default function Dashboard() {
     .then(response => response.json())
     .then(data => {
       console.log('✅ Modo auto confirmado:', data);
+      const responseTime = Date.now() - actionId;
       setLastAction({
         status: 'success',
-        message: '✅ Modo automático activado - Ciclos encendidos'
+        message: `✅ Modo automático activado - Ciclos encendidos (${responseTime}ms)`,
+        responseTime,
+        timestamp: Date.now()
       });
       setTimeout(() => fetchMode(), 500);
     })
@@ -285,16 +314,18 @@ export default function Dashboard() {
       console.error('❌ Error cambiando a auto:', error);
       setLastAction({
         status: 'error',
-        message: '❌ Error al cambiar a modo automático'
+        message: '❌ Error al cambiar a modo automático',
+        timestamp: Date.now()
       });
     });
   };
 
-  // Control de relé
+  // Control de relé - VERSIÓN MEJORADA PARA INTERNET
   const handleToggle = (index, action) => {
     const newState = action === 'on';
     const relayNum = index + 1;
     const relayName = RELAY_LABELS[index];
+    const actionId = Date.now();
     
     console.log(`🔍 [Dashboard] handleToggle: relé ${relayNum} -> ${newState ? 'ON' : 'OFF'}`);
     
@@ -308,7 +339,8 @@ export default function Dashboard() {
 
     setLastAction({
       status: 'pending',
-      message: `⏳ ${relayName}: ${newState ? 'Encendiendo' : 'Apagando'}...`
+      message: `⏳ ${relayName}: ${newState ? 'Encendiendo' : 'Apagando'}...`,
+      timestamp: actionId
     });
 
     fetch(`http://192.168.3.124:3000/api/arduino-plantas/relay`, {
@@ -319,24 +351,55 @@ export default function Dashboard() {
     .then(response => response.json())
     .then(data => {
       console.log('✅ Relé confirmado:', data);
+      const responseTime = Date.now() - actionId;
       setLastAction({
         status: 'success',
-        message: `✅ ${relayName}: ${newState ? 'Encendido' : 'Apagado'} correctamente`
+        message: `✅ ${relayName}: ${newState ? 'Encendido' : 'Apagado'} (${responseTime}ms)`,
+        responseTime,
+        timestamp: Date.now()
       });
     })
     .catch(error => {
       console.error('❌ Error en relé:', error);
       setLastAction({
         status: 'error',
-        message: `❌ ${relayName}: Error al ${newState ? 'encender' : 'apagar'}`
+        message: `❌ ${relayName}: Error de conexión - reintentando...`,
+        timestamp: Date.now()
       });
-      // Revertir el estado visual si hay error
+      
+      // Reintentar después de 2 segundos
       setTimeout(() => {
-        setRelayState(prev => {
-          if (!prev) return prev;
-          const next = [...prev];
-          next[index] = !newState;
-          return next;
+        fetch(`http://192.168.3.124:3000/api/arduino-plantas/relay`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ relay: relayNum, state: newState })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const retryTime = Date.now() - actionId;
+          setLastAction({
+            status: 'success',
+            message: `✅ ${relayName}: ${newState ? 'Encendido' : 'Apagado'} (reintento: ${retryTime}ms)`,
+            responseTime: retryTime,
+            timestamp: Date.now()
+          });
+        })
+        .catch(() => {
+          setLastAction({
+            status: 'error',
+            message: `❌ ${relayName}: Error permanente - revisa conexión`,
+            timestamp: Date.now()
+          });
+          
+          // Revertir el estado visual
+          setTimeout(() => {
+            setRelayState(prev => {
+              if (!prev) return prev;
+              const next = [...prev];
+              next[index] = !newState;
+              return next;
+            });
+          }, 2000);
         });
       }, 2000);
     });
@@ -396,7 +459,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Barra de confirmación - SIEMPRE FIJA */}
+      {/* Barra de confirmación mejorada */}
       <ConfirmationBar lastAction={lastAction} />
 
       {/* Banner de modo manual */}
