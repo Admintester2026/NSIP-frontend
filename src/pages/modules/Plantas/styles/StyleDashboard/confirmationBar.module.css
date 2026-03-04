@@ -1,0 +1,40 @@
+.confirmationBar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-left: 4px solid var(--green);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.confirmationIcon {
+  font-size: 1.2rem;
+}
+
+.confirmationText {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.confirmationTime {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}

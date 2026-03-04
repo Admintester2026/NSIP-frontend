@@ -1,0 +1,87 @@
+.actionsBar {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--red-dim);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  border-radius: var(--r-md);
+  color: var(--red);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background: var(--red);
+  color: var(--bg-primary);
+}
+
+.actionIcon {
+  font-size: 1.1rem;
+}
+
+/* Confirm Dialog */
+.confirmDialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+  z-index: 1100;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.confirmDialog p {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.confirmActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.confirmButton {
+  flex: 1;
+  padding: 0.75rem;
+  background: var(--red);
+  border: none;
+  border-radius: var(--r-md);
+  color: var(--bg-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.cancelButton:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}

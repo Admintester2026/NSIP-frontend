@@ -1,0 +1,218 @@
+/* Summary Bar */
+.summaryBar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+}
+
+.summaryItem {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.summaryLabel {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.summaryValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--green);
+}
+
+/* Cycle Card */
+.cycleCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cycleCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--green-dim);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.1);
+}
+
+/* Posiciones específicas */
+.topLeft {
+  border-top-left-radius: var(--r-lg);
+}
+
+.topRight {
+  border-top-right-radius: var(--r-lg);
+}
+
+.lastLeft {
+  border-bottom-left-radius: var(--r-lg);
+}
+
+.lastRight {
+  border-bottom-right-radius: var(--r-lg);
+}
+
+.cycleCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.cycleCardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.cycleCardSubtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.cycleCardStats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cycleCardBadge {
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+}
+
+.cycleStatus {
+  font-size: 1rem;
+}
+
+.statusInactive {
+  opacity: 0.5;
+}
+
+.statusPartial {
+  filter: drop-shadow(0 0 5px var(--amber));
+}
+
+.statusFull {
+  filter: drop-shadow(0 0 5px var(--green));
+}
+
+.cycleCardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.cycleGridItem {
+  padding: 0.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.cycleGridItem:hover {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+}
+
+.cycleGridItem.active {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+}
+
+.cycleGridNumber {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  min-width: 18px;
+}
+
+.cycleGridTime {
+  font-family: var(--font-mono);
+  color: var(--green);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.cycleGridDisabled {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.showMoreButton {
+  grid-column: span 2;
+  background: transparent;
+  border: 1px dashed var(--border-dim);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.showMoreButton:hover {
+  border-color: var(--green-dim);
+  color: var(--green);
+  background: var(--green-glow);
+}
+
+.cycleCardFooter {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+  font-size: 0.8rem;
+}
+
+.cycleCardStatus {
+  color: var(--text-muted);
+}
+
+.nextCycle {
+  color: var(--amber);
+  font-family: var(--font-mono);
+}
+
+.applyAllMiniButton {
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.applyAllMiniButton:hover {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+  color: var(--green);
+}

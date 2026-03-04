@@ -1,0 +1,119 @@
+.modeControl {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.modeLabel {
+  font-size: 0.9rem;
+  color: var(--green);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  display: block;
+  text-shadow: 0 0 10px var(--green-dim);
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 5px var(--green-dim); }
+  50% { text-shadow: 0 0 15px var(--green), 0 0 30px var(--green-dim); }
+}
+
+.modeButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modeButton:hover:not(:disabled) {
+  border-color: var(--border-bright);
+  color: var(--text-primary);
+}
+
+.modeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== VERSIÓN SUPER BRILLANTE PARA AUTO ===== */
+.modeAutoActive {
+  background: #00ff9d !important;  /* Verde neón puro */
+  border: 2px solid #ffffff !important;
+  color: #000000 !important;  /* Texto negro para contraste */
+  font-weight: 800 !important;
+  box-shadow: 
+    0 0 20px #00ff9d,
+    0 0 40px rgba(0, 255, 157, 0.8),
+    0 0 60px rgba(0, 255, 157, 0.4) !important;
+  animation: super-pulse 1.5s infinite !important;
+  position: relative;
+  z-index: 10;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5) !important;
+}
+
+@keyframes super-pulse {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px #00ff9d,
+      0 0 40px rgba(0, 255, 157, 0.8);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 
+      0 0 30px #00ff9d,
+      0 0 60px #00ff9d,
+      0 0 90px rgba(0, 255, 157, 0.8);
+    transform: scale(1.02);
+  }
+}
+
+/* ===== VERSIÓN BRILLANTE PARA MANUAL ===== */
+.modeManualActive {
+  background: #ffb340 !important;  /* Ámbar puro */
+  border: 2px solid #ffffff !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  box-shadow: 
+    0 0 20px #ffb340,
+    0 0 40px rgba(255, 179, 64, 0.8) !important;
+}
+
+.modeIcon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.modeStatus {
+  font-size: 0.8rem;
+  color: var(--green);
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--green-glow);
+  border-radius: var(--r-md);
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.modeStatusManual {
+  color: var(--amber);
+  background: var(--amber-dim);
+}

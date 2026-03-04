@@ -1,0 +1,58 @@
+@media (max-width: 768px) {
+  .cycles {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .backButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summaryBar {
+    grid-template-columns: 1fr;
+  }
+
+  .cyclesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cyclesGrid::before {
+    display: none;
+  }
+
+  .timeSelector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .timeLabel {
+    min-width: auto;
+  }
+
+  .timeSelect {
+    width: 100%;
+  }
+
+  .editorActions {
+    flex-direction: column;
+  }
+
+  .actionsBar {
+    justify-content: center;
+  }
+
+  .confirmDialog {
+    width: 90%;
+    padding: 1.5rem;
+  }
+
+  .confirmActions {
+    flex-direction: column;
+  }
+}

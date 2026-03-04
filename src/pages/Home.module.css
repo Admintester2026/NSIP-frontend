@@ -1,0 +1,154 @@
+.home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.mounted {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 4rem;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--green), #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-family: var(--font-mono);
+}
+
+.mainButtons {
+  display: flex;
+  gap: 2rem;
+  max-width: 1000px;
+  width: 100%;
+  margin-bottom: 4rem;
+}
+
+.primaryButton, .secondaryButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, var(--bg-surface), var(--green-glow));
+  border-color: var(--green-dim);
+}
+
+.primaryButton:hover {
+  transform: translateY(-8px);
+  border-color: var(--green);
+  box-shadow: 0 20px 30px -10px rgba(0, 255, 157, 0.2);
+}
+
+.secondaryButton:hover {
+  transform: translateY(-8px);
+  border-color: var(--amber);
+  box-shadow: 0 20px 30px -10px rgba(255, 179, 64, 0.2);
+}
+
+.buttonIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 15px currentColor);
+}
+
+.primaryButton .buttonIcon {
+  color: var(--green);
+}
+
+.secondaryButton .buttonIcon {
+  color: var(--amber);
+}
+
+.buttonText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.primaryButton .buttonText {
+  color: var(--green);
+}
+
+.buttonDesc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.footer {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+  border-top: 1px solid var(--border-dim);
+  width: 100%;
+  max-width: 1200px;
+}
+
+.footerSmall {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .home {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .mainButtons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .primaryButton, .secondaryButton {
+    padding: 2rem;
+  }
+
+  .buttonIcon {
+    font-size: 3rem;
+  }
+
+  .buttonText {
+    font-size: 1.25rem;
+  }
+}

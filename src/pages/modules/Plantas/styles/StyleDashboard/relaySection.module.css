@@ -1,0 +1,167 @@
+.relaySection {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.relayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.relayTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.relayHint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.relayGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.relayCard {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.relayCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.relayOn {
+  border-color: rgba(0, 255, 157, 0.3);
+  background: var(--green-glow);
+}
+
+.relayOn::before {
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+}
+
+.relayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.relayIndex {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.relayStatus {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.relayStatusOn {
+  color: var(--green);
+}
+
+.relayLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.relayToggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border-base);
+  background: var(--bg-surface);
+  position: relative;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-end;
+}
+
+.relayToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.relayToggleOn {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.relayThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.relayToggleOn .relayThumb {
+  transform: translateX(20px);
+  background: var(--bg-base);
+}
+
+/* Indicadores de estado para relés */
+.relayStatusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  min-height: 20px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 5px currentColor;
+}
+
+.statusText {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Ajustes para la tarjeta de relé */
+.relayCard {
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.relayToggle {
+  margin-top: 0.25rem;
+}

@@ -1,0 +1,60 @@
+.historicoTable {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.historicoTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.historicoTable th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-dim);
+  z-index: 10;
+}
+
+.historicoTable td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.relayOn {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.relayOff {
+  color: var(--text-muted);
+}
+
+.luxValue {
+  font-family: var(--font-mono);
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}

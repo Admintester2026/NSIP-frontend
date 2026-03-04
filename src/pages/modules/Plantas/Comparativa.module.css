@@ -1,0 +1,473 @@
+.comparativa {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fade-in 0.5s ease both;
+}
+
+/* ==========================================
+   HEADER
+   ========================================== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.titleSection {
+  flex: 1;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--green), #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+}
+
+/* ==========================================
+   TARJETAS DE ESTADO
+   ========================================== */
+.statusCards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.statusCard {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  transition: all 0.2s ease;
+}
+
+.statusCard.online {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+}
+
+.statusCard.offline {
+  border-color: var(--red-dim);
+  background: var(--red-dim);
+  opacity: 0.7;
+}
+
+.statusIcon {
+  font-size: 2.5rem;
+}
+
+.statusContent {
+  flex: 1;
+}
+
+.statusLabel {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.statusValue {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.statusDetail {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* ==========================================
+   TARJETA DE COMPARACIÓN DIRECTA
+   ========================================== */
+.comparacionCard {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  transition: all 0.3s ease;
+}
+
+.comparacionCard.ok {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+}
+
+.comparacionCard.warning {
+  border-color: var(--amber-dim);
+  background: var(--amber-dim);
+}
+
+.comparacionIcon {
+  font-size: 3rem;
+}
+
+.comparacionContent {
+  flex: 1;
+}
+
+.comparacionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.comparacionText {
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.comparacionText strong {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.comparacionHint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* ==========================================
+   GRID PRINCIPAL - DOS COLUMNAS
+   ========================================== */
+.comparativaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Columnas */
+.columnaArduino,
+.columnaSQL {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ==========================================
+   SECCIONES DE GRÁFICAS
+   ========================================== */
+.chartSection {
+  width: 100%;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.sectionIcon {
+  font-size: 1.25rem;
+}
+
+.chartCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  width: 100%;
+}
+
+/* ==========================================
+   SECCIONES DE TABLAS
+   ========================================== */
+.tableSection {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  width: 100%;
+}
+
+.tableContainer {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+/* Tablas */
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.dataTable th {
+  text-align: left;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-dim);
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 10;
+}
+
+.dataTable td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.dataTable td.on {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.dataTable td.off {
+  color: var(--text-muted);
+}
+
+.dataTable td.lux {
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+/* ==========================================
+   ANIMACIONES
+   ========================================== */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 1024px) {
+  .comparativaGrid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .comparativa {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .backButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .statusCards {
+    grid-template-columns: 1fr;
+  }
+
+  .statusCard {
+    padding: 1rem;
+  }
+
+  .comparacionCard {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .chartCard {
+    padding: 1rem;
+  }
+
+  .tableSection {
+    padding: 1rem;
+  }
+
+  .dataTable {
+    font-size: 0.8rem;
+  }
+
+  .dataTable th,
+  .dataTable td {
+    padding: 0.4rem;
+  }
+}
+
+/* ==========================================
+   ESTILOS PARA TABLA DE ESTADO DEL ARDUINO
+   ========================================== */
+.relayGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+}
+
+.relayItem {
+  padding: 0.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-sm);
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.relayItem.on {
+  background: var(--green-glow);
+  border-color: var(--green-dim);
+}
+
+.relayItem.off {
+  opacity: 0.7;
+}
+
+.relayNumber {
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.relayState {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.relayState.on {
+  color: var(--green);
+}
+
+.relayState.off {
+  color: var(--text-muted);
+}
+
+/*SELECTOR DE PERÍODO*/
+
+.periodSelectorContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  flex-wrap: wrap;
+}
+
+.selectorLabel {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.periodSelector {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--bg-raised);
+  padding: 0.25rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+}
+
+.periodButton {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  text-align: center;
+}
+
+.periodButton:hover {
+  color: var(--text-primary);
+  background: var(--green-glow);
+}
+
+.periodButton.active {
+  background: var(--green);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .periodSelectorContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .periodSelector {
+    width: 100%;
+  }
+
+  .periodButton {
+    flex: 1;
+  }
+}

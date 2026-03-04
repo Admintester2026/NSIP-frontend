@@ -1,0 +1,58 @@
+.periodSelectorContainer,
+.limitSelectorContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  flex-wrap: wrap;
+}
+
+.selectorLabel {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.periodSelector,
+.limitSelector {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--bg-raised);
+  padding: 0.25rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+}
+
+.periodButton,
+.limitButton {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  text-align: center;
+}
+
+.periodButton:hover,
+.limitButton:hover {
+  color: var(--text-primary);
+  background: var(--green-glow);
+}
+
+.periodButton.active,
+.limitButton.active {
+  background: var(--green);
+  color: var(--bg-primary);
+  font-weight: 600;
+}

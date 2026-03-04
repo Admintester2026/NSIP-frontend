@@ -1,0 +1,49 @@
+@media (max-width: 1024px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .mainPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .relayGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actionButton {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .statusBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lastUpdate, .warning {
+    margin-left: 0;
+  }
+
+  .relayGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .relayGrid {
+    grid-template-columns: 1fr;
+  }
+}

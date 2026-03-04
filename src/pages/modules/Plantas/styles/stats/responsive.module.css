@@ -1,0 +1,66 @@
+@media (max-width: 1024px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tablesGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .backButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summaryCards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lastRecordGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .periodSelectorContainer,
+  .limitSelectorContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .selectorLabel {
+    margin-bottom: 0.5rem;
+  }
+
+  .periodSelector,
+  .limitSelector {
+    width: 100%;
+  }
+
+  .periodButton,
+  .limitButton {
+    flex: 1;
+  }
+
+  .relayStatusCompact {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summaryCards {
+    grid-template-columns: 1fr;
+  }
+}

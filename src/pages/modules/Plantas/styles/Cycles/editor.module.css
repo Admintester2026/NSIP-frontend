@@ -1,0 +1,191 @@
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fade-in 0.2s ease;
+}
+
+.modal {
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Cycle Editor */
+.cycleEditor {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+}
+
+.editorTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.editorRow {
+  margin-bottom: 1.5rem;
+}
+
+.editorLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.editorCheckbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--green);
+}
+
+.timeSelector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.timeLabel {
+  min-width: 60px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.timeSelect {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  color: var(--text-primary);
+  padding: 0.5rem;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.timeSelect:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.timeSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timeSeparator {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.timeInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.timeInput {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  color: var(--text-primary);
+  padding: 0.5rem;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  width: 100px;
+}
+
+.timeInput:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.inputHint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.editorActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+.saveButton {
+  flex: 2;
+  padding: 0.75rem;
+  background: var(--green);
+  border: none;
+  border-radius: var(--r-md);
+  color: var(--bg-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveButton:hover:not(:disabled) {
+  filter: brightness(1.2);
+  box-shadow: 0 0 20px var(--green-dim);
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.applyAllButton {
+  flex: 1;
+  padding: 0.75rem;
+  background: var(--amber-dim);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+  border-radius: var(--r-md);
+  color: var(--amber);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.applyAllButton:hover:not(:disabled) {
+  background: var(--amber);
+  color: var(--bg-primary);
+}
+
+.applyAllButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}

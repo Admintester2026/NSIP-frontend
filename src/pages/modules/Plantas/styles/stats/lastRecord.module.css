@@ -1,0 +1,71 @@
+.lastRecord {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.sectionIcon {
+  font-size: 1.25rem;
+}
+
+.lastRecordGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.lastRecordItem {
+  padding: 0.75rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-dim);
+}
+
+.lastRecordLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.lastRecordValue {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.relayStatusCompact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.25rem;
+}
+
+.relayStatusCompactItem {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.relayStatusCompactItem .on {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.relayStatusCompactItem .off {
+  color: var(--text-muted);
+}

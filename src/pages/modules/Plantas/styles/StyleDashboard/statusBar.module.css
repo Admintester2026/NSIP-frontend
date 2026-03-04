@@ -1,0 +1,117 @@
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  margin-bottom: 2rem;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.badgeOnline {
+  background: var(--green-glow);
+  border-color: rgba(0, 255, 157, 0.3);
+  color: var(--green);
+}
+
+.badgeOffline {
+  background: var(--red-dim);
+  border-color: rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.badgeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.badgeLabel {
+  font-weight: 600;
+}
+
+.badgeStatus {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  padding: 0.15rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+}
+
+.sdBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  border: 1px solid;
+}
+
+.sdOK {
+  background: var(--green-glow);
+  border-color: rgba(0, 255, 157, 0.3);
+  color: var(--green);
+}
+
+.sdError {
+  background: var(--red-dim);
+  border-color: rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.sdIcon {
+  font-size: 1rem;
+}
+
+.sdFails {
+  margin-left: 0.5rem;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.lastUpdate {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border-radius: 30px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.lastUpdateIcon {
+  font-size: 1rem;
+}
+
+.warning {
+  padding: 0.5rem 1rem;
+  background: var(--amber-dim);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+  border-radius: 30px;
+  color: var(--amber);
+  font-size: 0.85rem;
+  margin-left: auto;
+}

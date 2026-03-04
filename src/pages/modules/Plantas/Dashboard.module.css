@@ -1,0 +1,732 @@
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fade-in 0.5s ease both;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.titleSection {
+  flex: 1;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--green), #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+  transform: translateY(-2px);
+}
+
+.actionIcon {
+  font-size: 1.2rem;
+}
+
+/* Status Bar */
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  margin-bottom: 2rem;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.badgeOnline {
+  background: var(--green-glow);
+  border-color: rgba(0, 255, 157, 0.3);
+  color: var(--green);
+}
+
+.badgeOffline {
+  background: var(--red-dim);
+  border-color: rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.badgeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-dot 2s infinite;
+}
+
+.badgeLabel {
+  font-weight: 600;
+}
+
+.badgeStatus {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  padding: 0.15rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+}
+
+.sdBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  border: 1px solid;
+}
+
+.sdOK {
+  background: var(--green-glow);
+  border-color: rgba(0, 255, 157, 0.3);
+  color: var(--green);
+}
+
+.sdError {
+  background: var(--red-dim);
+  border-color: rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.sdIcon {
+  font-size: 1rem;
+}
+
+.sdFails {
+  margin-left: 0.5rem;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.lastUpdate {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border-radius: 30px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.lastUpdateIcon {
+  font-size: 1rem;
+}
+
+.warning {
+  padding: 0.5rem 1rem;
+  background: var(--amber-dim);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+  border-radius: 30px;
+  color: var(--amber);
+  font-size: 0.85rem;
+  margin-left: auto;
+}
+
+/* Main Panel */
+.mainPanel {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+}
+
+/* Stats Panel */
+.statsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.statValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.statUnit {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.statProgress {
+  height: 6px;
+  background: var(--bg-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.statProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+  transition: width 0.3s ease;
+}
+
+/* Light Meter */
+.lightMeter {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.lightHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.lightTitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lightValue {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.lightUnit {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+.lightTrack {
+  height: 8px;
+  background: var(--bg-raised);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.lightFill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.lightScale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Mode Control */
+.modeControl {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.modeLabel {
+  font-size: 0.9rem;
+  color: var(--green);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  display: block;
+  text-shadow: 0 0 10px var(--green-dim);
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 5px var(--green-dim); }
+  50% { text-shadow: 0 0 15px var(--green), 0 0 30px var(--green-dim); }
+}
+
+.modeButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modeButton:hover:not(:disabled) {
+  border-color: var(--border-bright);
+  color: var(--text-primary);
+}
+
+.modeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== ESTILOS CORREGIDOS PARA LOS BOTONES ===== */
+/* Botón Automático - Brilla en verde SOLO cuando está activo */
+.modeAutoActive {
+  background: var(--green-glow) !important;
+  border-color: rgba(0, 255, 157, 0.3) !important;
+  color: var(--green) !important;
+  box-shadow: 0 0 15px var(--green-dim), 0 0 30px rgba(0, 255, 157, 0.2) !important;
+  animation: pulse-auto 2s infinite !important;
+}
+
+@keyframes pulse-auto {
+  0%, 100% { box-shadow: 0 0 15px var(--green-dim), 0 0 30px rgba(0, 255, 157, 0.2); }
+  50% { box-shadow: 0 0 25px var(--green), 0 0 50px rgba(0, 255, 157, 0.4); }
+}
+
+/* Botón Manual - Color ámbar cuando está activo */
+.modeManualActive {
+  background: var(--amber-dim) !important;
+  border-color: rgba(255, 179, 64, 0.3) !important;
+  color: var(--amber) !important;
+  box-shadow: 0 0 15px var(--amber-dim) !important;
+}
+
+/* Cuando el modo es MANUAL, el botón Automático se ve gris */
+.modeButton:not(.modeAutoActive):not(.modeManualActive) {
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  border-color: var(--border-dim);
+  opacity: 0.8;
+}
+
+.modeIcon {
+  font-size: 1rem;
+}
+
+.modeStatus {
+  font-size: 0.8rem;
+  color: var(--green);
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--green-glow);
+  border-radius: var(--r-md);
+  transition: all 0.3s ease;
+}
+
+.modeStatusManual {
+  color: var(--amber);
+  background: var(--amber-dim);
+}
+
+/* Relay Section */
+.relaySection {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.relayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.relayTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.relayHint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.relayGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.relayCard {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.relayCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.relayOn {
+  border-color: rgba(0, 255, 157, 0.3);
+  background: var(--green-glow);
+}
+
+.relayOn::before {
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+}
+
+.relayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.relayIndex {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.relayStatus {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.relayStatusOn {
+  color: var(--green);
+}
+
+.relayLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.relayToggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border-base);
+  background: var(--bg-surface);
+  position: relative;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-end;
+}
+
+.relayToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.relayToggleOn {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.relayThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.relayToggleOn .relayThumb {
+  transform: translateX(20px);
+  background: var(--bg-base);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .mainPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .relayGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actionButton {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .statusBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lastUpdate, .warning {
+    margin-left: 0;
+  }
+
+  .relayGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .relayGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   MANUAL MODE BANNER
+   ========================================== */
+.manualModeBanner {
+  background: linear-gradient(135deg, var(--amber-dim), var(--amber-glow));
+  border: 1px solid var(--amber);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.5rem;
+  margin: 1rem 0 2rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 179, 64, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 179, 64, 0); }
+}
+
+.manualModeIcon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 8px var(--amber));
+}
+
+.manualModeContent {
+  flex: 1;
+}
+
+.manualModeContent strong {
+  display: block;
+  color: var(--amber);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.manualModeContent p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.autoModeButton {
+  background: var(--amber);
+  border: none;
+  border-radius: var(--r-md);
+  color: var(--bg-primary);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.autoModeButton:hover:not(:disabled) {
+  filter: brightness(1.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 179, 64, 0.3);
+}
+
+.autoModeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   INDICADORES DE ESTADO PARA RELÉS
+   ========================================== */
+.relayStatusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  min-height: 20px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 5px currentColor;
+}
+
+.statusText {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Ajustes para la tarjeta de relé */
+.relayCard {
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.relayToggle {
+  margin-top: 0.25rem;
+}
+/* ==========================================
+   BARRA DE CONFIRMACIÓN
+   ========================================== */
+.confirmationBar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-left: 4px solid var(--green);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.confirmationIcon {
+  font-size: 1.2rem;
+}
+
+.confirmationText {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.confirmationTime {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}

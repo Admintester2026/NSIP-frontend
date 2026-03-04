@@ -1,0 +1,49 @@
+.statsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.statValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.statUnit {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.statProgress {
+  height: 6px;
+  background: var(--bg-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.statProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+  transition: width 0.3s ease;
+}

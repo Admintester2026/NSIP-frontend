@@ -1,0 +1,69 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.titleSection {
+  flex: 1;
+  margin-right: 2rem;  /* ← ESPACIO ENTRE TÍTULO Y BOTÓN */
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--green), #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;  /* ← AUMENTADO EL PADDING LATERAL */
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;  /* ← EVITA QUE EL TEXTO SE ENVUELVA */
+  margin-left: 1rem;    /* ← MARGEN IZQUIERDO ADICIONAL */
+}
+
+.backButton:hover {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+}
+
+/* Responsive: en móvil, que se apilen */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .titleSection {
+    margin-right: 0;
+  }
+
+  .backButton {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}
