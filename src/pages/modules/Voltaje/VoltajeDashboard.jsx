@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../../api/voltaje';
 import { usePolling } from '../../../hooks/useAsync';
-import VoltageCard from './components/VoltageCard';
+import VoltageCard from '../../../components/charts/Sensorvoltaje/VoltageCard';
 import styles from './VoltajeDashboard.module.css';
 
 function formatTime(isoString) {
