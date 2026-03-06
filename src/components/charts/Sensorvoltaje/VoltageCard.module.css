@@ -1,0 +1,93 @@
+.voltageCard {
+  background: var(--bg-raised);
+  border: 2px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.voltageCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 255, 157, 0.1);
+}
+
+.voltageCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: currentColor;
+  transition: all 0.3s ease;
+}
+
+.voltageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.voltageIndex {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.voltageBadge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  color: var(--bg-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.voltageValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.voltageUnit {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+.voltageFooter {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.voltageRange {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .voltageValue {
+    font-size: 2rem;
+  }
+  
+  .voltageCard {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .voltageValue {
+    font-size: 1.75rem;
+  }
+}

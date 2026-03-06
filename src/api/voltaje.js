@@ -1,0 +1,54 @@
+const API_BASE = '/api/arduino-voltaje';
+
+async function handleResponse(response) {
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`HTTP ${response.status}: ${error}`);
+  }
+  const data = await response.json();
+  return data;
+}
+
+export const voltajeAPI = {
+  // Obtener estado actual del Arduino
+  getStatus: async () => {
+    const response = await fetch(`${API_BASE}/status`);
+    const data = await handleResponse(response);
+    return data.data;
+  },
+
+  // Obtener último registro SQL
+  getUltimo: async () => {
+    const response = await fetch(`${API_BASE}/ultimo`);
+    const data = await handleResponse(response);
+    return data.datos;
+  },
+
+  // Obtener histórico
+  getHistorico: async (limite = 100) => {
+    const response = await fetch(`${API_BASE}/historico`);
+    const data = await handleResponse(response);
+    return data.datos || [];
+  },
+
+  // Buscar registros
+  buscarRegistros: async (termino) => {
+    const response = await fetch(`${API_BASE}/buscar?q=${encodeURIComponent(termino)}`);
+    const data = await response.json();
+    return data.datos || [];
+  },
+
+  // Obtener estadísticas
+  getStats: async () => {
+    const response = await fetch(`${API_BASE}/stats`);
+    const data = await handleResponse(response);
+    return data.data;
+  },
+
+  // Obtener resumen rápido
+  getResumen: async () => {
+    const response = await fetch(`${API_BASE}/resumen`);
+    const data = await handleResponse(response);
+    return data.data;
+  }
+};

@@ -1,0 +1,482 @@
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fade-in 0.5s ease both;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.titleSection {
+  flex: 1;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--green), #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+  transform: translateY(-2px);
+}
+
+.actionIcon {
+  font-size: 1.2rem;
+}
+
+/* Status Bar */
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  margin-bottom: 2rem;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.badgeOnline {
+  background: var(--green-glow);
+  border-color: rgba(0, 255, 157, 0.3);
+  color: var(--green);
+}
+
+.badgeOffline {
+  background: var(--red-dim);
+  border-color: rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.badgeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-dot 2s infinite;
+}
+
+.badgeLabel {
+  font-weight: 600;
+}
+
+.badgeStatus {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  padding: 0.15rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+}
+
+.sdBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  border: 1px solid;
+}
+
+.sdOK {
+  background: var(--green-glow);
+  border-color: rgba(0, 255, 157, 0.3);
+  color: var(--green);
+}
+
+.sdError {
+  background: var(--red-dim);
+  border-color: rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.sdIcon {
+  font-size: 1rem;
+}
+
+.sdFails {
+  margin-left: 0.5rem;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.lastUpdate {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border-radius: 30px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.lastUpdateIcon {
+  font-size: 1rem;
+}
+
+.lastUpdateText {
+  font-family: var(--font-mono);
+}
+
+.warning {
+  padding: 0.5rem 1rem;
+  background: var(--amber-dim);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+  border-radius: 30px;
+  color: var(--amber);
+  font-size: 0.85rem;
+}
+
+/* Main Panel */
+.mainPanel {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+}
+
+/* Stats Panel */
+.statsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.statValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.statUnit {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 0.25rem;
+}
+
+.statProgress {
+  height: 6px;
+  background: var(--bg-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.statProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+  transition: width 0.3s ease;
+}
+
+/* Info Card */
+.infoCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.infoTitle {
+  font-size: 1rem;
+  color: var(--green);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.infoItem {
+  text-align: center;
+}
+
+.infoLabel {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.infoValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.statusList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.statusItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+}
+
+.statusLabel {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.statusValue {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Voltage Section */
+.voltageSection {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.voltageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.voltageTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.voltageHint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-raised);
+  border-radius: 20px;
+}
+
+.voltageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.voltageCard {
+  background: var(--bg-raised);
+  border: 2px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.voltageCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 255, 157, 0.1);
+}
+
+.voltageCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: currentColor;
+  transition: all 0.3s ease;
+}
+
+.voltageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.voltageIndex {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.voltageBadge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+.voltageValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.voltageUnit {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+.voltageFooter {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.voltageRange {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .mainPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .voltageGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actionButton {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .statusBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lastUpdate {
+    margin-left: 0;
+  }
+
+  .voltageGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .voltageGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
