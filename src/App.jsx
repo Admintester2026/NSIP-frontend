@@ -6,13 +6,19 @@ import PlantasDashboard from './pages/modules/Plantas/Dashboard';
 import PlantasCycles from './pages/modules/Plantas/Cycles';
 import PlantasStats from './pages/modules/Plantas/Stats';
 import PlantasComparativa from './pages/modules/Plantas/Comparativa';
-import { ModeProvider } from './context/ModeContext';  // ← NUEVO
+
+// IMPORTAR MÓDULO DE VOLTAJE (agrega estas líneas)
+import VoltajeDashboard from './pages/modules/Voltaje/VoltajeDashboard';
+import VoltajeStats from './pages/modules/Voltaje/VoltajeStats';
+import VoltajeHistorico from './pages/modules/Voltaje/VoltajeHistorico';
+
+import { ModeProvider } from './context/ModeContext';
 import './styles/global.css';
 
 function App() {
   return (
     <BrowserRouter>
-      <ModeProvider>  {/* ← NUEVO */}
+      <ModeProvider>
         <Navbar />
         <Routes>
           {/* Página principal */}
@@ -27,9 +33,11 @@ function App() {
           <Route path="/modulos/luminarias/estadisticas" element={<PlantasStats />} />
           <Route path="/modulos/luminarias/comparativa" element={<PlantasComparativa />} />
 
-          {/* Módulos futuros */}
-          <Route path="/modulos/voltaje" element={<Navigate to="/modulos" replace />} />
-          
+          {/* ✅ MÓDULO DE VOLTAJE - ACTIVADO */}
+          <Route path="/modulos/voltaje" element={<VoltajeDashboard />} />
+          <Route path="/modulos/voltaje/estadisticas" element={<VoltajeStats />} />
+          <Route path="/modulos/voltaje/historico" element={<VoltajeHistorico />} />
+
           {/* Mantenimiento (futuro) */}
           <Route path="/mantenimiento" element={<Navigate to="/" replace />} />
 
