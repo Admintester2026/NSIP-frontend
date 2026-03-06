@@ -1,5 +1,5 @@
 //const API_BASE = 'http://192.168.3.124:3000/api/arduino-plantas';     --> para pruebas locales
-const API_BASE = import.meta.env.VITE_API_URL || 'http://192.168.3.124:3000/api/arduino-plantas';
+const API_BASE = '/api/arduino-plantas';
 
 // Helper para manejar respuestas
 async function handleResponse(response) {
