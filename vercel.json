@@ -4,6 +4,7 @@
   "framework": "vite",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/" },
+    { "source": "/api/:match*", "destination": "http://192.168.3.124:3000/api/:match*" }
   ]
 }
