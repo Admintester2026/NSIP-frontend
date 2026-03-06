@@ -15,12 +15,13 @@ export default function Modulos() {
           <span className={styles.moduleStatus}>ACTIVO</span>
         </Link>
 
-        <div className={`${styles.moduleCard} ${styles.disabled}`}>
+        {/* Módulo de Voltaje - AHORA ACTIVO */}
+        <Link to="/modulos/voltaje" className={styles.moduleCard}>
           <span className={styles.moduleIcon}>⚡</span>
           <h2 className={styles.moduleName}>Control de Voltaje</h2>
-          <p className={styles.moduleDesc}>Sistema de monitoreo de voltaje (Próximamente)</p>
-          <span className={`${styles.moduleStatus} ${styles.comingSoon}`}>EN DESARROLLO</span>
-        </div>
+          <p className={styles.moduleDesc}>Monitoreo de 3 fases con sensores ZMPT101B</p>
+          <span className={styles.moduleStatus}>ACTIVO</span>
+        </Link>
       </div>
     </div>
   );

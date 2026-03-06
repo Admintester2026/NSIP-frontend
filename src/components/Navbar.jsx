@@ -66,14 +66,15 @@ export default function Navbar() {
                   <span className={styles.statusBadge}>ACTIVO</span>
                 </Link>
                 
-                <div className={styles.dropdownItem}>
+                {/* Módulo de Voltaje - AHORA ACTIVO */}
+                <Link to="/modulos/voltaje" className={styles.dropdownItem}>
                   <span className={styles.dropdownIcon}>⚡</span>
                   <div className={styles.dropdownContent}>
                     <span className={styles.dropdownTitle}>Control de Voltaje</span>
-                    <span className={styles.dropdownDesc}>Próximamente</span>
+                    <span className={styles.dropdownDesc}>Monitoreo de 3 fases ZMPT101B</span>
                   </div>
-                  <span className={`${styles.statusBadge} ${styles.comingSoon}`}>EN DESARROLLO</span>
-                </div>
+                  <span className={styles.statusBadge}>ACTIVO</span>
+                </Link>
               </div>
             )}
           </div>
