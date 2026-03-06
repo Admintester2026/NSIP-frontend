@@ -2,10 +2,13 @@
 // ARCHIVO DE EXPORTACIÓN DE ESTILOS - VOLTAJE
 // ==========================================
 
-// Exportar estilos de las páginas
-export { default as dashboardStyles } from '../VoltajeDashboard.module.css';
-export { default as statsStyles } from '../VoltajeStats.module.css';
-export { default as historicoStyles } from '../VoltajeHistorico.module.css';
+// Importar estilos de las páginas
+import dashboardStyles from '../VoltajeDashboard.module.css';
+import statsStyles from '../VoltajeStats.module.css';
+import historicoStyles from '../VoltajeHistorico.module.css';
+
+// Re-exportar los estilos
+export { dashboardStyles, statsStyles, historicoStyles };
 
 // NOTA: Los estilos de VoltageCard están en components/charts/Sensorvoltaje/
 // No los exportamos desde aquí para mantener la separación de responsabilidades
@@ -158,7 +161,7 @@ export const VOLTAJE_TEXTS = {
 };
 
 // ==========================================
-//CONFIGURACIÓN DE ENDPOINTS
+// CONFIGURACIÓN DE ENDPOINTS
 // ==========================================
 export const VOLTAJE_ENDPOINTS = {
   status: '/api/arduino-voltaje/status',
