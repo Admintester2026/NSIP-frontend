@@ -1,5 +1,10 @@
 //const API_BASE = 'http://192.168.3.124:3000/api/arduino-plantas';     --> para pruebas locales
-const API_BASE = '/api/arduino-plantas';
+// Usar variable de entorno de Vercel, o ruta relativa como fallback
+const API_BASE = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/arduino-plantas`
+  : '/api/arduino-plantas';
+
+console.log('🔧 [arduino.js] API_BASE:', API_BASE); // Para debugging
 
 // Helper para manejar respuestas
 async function handleResponse(response) {

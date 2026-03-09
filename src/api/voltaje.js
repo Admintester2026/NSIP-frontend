@@ -1,4 +1,9 @@
-const API_BASE = '/api/arduino-voltaje';
+// Usar variable de entorno de Vercel, o ruta relativa como fallback
+const API_BASE = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/arduino-voltaje`
+  : '/api/arduino-voltaje';
+
+console.log('🔧 [voltaje.js] API_BASE:', API_BASE); // Para debugging
 
 async function handleResponse(response) {
   if (!response.ok) {
