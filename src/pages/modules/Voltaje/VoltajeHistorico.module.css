@@ -474,3 +474,143 @@
     transform: translateY(0);
   }
 }
+/* ===== NUEVA BARRA DE FILTROS ===== */
+.filtersBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--bg-surface);
+  padding: 1rem;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border-dim);
+}
+
+.limitSelector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-raised);
+  padding: 0.25rem;
+  border-radius: var(--r-md);
+  flex-wrap: wrap;
+}
+
+.limitLabel {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-right: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.limitButton {
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+  min-width: 50px;
+}
+
+.limitButton:hover {
+  border-color: var(--green-dim);
+  color: var(--green);
+}
+
+.limitButton.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--bg-primary);
+}
+
+.searchBox {
+  flex: 2;
+  position: relative;
+  min-width: 200px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 2.2rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--green-dim);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.dateFilter {
+  flex: 1;
+  min-width: 150px;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--green-dim);
+}
+
+.clearButton {
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.clearButton:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+/* Responsive para la barra de filtros */
+@media (max-width: 768px) {
+  .filtersBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .limitSelector {
+    justify-content: center;
+  }
+
+  .searchBox,
+  .dateFilter,
+  .clearButton {
+    width: 100%;
+  }
+}

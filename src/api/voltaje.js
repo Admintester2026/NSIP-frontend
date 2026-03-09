@@ -30,11 +30,13 @@ export const voltajeAPI = {
   },
 
   // Obtener histórico
-  getHistorico: async (limite = 100) => {
-    const response = await fetch(`${API_BASE}/historico`);
-    const data = await handleResponse(response);
-    return data.datos || [];
-  },
+  // Obtener histórico con límite variable
+    getHistorico: async (limite = 100) => {
+      // Agregar el parámetro limite a la URL
+      const response = await fetch(`${API_BASE}/historico?limite=${limite}`);
+      const data = await handleResponse(response);
+      return data.datos || [];
+    },
 
   // Buscar registros
   buscarRegistros: async (termino) => {

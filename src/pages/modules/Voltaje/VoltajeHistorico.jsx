@@ -39,6 +39,7 @@ export default function VoltajeHistorico() {
   const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [limit, setLimit] = useState(100); // ← NUEVO: límite por defecto
   const [sortConfig, setSortConfig] = useState({ key: 'FECHA', direction: 'desc' });
   const [stats, setStats] = useState({
     total: 0,
@@ -49,8 +50,8 @@ export default function VoltajeHistorico() {
     minVR: 999
   });
 
-  // Obtener histórico
-  const fetchHistorico = useCallback(() => voltajeAPI.getHistorico(500), []);
+  // Obtener histórico con límite variable
+  const fetchHistorico = useCallback(() => voltajeAPI.getHistorico(limit), [limit]);
   const { data, loading, error } = usePolling(fetchHistorico, 30000);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function VoltajeHistorico() {
       applyFilters(data, searchTerm, dateFilter);
       calculateStats(data);
     }
-  }, [data]);
+  }, [data, searchTerm, dateFilter]);
 
   // Calcular estadísticas
   const calculateStats = (data) => {
@@ -120,25 +121,28 @@ export default function VoltajeHistorico() {
     setFilteredData(filtered);
   };
 
+  // Manejar cambio de límite
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+  };
+
   // Manejar búsqueda
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
-    applyFilters(historico, term, dateFilter);
+    // No aplicar filtros aquí, se hará en el useEffect
   };
 
   // Manejar filtro por fecha
   const handleDateFilter = (e) => {
     const date = e.target.value;
     setDateFilter(date);
-    applyFilters(historico, searchTerm, date);
   };
 
   // Limpiar filtros
   const clearFilters = () => {
     setSearchTerm('');
     setDateFilter('');
-    setFilteredData(historico);
   };
 
   // Ordenar datos
@@ -199,7 +203,7 @@ export default function VoltajeHistorico() {
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Histórico de Voltaje</h1>
-          <p className={styles.subtitle}>Últimos {historico.length} registros</p>
+          <p className={styles.subtitle}>Total en BD: {stats.total} registros</p>
         </div>
         <Link to="/modulos/voltaje" className={styles.backButton}>
           ← Volver
@@ -249,12 +253,48 @@ export default function VoltajeHistorico() {
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className={styles.filtersSection}>
+      {/* ===== NUEVA BARRA DE FILTROS ===== */}
+      <div className={styles.filtersBar}>
+        {/* Selector de límite */}
+        <div className={styles.limitSelector}>
+          <span className={styles.limitLabel}>Mostrar:</span>
+          <button 
+            className={`${styles.limitButton} ${limit === 20 ? styles.active : ''}`}
+            onClick={() => handleLimitChange(20)}
+          >
+            20
+          </button>
+          <button 
+            className={`${styles.limitButton} ${limit === 50 ? styles.active : ''}`}
+            onClick={() => handleLimitChange(50)}
+          >
+            50
+          </button>
+          <button 
+            className={`${styles.limitButton} ${limit === 100 ? styles.active : ''}`}
+            onClick={() => handleLimitChange(100)}
+          >
+            100
+          </button>
+          <button 
+            className={`${styles.limitButton} ${limit === 500 ? styles.active : ''}`}
+            onClick={() => handleLimitChange(500)}
+          >
+            500
+          </button>
+          <button 
+            className={`${styles.limitButton} ${limit === 1000 ? styles.active : ''}`}
+            onClick={() => handleLimitChange(1000)}
+          >
+            1000
+          </button>
+        </div>
+
+        {/* Buscador por fecha */}
         <div className={styles.searchBox}>
           <input
             type="text"
-            placeholder="Buscar por fecha (YYYY/MM/DD)..."
+            placeholder="Buscar fecha (YYYY/MM/DD)..."
             value={searchTerm}
             onChange={handleSearch}
             className={styles.searchInput}
@@ -262,6 +302,7 @@ export default function VoltajeHistorico() {
           <span className={styles.searchIcon}>🔍</span>
         </div>
 
+        {/* Filtro por fecha */}
         <div className={styles.dateFilter}>
           <input
             type="date"
@@ -271,6 +312,7 @@ export default function VoltajeHistorico() {
           />
         </div>
 
+        {/* Botón limpiar */}
         {(searchTerm || dateFilter) && (
           <button onClick={clearFilters} className={styles.clearButton}>
             ✕ Limpiar filtros
@@ -283,7 +325,7 @@ export default function VoltajeHistorico() {
         <div className={styles.tableHeader}>
           <h2 className={styles.tableTitle}>Registros históricos</h2>
           <span className={styles.tableCount}>
-            Mostrando {filteredData.length} de {historico.length} registros
+            Mostrando {filteredData.length} de {historico.length} registros (límite: {limit})
           </span>
         </div>
 

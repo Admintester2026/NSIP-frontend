@@ -1,5 +1,5 @@
 import styles from './VoltageCard.module.css';
-import { getVoltageColor, getVoltageStatus, getVoltageIcon, VOLTAJE_RANGOS } from '../../../pages/modules/Voltaje/styles';
+import { getVoltageColor, getVoltageStatus, getVoltageIcon, VOLTAJE_RANGOS } from '../../pages/modules/Voltaje/styles';
 
 export default function VoltageCard({ 
   index, 

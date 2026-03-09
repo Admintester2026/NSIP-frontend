@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../../api/voltaje';
 import { usePolling } from '../../../hooks/useAsync';
-import VoltageCard from '../../../components/charts/Sensorvoltaje/VoltageCard';
+import VoltageCard from '../../../components/Sensorvoltaje/VoltageCard';
 import styles from './VoltajeDashboard.module.css';
 
 function formatTime(isoString) {
@@ -155,15 +155,15 @@ export default function VoltajeDashboard() {
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Mínimo</span>
-                <span className={styles.infoValue}>110 V</span>
+                <span className={styles.infoValue}>209 v V</span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Máximo</span>
-                <span className={styles.infoValue}>130 V</span>
+                <span className={styles.infoValue}>231 V</span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Crítico</span>
-                <span className={styles.infoValue}>&lt;105 o &gt;135</span>
+                <span className={styles.infoValue}>&lt;200 o &gt;240</span>
               </div>
             </div>
           </div>
