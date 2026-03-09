@@ -34,12 +34,22 @@ function formatTimeOnly(isoString) {
   return `${horas}:${minutos}:${segundos}`;
 }
 
+// Función para formatear fecha al formato del input date (YYYY-MM-DD)
+const formatDateForInput = (isoString) => {
+  if (!isoString) return '';
+  const fecha = new Date(isoString);
+  const año = fecha.getFullYear();
+  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+  const dia = fecha.getDate().toString().padStart(2, '0');
+  return `${año}-${mes}-${dia}`;
+};
+
 export default function VoltajeHistorico() {
   const [historico, setHistorico] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const [limit, setLimit] = useState(100); // ← NUEVO: límite por defecto
+  const [limit, setLimit] = useState(100);
   const [sortConfig, setSortConfig] = useState({ key: 'FECHA', direction: 'desc' });
   const [stats, setStats] = useState({
     total: 0,
@@ -99,22 +109,24 @@ export default function VoltajeHistorico() {
     });
   };
 
-  // Aplicar filtros
+  // Aplicar filtros - CORREGIDO para manejar formato de fecha
   const applyFilters = (data, search, date) => {
     let filtered = [...data];
 
-    // Filtro por texto (fecha)
+    // Filtro por texto (búsqueda libre)
     if (search.trim() !== '') {
       filtered = filtered.filter(item => 
         formatDateTime(item.FECHA).toLowerCase().includes(search.toLowerCase())
       );
     }
 
-    // Filtro por fecha específica
+    // Filtro por fecha específica (input date en formato YYYY-MM-DD)
     if (date) {
       filtered = filtered.filter(item => {
-        const itemDate = formatDateOnly(item.FECHA);
-        return itemDate === date;
+        const itemDate = formatDateOnly(item.FECHA); // YYYY/MM/DD
+        // Convertir el date del input (YYYY-MM-DD) a formato YYYY/MM/DD para comparar
+        const inputDate = date.replace(/-/g, '/');
+        return itemDate === inputDate;
       });
     }
 
@@ -130,12 +142,11 @@ export default function VoltajeHistorico() {
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
-    // No aplicar filtros aquí, se hará en el useEffect
   };
 
-  // Manejar filtro por fecha
+  // Manejar filtro por fecha - CORREGIDO
   const handleDateFilter = (e) => {
-    const date = e.target.value;
+    const date = e.target.value; // Viene en formato YYYY-MM-DD
     setDateFilter(date);
   };
 
@@ -253,7 +264,7 @@ export default function VoltajeHistorico() {
         </div>
       </div>
 
-      {/* ===== NUEVA BARRA DE FILTROS ===== */}
+      {/* BARRA DE FILTROS */}
       <div className={styles.filtersBar}>
         {/* Selector de límite */}
         <div className={styles.limitSelector}>
@@ -302,7 +313,7 @@ export default function VoltajeHistorico() {
           <span className={styles.searchIcon}>🔍</span>
         </div>
 
-        {/* Filtro por fecha */}
+        {/* Filtro por fecha con calendario */}
         <div className={styles.dateFilter}>
           <input
             type="date"
@@ -320,7 +331,7 @@ export default function VoltajeHistorico() {
         )}
       </div>
 
-      {/* Tabla de histórico */}
+      {/* Tabla de histórico CON SCROLL */}
       <div className={styles.tableSection}>
         <div className={styles.tableHeader}>
           <h2 className={styles.tableTitle}>Registros históricos</h2>

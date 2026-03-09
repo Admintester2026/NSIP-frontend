@@ -311,3 +311,58 @@
     transform: translateY(0);
   }
 }
+/* ===== NUEVO: CONTENEDOR CON SCROLL PARA LA TABLA ===== */
+.tableWrapper {
+  max-height: 400px;  /* ← Altura máxima antes del scroll */
+  overflow-y: auto;   /* ← Scroll vertical cuando sea necesario */
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  background: var(--bg-raised);
+}
+
+/* Mantener el encabezado fijo mientras se hace scroll */
+.tableWrapper thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 10;
+}
+
+.tableWrapper thead th {
+  background: var(--bg-surface);
+  border-bottom: 2px solid var(--green-dim);
+}
+
+/* Estilos para la tabla dentro del contenedor con scroll */
+.tableWrapper .hourlyTable {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.tableWrapper .hourlyTable th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 10;
+}
+
+/* Mejoras visuales para el scroll */
+.tableWrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+  border-radius: 4px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 4px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}

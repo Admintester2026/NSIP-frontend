@@ -614,3 +614,53 @@
     width: 100%;
   }
 }
+/* ===== CONTENEDOR CON SCROLL PARA LA TABLA ===== */
+.tableContainer {
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  background: var(--bg-raised);
+  margin-top: 1rem;
+}
+
+/* Encabezado sticky */
+.tableContainer thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 10;
+}
+
+.tableContainer thead th {
+  background: var(--bg-surface);
+  border-bottom: 2px solid var(--green-dim);
+  padding: 1rem;
+}
+
+/* Asegurar que el contenido de la tabla no se encoja */
+.tableContainer .historicoTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Scroll personalizado */
+.tableContainer::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tableContainer::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+  border-radius: 4px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 4px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}

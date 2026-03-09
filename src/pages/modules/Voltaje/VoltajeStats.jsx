@@ -122,10 +122,10 @@ export default function VoltajeStats() {
         </div>
       </div>
 
-      {/* Tabla horaria */}
+      {/* Tabla horaria CON SCROLL */}
       <div className={styles.hourlySection}>
         <h2 className={styles.sectionTitle}>Promedios por hora (últimas 24h)</h2>
-        <div className={styles.tableContainer}>
+        <div className={styles.tableWrapper}>  {/* ← NUEVO: contenedor con scroll */}
           <table className={styles.hourlyTable}>
             <thead>
               <tr>
