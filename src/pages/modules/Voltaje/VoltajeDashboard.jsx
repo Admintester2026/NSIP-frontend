@@ -105,6 +105,10 @@ export default function VoltajeDashboard() {
             <span className={styles.actionIcon}>📈</span>
             Histórico
           </Link>
+          <Link to="/modulos/voltaje/graficas" className={styles.actionButton}>
+            <span className={styles.actionIcon}>📉</span>
+            Gráficas
+          </Link>
         </div>
       </div>
 
@@ -145,7 +149,7 @@ export default function VoltajeDashboard() {
             <div className={styles.statProgress}>
               <div 
                 className={styles.statProgressFill}
-                style={{ width: `${(promedio / 140) * 100}%` }}
+                style={{ width: `${(promedio / 240) * 100}%` }}  /* Cambiado de 140 a 240 para 220V */
               />
             </div>
           </div>
@@ -155,7 +159,7 @@ export default function VoltajeDashboard() {
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Mínimo</span>
-                <span className={styles.infoValue}>209 v V</span>
+                <span className={styles.infoValue}>209 V</span>  {/* Corregido: quitado "v" extra */}
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Máximo</span>

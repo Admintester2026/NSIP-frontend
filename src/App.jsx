@@ -6,6 +6,7 @@ import PlantasDashboard from './pages/modules/Plantas/Dashboard';
 import PlantasCycles from './pages/modules/Plantas/Cycles';
 import PlantasStats from './pages/modules/Plantas/Stats';
 import PlantasComparativa from './pages/modules/Plantas/Comparativa';
+import VoltajeGraficas from './pages/modules/Voltaje/VoltajeGraficas';
 
 // IMPORTAR MÓDULO DE VOLTAJE (agrega estas líneas)
 import VoltajeDashboard from './pages/modules/Voltaje/VoltajeDashboard';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/modulos/voltaje" element={<VoltajeDashboard />} />
           <Route path="/modulos/voltaje/estadisticas" element={<VoltajeStats />} />
           <Route path="/modulos/voltaje/historico" element={<VoltajeHistorico />} />
+          <Route path="/modulos/voltaje/graficas" element={<VoltajeGraficas />} />
 
           {/* Mantenimiento (futuro) */}
           <Route path="/mantenimiento" element={<Navigate to="/" replace />} />

@@ -664,3 +664,20 @@
 .tableContainer::-webkit-scrollbar-thumb:hover {
   background: var(--green);
 }
+/* Información de filtros */
+.filterInfo {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  display: inline-block;
+}
+
+.filterBadge {
+  background: var(--green-dim);
+  color: var(--green);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}

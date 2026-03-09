@@ -34,16 +34,6 @@ function formatTimeOnly(isoString) {
   return `${horas}:${minutos}:${segundos}`;
 }
 
-// Función para formatear fecha al formato del input date (YYYY-MM-DD)
-const formatDateForInput = (isoString) => {
-  if (!isoString) return '';
-  const fecha = new Date(isoString);
-  const año = fecha.getFullYear();
-  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-  const dia = fecha.getDate().toString().padStart(2, '0');
-  return `${año}-${mes}-${dia}`;
-};
-
 export default function VoltajeHistorico() {
   const [historico, setHistorico] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -67,10 +57,14 @@ export default function VoltajeHistorico() {
   useEffect(() => {
     if (data) {
       setHistorico(data);
-      applyFilters(data, searchTerm, dateFilter);
       calculateStats(data);
     }
-  }, [data, searchTerm, dateFilter]);
+  }, [data]);
+
+  // Aplicar filtros CADA VEZ que cambien searchTerm, dateFilter o historico
+  useEffect(() => {
+    applyFilters(historico, searchTerm, dateFilter);
+  }, [historico, searchTerm, dateFilter]);
 
   // Calcular estadísticas
   const calculateStats = (data) => {
@@ -109,19 +103,24 @@ export default function VoltajeHistorico() {
     });
   };
 
-  // Aplicar filtros - CORREGIDO para manejar formato de fecha
+  // Aplicar filtros - CORREGIDO: siempre filtra sobre TODOS los datos disponibles
   const applyFilters = (data, search, date) => {
+    if (!data || data.length === 0) {
+      setFilteredData([]);
+      return;
+    }
+
     let filtered = [...data];
 
     // Filtro por texto (búsqueda libre)
-    if (search.trim() !== '') {
+    if (search && search.trim() !== '') {
       filtered = filtered.filter(item => 
         formatDateTime(item.FECHA).toLowerCase().includes(search.toLowerCase())
       );
     }
 
     // Filtro por fecha específica (input date en formato YYYY-MM-DD)
-    if (date) {
+    if (date && date.trim() !== '') {
       filtered = filtered.filter(item => {
         const itemDate = formatDateOnly(item.FECHA); // YYYY/MM/DD
         // Convertir el date del input (YYYY-MM-DD) a formato YYYY/MM/DD para comparar
@@ -144,9 +143,9 @@ export default function VoltajeHistorico() {
     setSearchTerm(term);
   };
 
-  // Manejar filtro por fecha - CORREGIDO
+  // Manejar filtro por fecha
   const handleDateFilter = (e) => {
-    const date = e.target.value; // Viene en formato YYYY-MM-DD
+    const date = e.target.value;
     setDateFilter(date);
   };
 
@@ -331,12 +330,21 @@ export default function VoltajeHistorico() {
         )}
       </div>
 
+      {/* Información de filtros */}
+      {(searchTerm || dateFilter) && (
+        <div className={styles.filterInfo}>
+          <span className={styles.filterBadge}>
+            {filteredData.length} resultados encontrados
+          </span>
+        </div>
+      )}
+
       {/* Tabla de histórico CON SCROLL */}
       <div className={styles.tableSection}>
         <div className={styles.tableHeader}>
           <h2 className={styles.tableTitle}>Registros históricos</h2>
           <span className={styles.tableCount}>
-            Mostrando {filteredData.length} de {historico.length} registros (límite: {limit})
+            Mostrando {filteredData.length} de {limit} registros cargados (total BD: {stats.total})
           </span>
         </div>
 
