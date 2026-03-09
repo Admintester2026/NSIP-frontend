@@ -31,12 +31,13 @@ export const VOLTAJE_COLORS = {
 // RANGOS DE VOLTAJE POR DEFECTO
 // ==========================================
 export const VOLTAJE_RANGOS = {
-  min: 110,
-  max: 130,
-  criticoMin: 105,
-  criticoMax: 135,
+  min: 209,
+  max: 231,
+  criticoMin: 200,
+  criticoMax: 240,
   unidad: 'V',
-  advertencia: 'V'
+  advertencia: 'V',
+  nominal: 220
 };
 
 // ==========================================
