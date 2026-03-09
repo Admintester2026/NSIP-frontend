@@ -255,7 +255,7 @@ export default function Dashboard() {
       timestamp: actionId
     });
     
-    fetch(`http://192.168.3.124:3000/api/arduino-plantas/mode`, {
+    fetch(`${import.meta.env.VITE_API_URL}/arduino-plantas/mode`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: 'manual' })
@@ -293,7 +293,7 @@ export default function Dashboard() {
       timestamp: actionId
     });
     
-    fetch(`http://192.168.3.124:3000/api/arduino-plantas/mode`, {
+    fetch(`${import.meta.env.VITE_API_URL}/arduino-plantas/mode`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: 'auto' })
@@ -343,7 +343,7 @@ export default function Dashboard() {
       timestamp: actionId
     });
 
-    fetch(`http://192.168.3.124:3000/api/arduino-plantas/relay`, {
+    fetch(`${import.meta.env.VITE_API_URL}/arduino-plantas/relay`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ relay: relayNum, state: newState })
@@ -369,7 +369,7 @@ export default function Dashboard() {
       
       // Reintentar después de 2 segundos
       setTimeout(() => {
-        fetch(`http://192.168.3.124:3000/api/arduino-plantas/relay`, {
+        fetch(`${import.meta.env.VITE_API_URL}/arduino-plantas/relay`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ relay: relayNum, state: newState })
