@@ -2,37 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../../api/voltaje';
 import { usePolling } from '../../../hooks/useAsync';
+import { formatDateTime, formatDateOnly, formatTimeOnly } from '../../../utils/dateUtils';
 import styles from './VoltajeHistorico.module.css';
-
-function formatDateTime(isoString) {
-  if (!isoString) return '--/--/---- --:--:--';
-  const fecha = new Date(isoString);
-  const año = fecha.getFullYear();
-  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-  const dia = fecha.getDate().toString().padStart(2, '0');
-  const horas = fecha.getHours().toString().padStart(2, '0');
-  const minutos = fecha.getMinutes().toString().padStart(2, '0');
-  const segundos = fecha.getSeconds().toString().padStart(2, '0');
-  return `${año}/${mes}/${dia} ${horas}:${minutos}:${segundos}`;
-}
-
-function formatDateOnly(isoString) {
-  if (!isoString) return '--/--/----';
-  const fecha = new Date(isoString);
-  const año = fecha.getFullYear();
-  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-  const dia = fecha.getDate().toString().padStart(2, '0');
-  return `${año}/${mes}/${dia}`;
-}
-
-function formatTimeOnly(isoString) {
-  if (!isoString) return '--:--:--';
-  const fecha = new Date(isoString);
-  const horas = fecha.getHours().toString().padStart(2, '0');
-  const minutos = fecha.getMinutes().toString().padStart(2, '0');
-  const segundos = fecha.getSeconds().toString().padStart(2, '0');
-  return `${horas}:${minutos}:${segundos}`;
-}
 
 export default function VoltajeHistorico() {
   const [historico, setHistorico] = useState([]);
@@ -103,7 +74,7 @@ export default function VoltajeHistorico() {
     });
   };
 
-  // Aplicar filtros - CORREGIDO: siempre filtra sobre TODOS los datos disponibles
+  // Aplicar filtros
   const applyFilters = (data, search, date) => {
     if (!data || data.length === 0) {
       setFilteredData([]);
@@ -123,7 +94,6 @@ export default function VoltajeHistorico() {
     if (date && date.trim() !== '') {
       filtered = filtered.filter(item => {
         const itemDate = formatDateOnly(item.FECHA); // YYYY/MM/DD
-        // Convertir el date del input (YYYY-MM-DD) a formato YYYY/MM/DD para comparar
         const inputDate = date.replace(/-/g, '/');
         return itemDate === inputDate;
       });
@@ -155,7 +125,7 @@ export default function VoltajeHistorico() {
     setDateFilter('');
   };
 
-  // Ordenar datos
+  // Ordenar datos (CORREGIDO - sin new Date)
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -168,8 +138,9 @@ export default function VoltajeHistorico() {
       let bVal = b[key] || 0;
       
       if (key === 'FECHA') {
-        aVal = new Date(a[key]).getTime();
-        bVal = new Date(b[key]).getTime();
+        // Ordenar como strings en lugar de usar new Date
+        aVal = a[key];
+        bVal = b[key];
       }
       
       if (aVal < bVal) return direction === 'asc' ? -1 : 1;

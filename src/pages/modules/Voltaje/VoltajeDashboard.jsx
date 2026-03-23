@@ -3,25 +3,8 @@ import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../../api/voltaje';
 import { usePolling } from '../../../hooks/useAsync';
 import VoltageCard from '../../../components/Sensorvoltaje/VoltageCard';
+import { formatDate, formatTime } from '../../../utils/dateUtils';
 import styles from './VoltajeDashboard.module.css';
-
-function formatTime(isoString) {
-  if (!isoString) return '--:--:--';
-  const fecha = new Date(isoString);
-  const horas = fecha.getHours().toString().padStart(2, '0');
-  const minutos = fecha.getMinutes().toString().padStart(2, '0');
-  const segundos = fecha.getSeconds().toString().padStart(2, '0');
-  return `${horas}:${minutos}:${segundos}`;
-}
-
-function formatDate(isoString) {
-  if (!isoString) return '----/--/--';
-  const fecha = new Date(isoString);
-  const año = fecha.getFullYear();
-  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-  const dia = fecha.getDate().toString().padStart(2, '0');
-  return `${año}/${mes}/${dia}`;
-}
 
 function ConnectionBadge({ connected, label }) {
   const statusClass = connected ? styles.badgeOnline : styles.badgeOffline;
@@ -149,7 +132,7 @@ export default function VoltajeDashboard() {
             <div className={styles.statProgress}>
               <div 
                 className={styles.statProgressFill}
-                style={{ width: `${(promedio / 240) * 100}%` }}  /* Cambiado de 140 a 240 para 220V */
+                style={{ width: `${(promedio / 240) * 100}%` }}
               />
             </div>
           </div>
@@ -159,7 +142,7 @@ export default function VoltajeDashboard() {
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Mínimo</span>
-                <span className={styles.infoValue}>209 V</span>  {/* Corregido: quitado "v" extra */}
+                <span className={styles.infoValue}>209 V</span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Máximo</span>
