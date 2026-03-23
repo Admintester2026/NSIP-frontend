@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../api/voltaje';
 import { usePolling } from '../../hooks/useAsync';
+import { formatDate, formatTime } from '../../utils/dateUtils';  // ← Agregar import
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, AreaChart, Area
@@ -9,7 +10,7 @@ import {
 import styles from './VoltajeGraficas.module.css';
 
 export default function VoltajeGraficas() {
-  const [periodo, setPeriodo] = useState('dia'); // dia, semana, mes
+  const [periodo, setPeriodo] = useState('dia');
   const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,10 +29,10 @@ export default function VoltajeGraficas() {
     if (periodoSeleccionado === 'dia') {
       // Filtrar solo hoy y agrupar por hora
       const hoy = new Date();
-      const fechaHoy = `${hoy.getFullYear()}/${(hoy.getMonth()+1).toString().padStart(2,'0')}/${hoy.getDate().toString().padStart(2,'0')}`;
+      const fechaHoy = formatDate(hoy.toISOString());  // ← Usar formatDate
       
       const datosHoy = datosCrudos.filter(item => {
-        const itemFecha = formatDateOnly(item.FECHA);
+        const itemFecha = formatDate(item.FECHA);  // ← Usar formatDate
         return itemFecha === fechaHoy;
       });
 
@@ -45,8 +46,16 @@ export default function VoltajeGraficas() {
       }));
 
       datosHoy.forEach(item => {
-        const fecha = new Date(item.FECHA);
-        const hora = fecha.getHours();
+        // Extraer hora directamente de la fecha corregida (formato: YYYY/MM/DD HH:MM:SS)
+        const fechaStr = item.FECHA;
+        let hora = 0;
+        
+        // Formato esperado: "2026-03-23 11:47:31" o "2026/03/23 11:47:31"
+        const timeMatch = fechaStr.match(/(\d{2}):(\d{2}):(\d{2})/);
+        if (timeMatch) {
+          hora = parseInt(timeMatch[1], 10);
+        }
+        
         horas[hora].R += item.V_R || 0;
         horas[hora].S += item.V_S || 0;
         horas[hora].T += item.V_T || 0;
@@ -64,17 +73,16 @@ export default function VoltajeGraficas() {
       setDatos(datosGrafica);
     } 
     else if (periodoSeleccionado === 'semana') {
-      // Agrupar por día de la semana (últimos 7 días)
       const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
       const datosSemana = [];
 
       for (let i = 6; i >= 0; i--) {
         const fecha = new Date();
         fecha.setDate(fecha.getDate() - i);
-        const fechaStr = `${fecha.getFullYear()}/${(fecha.getMonth()+1).toString().padStart(2,'0')}/${fecha.getDate().toString().padStart(2,'0')}`;
+        const fechaStr = formatDate(fecha.toISOString());  // ← Usar formatDate
         
         const datosDia = datosCrudos.filter(item => {
-          const itemFecha = formatDateOnly(item.FECHA);
+          const itemFecha = formatDate(item.FECHA);  // ← Usar formatDate
           return itemFecha === fechaStr;
         });
 
@@ -101,7 +109,6 @@ export default function VoltajeGraficas() {
       setDatos(datosSemana);
     }
     else if (periodoSeleccionado === 'mes') {
-      // Agrupar por semana del mes
       const semanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
       const datosMes = [];
 
@@ -115,8 +122,11 @@ export default function VoltajeGraficas() {
         finSemana.setDate(finSemana.getDate() + 6);
 
         const datosSemana = datosCrudos.filter(item => {
-          const itemFecha = new Date(item.FECHA);
-          return itemFecha >= inicioSemana && itemFecha <= finSemana;
+          // Extraer fecha como string para comparar
+          const itemFechaStr = formatDate(item.FECHA);
+          const inicioStr = formatDate(inicioSemana.toISOString());
+          const finStr = formatDate(finSemana.toISOString());
+          return itemFechaStr >= inicioStr && itemFechaStr <= finStr;
         });
 
         if (datosSemana.length > 0) {
@@ -142,15 +152,6 @@ export default function VoltajeGraficas() {
       setDatos(datosMes);
     }
     setLoading(false);
-  };
-
-  const formatDateOnly = (isoString) => {
-    if (!isoString) return '--/--/----';
-    const fecha = new Date(isoString);
-    const año = fecha.getFullYear();
-    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-    const dia = fecha.getDate().toString().padStart(2, '0');
-    return `${año}/${mes}/${dia}`;
   };
 
   if (loading) {
@@ -219,14 +220,14 @@ export default function VoltajeGraficas() {
               }} 
             />
             <Legend />
-            <Line type="monotone" dataKey="R" stroke="#00ff9d" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="S" stroke="#00cc7a" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="T" stroke="#009955" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="V1" stroke="#00ff9d" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="V2" stroke="#00cc7a" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="V3" stroke="#009955" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Gráfica de áreas (apiladas) */}
+      {/* Gráfica de áreas */}
       <div className={styles.chartCard}>
         <h2 className={styles.chartTitle}>Comparativa de fases</h2>
         <ResponsiveContainer width="100%" height={400}>
@@ -245,9 +246,9 @@ export default function VoltajeGraficas() {
               }} 
             />
             <Legend />
-            <Area type="monotone" dataKey="R" stackId="1" stroke="#00ff9d" fill="#00ff9d" fillOpacity={0.3} />
-            <Area type="monotone" dataKey="S" stackId="1" stroke="#00cc7a" fill="#00cc7a" fillOpacity={0.3} />
-            <Area type="monotone" dataKey="T" stackId="1" stroke="#009955" fill="#009955" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="V1" stackId="1" stroke="#00ff9d" fill="#00ff9d" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="V2" stackId="1" stroke="#00cc7a" fill="#00cc7a" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="V3" stackId="1" stroke="#009955" fill="#009955" fillOpacity={0.3} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

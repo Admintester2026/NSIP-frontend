@@ -55,7 +55,7 @@ export default function VoltajeDashboard() {
     if (ultimo) setSqlData(ultimo);
   }, [ultimo]);
 
-  const fases = ['R', 'S', 'T'];
+  const fases = ['V1', 'V2', 'V3'];
   const valores = {
     vR: arduinoData?.vR ?? sqlData?.V_R ?? 0,
     vS: arduinoData?.vS ?? sqlData?.V_S ?? 0,
