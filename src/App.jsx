@@ -6,9 +6,9 @@ import PlantasDashboard from './pages/modules/Plantas/Dashboard';
 import PlantasCycles from './pages/modules/Plantas/Cycles';
 import PlantasStats from './pages/modules/Plantas/Stats';
 import PlantasComparativa from './pages/modules/Plantas/Comparativa';
-import VoltajeGraficas from './pages/modules/Voltaje/VoltajeGraficas';
+import VoltajeGraficas from './components/Sensorvoltaje/VoltajeGraficas';
 
-// IMPORTAR MÓDULO DE VOLTAJE (agrega estas líneas)
+// IMPORTAR MÓDULO DE VOLTAJE
 import VoltajeDashboard from './pages/modules/Voltaje/VoltajeDashboard';
 import VoltajeStats from './pages/modules/Voltaje/VoltajeStats';
 import VoltajeHistorico from './pages/modules/Voltaje/VoltajeHistorico';
