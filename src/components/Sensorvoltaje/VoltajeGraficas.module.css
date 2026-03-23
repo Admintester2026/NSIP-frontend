@@ -98,24 +98,113 @@
     transform: translateY(0);
   }
 }
-/* Estilo para el botón Volver */
-.backButton {
+/* Botón Volver con borde verde neon al hover */
+.backButtonOutline {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: var(--bg-surface);
+  background: transparent;
   border: 1px solid var(--border-dim);
   border-radius: 0.5rem;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--text-secondary);
   text-decoration: none;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
 }
 
-.backButton:hover {
-  background-color: var(--bg-hover);
+.backButtonOutline:hover {
+  border-color: #00ff9d;
+  color: #00ff9d;
+  box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
+}
+
+/* Contenedor de tres gráficas en paralelo */
+.chartsContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.chartCard {
+  background: var(--bg-surface);
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-dim);
+  transition: all 0.2s ease;
+}
+
+.chartCard:hover {
   border-color: var(--border);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.chartTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+/* Selector de período */
+.periodSelector {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.periodButton {
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: 2rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.periodButton:hover {
+  border-color: #00ff9d;
+  color: #00ff9d;
+}
+
+.periodButton.active {
+  background: #00ff9d;
+  border-color: #00ff9d;
+  color: #000;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .chartsContainer {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Loading */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-dim);
+  border-top-color: #00ff9d;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
