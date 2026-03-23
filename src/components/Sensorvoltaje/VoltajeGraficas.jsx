@@ -5,7 +5,7 @@ import { usePolling } from '../../hooks/useAsync';
 import { formatDate } from '../../utils/dateUtils';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, AreaChart, Area
+  Tooltip, ResponsiveContainer
 } from 'recharts';
 import styles from './VoltajeGraficas.module.css';
 
@@ -15,7 +15,7 @@ export default function VoltajeGraficas() {
   const [loading, setLoading] = useState(true);
 
   const fetchHistorico = useCallback(() => voltajeAPI.getHistorico(1000), []);
-  const { data } = usePolling(fetchHistorico, 60000); // ← Eliminado 'error' no usado
+  const { data } = usePolling(fetchHistorico, 60000);
 
   useEffect(() => {
     if (data) {
@@ -30,7 +30,6 @@ export default function VoltajeGraficas() {
     }
 
     if (periodoSeleccionado === 'dia') {
-      // Filtrar solo hoy
       const hoy = new Date();
       const fechaHoy = formatDate(hoy.toISOString());
       
@@ -39,7 +38,6 @@ export default function VoltajeGraficas() {
         return itemFecha === fechaHoy;
       });
 
-      // Crear array con 24 horas
       const horas = Array.from({ length: 24 }, (_, i) => ({
         hora: `${i}:00`,
         '1': 0,
@@ -63,7 +61,6 @@ export default function VoltajeGraficas() {
         horas[hora].count += 1;
       });
 
-      // Calcular promedios
       const datosGrafica = horas.map(h => ({
         hora: h.hora,
         '1': h.count > 0 ? (h['1'] / h.count).toFixed(1) : 0,
@@ -163,12 +160,19 @@ export default function VoltajeGraficas() {
     );
   }
 
+  // Configuración de colores para cada fase
+  const colores = {
+    fase1: '#ff6b6b',  // Rojo coral
+    fase2: '#4ecdc4',  // Turquesa
+    fase3: '#45b7d1'   // Azul celeste
+  };
+
   return (
     <div className={styles.graficas}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Gráficas de Voltaje</h1>
-          <p className={styles.subtitle}>Visualización de datos</p>
+          <p className={styles.subtitle}>Visualización de datos por fase</p>
         </div>
         <Link to="/modulos/voltaje" className={styles.backButton}>
           ← Volver
@@ -197,60 +201,133 @@ export default function VoltajeGraficas() {
         </button>
       </div>
 
-      {/* Gráfica de líneas */}
+      {/* Gráfica Fase 1 */}
       <div className={styles.chartCard}>
-        <h2 className={styles.chartTitle}>
-          {periodo === 'dia' ? 'Comportamiento por hora (hoy)' : 
-           periodo === 'semana' ? 'Promedio por día (semana actual)' : 
-           'Promedio por semana (mes actual)'}
-        </h2>
-        <ResponsiveContainer width="100%" height={400}>
+        <div className={styles.chartHeader}>
+          <h2 className={styles.chartTitle}>
+            <span className={styles.faseBadge} style={{ backgroundColor: colores.fase1 }}>Fase 1</span>
+            {periodo === 'dia' ? 'Comportamiento por hora (hoy)' : 
+             periodo === 'semana' ? 'Promedio por día (semana actual)' : 
+             'Promedio por semana (mes actual)'}
+          </h2>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
           <LineChart data={datos} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
             <XAxis 
               dataKey={periodo === 'dia' ? 'hora' : periodo === 'semana' ? 'dia' : 'semana'} 
               stroke="var(--text-muted)"
             />
-            <YAxis stroke="var(--text-muted)" />
+            <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'var(--bg-surface)', 
                 borderColor: 'var(--border-dim)',
                 color: 'var(--text-primary)'
-              }} 
+              }}
+              formatter={(value) => [`${value} V`, 'Voltaje']}
             />
-            <Legend />
-            <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={2} dot={false} name="Fase 1" />
-            <Line type="monotone" dataKey="2" stroke="#00cc7a" strokeWidth={2} dot={false} name="Fase 2" />
-            <Line type="monotone" dataKey="3" stroke="#009955" strokeWidth={2} dot={false} name="Fase 3" />
+            <Line 
+              type="monotone" 
+              dataKey="1" 
+              stroke={colores.fase1} 
+              strokeWidth={3} 
+              dot={{ r: 4, fill: colores.fase1 }}
+              activeDot={{ r: 6 }}
+              name="Fase 1"
+            />
           </LineChart>
         </ResponsiveContainer>
+        <div className={styles.chartStats}>
+          <span>⚡ Voltaje Fase 1</span>
+          <span>Rango normal: 209-231 V</span>
+        </div>
       </div>
 
-      {/* Gráfica de áreas */}
+      {/* Gráfica Fase 2 */}
       <div className={styles.chartCard}>
-        <h2 className={styles.chartTitle}>Comparativa de fases</h2>
-        <ResponsiveContainer width="100%" height={400}>
-          <AreaChart data={datos} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+        <div className={styles.chartHeader}>
+          <h2 className={styles.chartTitle}>
+            <span className={styles.faseBadge} style={{ backgroundColor: colores.fase2 }}>Fase 2</span>
+            {periodo === 'dia' ? 'Comportamiento por hora (hoy)' : 
+             periodo === 'semana' ? 'Promedio por día (semana actual)' : 
+             'Promedio por semana (mes actual)'}
+          </h2>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={datos} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
             <XAxis 
               dataKey={periodo === 'dia' ? 'hora' : periodo === 'semana' ? 'dia' : 'semana'} 
               stroke="var(--text-muted)"
             />
-            <YAxis stroke="var(--text-muted)" />
+            <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'var(--bg-surface)', 
                 borderColor: 'var(--border-dim)',
                 color: 'var(--text-primary)'
-              }} 
+              }}
+              formatter={(value) => [`${value} V`, 'Voltaje']}
             />
-            <Legend />
-            <Area type="monotone" dataKey="1" stackId="1" stroke="#00ff9d" fill="#00ff9d" fillOpacity={0.3} name="Fase 1" />
-            <Area type="monotone" dataKey="2" stackId="1" stroke="#00cc7a" fill="#00cc7a" fillOpacity={0.3} name="Fase 2" />
-            <Area type="monotone" dataKey="3" stackId="1" stroke="#009955" fill="#009955" fillOpacity={0.3} name="Fase 3" />
-          </AreaChart>
+            <Line 
+              type="monotone" 
+              dataKey="2" 
+              stroke={colores.fase2} 
+              strokeWidth={3} 
+              dot={{ r: 4, fill: colores.fase2 }}
+              activeDot={{ r: 6 }}
+              name="Fase 2"
+            />
+          </LineChart>
         </ResponsiveContainer>
+        <div className={styles.chartStats}>
+          <span>⚡ Voltaje Fase 2</span>
+          <span>Rango normal: 209-231 V</span>
+        </div>
+      </div>
+
+      {/* Gráfica Fase 3 */}
+      <div className={styles.chartCard}>
+        <div className={styles.chartHeader}>
+          <h2 className={styles.chartTitle}>
+            <span className={styles.faseBadge} style={{ backgroundColor: colores.fase3 }}>Fase 3</span>
+            {periodo === 'dia' ? 'Comportamiento por hora (hoy)' : 
+             periodo === 'semana' ? 'Promedio por día (semana actual)' : 
+             'Promedio por semana (mes actual)'}
+          </h2>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={datos} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
+            <XAxis 
+              dataKey={periodo === 'dia' ? 'hora' : periodo === 'semana' ? 'dia' : 'semana'} 
+              stroke="var(--text-muted)"
+            />
+            <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'var(--bg-surface)', 
+                borderColor: 'var(--border-dim)',
+                color: 'var(--text-primary)'
+              }}
+              formatter={(value) => [`${value} V`, 'Voltaje']}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="3" 
+              stroke={colores.fase3} 
+              strokeWidth={3} 
+              dot={{ r: 4, fill: colores.fase3 }}
+              activeDot={{ r: 6 }}
+              name="Fase 3"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className={styles.chartStats}>
+          <span>⚡ Voltaje Fase 3</span>
+          <span>Rango normal: 209-231 V</span>
+        </div>
       </div>
     </div>
   );

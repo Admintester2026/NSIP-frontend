@@ -98,3 +98,24 @@
     transform: translateY(0);
   }
 }
+/* Estilo para el botón Volver */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
