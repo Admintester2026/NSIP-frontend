@@ -308,3 +308,141 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+/* Sección de búsqueda */
+.searchSection {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border-dim);
+}
+
+.searchTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.searchContainer {
+  background: var(--bg-surface);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-dim);
+}
+
+.searchPeriodSelector {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.searchPeriodButton {
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: 2rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.searchPeriodButton:hover {
+  border-color: #00ff9d;
+  color: #00ff9d;
+}
+
+.searchPeriodButton.active {
+  background: #00ff9d;
+  border-color: #00ff9d;
+  color: #000;
+}
+
+.searchInputGroup {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dateInput {
+  padding: 0.6rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: #00ff9d;
+}
+
+.searchButton {
+  padding: 0.6rem 1.5rem;
+  background: #00ff9d;
+  border: none;
+  border-radius: 0.5rem;
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.searchButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3);
+}
+
+.searchButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.clearButton {
+  padding: 0.6rem 1.5rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearButton:hover {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.searchError {
+  color: #ff6b6b;
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+
+.searchResults {
+  margin-top: 2rem;
+}
+
+.resultsTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--bg-raised);
+  border-radius: 0.5rem;
+}
+
+.note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  font-style: italic;
+}

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../api/voltaje';
 import { usePolling } from '../../hooks/useAsync';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
@@ -13,31 +13,34 @@ export default function VoltajeGraficas() {
   const [periodo, setPeriodo] = useState('dia');
   const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estado para búsqueda histórica
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchDate, setSearchDate] = useState('');
+  const [searchPeriodo, setSearchPeriodo] = useState('dia');
+  const [searchDatos, setSearchDatos] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
-  const fetchHistorico = useCallback(() => voltajeAPI.getHistorico(1000), []);
+  const fetchHistorico = useCallback(() => voltajeAPI.getHistorico(5000), []);
   const { data } = usePolling(fetchHistorico, 60000);
 
   useEffect(() => {
     if (data) {
-      procesarDatos(data, periodo);
+      procesarDatos(data, periodo, setDatos);
+      setLoading(false);
     }
   }, [data, periodo]);
 
-  const procesarDatos = (datosCrudos, periodoSeleccionado) => {
+  // Función para procesar datos (reutilizable)
+  const procesarDatos = (datosCrudos, periodoSeleccionado, setStateCallback) => {
     if (!datosCrudos || datosCrudos.length === 0) {
-      setLoading(false);
+      setStateCallback([]);
       return;
     }
 
     if (periodoSeleccionado === 'dia') {
-      const hoy = new Date();
-      const fechaHoy = formatDate(hoy.toISOString());
-      
-      const datosHoy = datosCrudos.filter(item => {
-        const itemFecha = formatDate(item.FECHA);
-        return itemFecha === fechaHoy;
-      });
-
+      const datosFiltrados = datosCrudos;
       const horas = Array.from({ length: 24 }, (_, i) => ({
         hora: `${i}:00`,
         '1': 0,
@@ -46,7 +49,7 @@ export default function VoltajeGraficas() {
         count: 0
       }));
 
-      datosHoy.forEach(item => {
+      datosFiltrados.forEach(item => {
         const fechaStr = item.FECHA;
         let hora = 0;
         
@@ -68,7 +71,7 @@ export default function VoltajeGraficas() {
         '3': h.count > 0 ? parseFloat((h['3'] / h.count).toFixed(1)) : 0
       }));
 
-      setDatos(datosGrafica);
+      setStateCallback(datosGrafica);
     } 
     else if (periodoSeleccionado === 'semana') {
       const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -104,7 +107,7 @@ export default function VoltajeGraficas() {
           });
         }
       }
-      setDatos(datosSemana);
+      setStateCallback(datosSemana);
     }
     else if (periodoSeleccionado === 'mes') {
       const semanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
@@ -146,10 +149,90 @@ export default function VoltajeGraficas() {
           });
         }
       }
-      setDatos(datosMes);
+      setStateCallback(datosMes);
     }
-    setLoading(false);
   };
+
+  // Función para buscar registros históricos
+  const handleSearch = async () => {
+    if (!searchDate) {
+      setSearchError('Selecciona una fecha');
+      return;
+    }
+
+    setSearchLoading(true);
+    setSearchError('');
+    setSearchMode(true);
+
+    try {
+      // Obtener todos los datos
+      const allData = await voltajeAPI.getHistorico(10000);
+      
+      if (!allData || allData.length === 0) {
+        setSearchError('No hay datos disponibles');
+        setSearchMode(false);
+        return;
+      }
+
+      // Filtrar según el período seleccionado
+      let filteredData = [];
+      const searchDateObj = new Date(searchDate);
+      
+      if (searchPeriodo === 'dia') {
+        // Filtrar por día específico
+        const fechaBuscar = formatDate(searchDateObj.toISOString());
+        filteredData = allData.filter(item => {
+          const itemFecha = formatDate(item.FECHA);
+          return itemFecha === fechaBuscar;
+        });
+      } 
+      else if (searchPeriodo === 'semana') {
+        // Filtrar por semana específica (7 días desde la fecha seleccionada)
+        const fechaInicio = new Date(searchDateObj);
+        fechaInicio.setDate(fechaInicio.getDate() - fechaInicio.getDay()); // Domingo de esa semana
+        const fechaFin = new Date(fechaInicio);
+        fechaFin.setDate(fechaFin.getDate() + 6);
+        
+        filteredData = allData.filter(item => {
+          const itemFecha = new Date(item.FECHA);
+          return itemFecha >= fechaInicio && itemFecha <= fechaFin;
+        });
+      }
+      else if (searchPeriodo === 'mes') {
+        // Filtrar por mes específico
+        const mes = searchDateObj.getMonth();
+        const año = searchDateObj.getFullYear();
+        
+        filteredData = allData.filter(item => {
+          const itemFecha = new Date(item.FECHA);
+          return itemFecha.getMonth() === mes && itemFecha.getFullYear() === año;
+        });
+      }
+
+      if (filteredData.length === 0) {
+        setSearchError(`No se encontraron registros para ${searchPeriodo === 'dia' ? 'el día' : searchPeriodo === 'semana' ? 'la semana' : 'el mes'} seleccionado`);
+        setSearchMode(false);
+      } else {
+        procesarDatos(filteredData, searchPeriodo, setSearchDatos);
+      }
+    } catch (err) {
+      console.error('Error en búsqueda:', err);
+      setSearchError('Error al buscar datos');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Limpiar búsqueda
+  const clearSearch = () => {
+    setSearchMode(false);
+    setSearchDate('');
+    setSearchDatos([]);
+    setSearchError('');
+  };
+
+  const xAxisKey = periodo === 'dia' ? 'hora' : periodo === 'semana' ? 'dia' : 'semana';
+  const searchXAxisKey = searchPeriodo === 'dia' ? 'hora' : searchPeriodo === 'semana' ? 'dia' : 'semana';
 
   if (loading) {
     return (
@@ -160,46 +243,45 @@ export default function VoltajeGraficas() {
     );
   }
 
-  // Determinar el eje X según el período
-  const xAxisKey = periodo === 'dia' ? 'hora' : periodo === 'semana' ? 'dia' : 'semana';
-
   return (
     <div className={styles.graficas}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Gráficas de Voltaje</h1>
-          <p className={styles.subtitle}>Visualización de datos por fase</p>
+          <p className={styles.subtitle}>
+            Visualización de datos | 
+            <span className={styles.note}> 📅 Los botones muestran el período actual</span>
+          </p>
         </div>
         <Link to="/modulos/voltaje" className={styles.backButtonOutline}>
           ← Volver
         </Link>
       </div>
 
-      {/* Selector de período */}
+      {/* Selector de período actual */}
       <div className={styles.periodSelector}>
         <button 
           className={`${styles.periodButton} ${periodo === 'dia' ? styles.active : ''}`}
           onClick={() => setPeriodo('dia')}
         >
-          📅 Día
+          📅 Día Actual
         </button>
         <button 
           className={`${styles.periodButton} ${periodo === 'semana' ? styles.active : ''}`}
           onClick={() => setPeriodo('semana')}
         >
-          📊 Semana
+          📊 Semana Actual
         </button>
         <button 
           className={`${styles.periodButton} ${periodo === 'mes' ? styles.active : ''}`}
           onClick={() => setPeriodo('mes')}
         >
-          📈 Mes
+          📈 Mes Actual
         </button>
       </div>
 
-      {/* Tres gráficas en paralelo */}
+      {/* Tres gráficas principales */}
       <div className={styles.chartsContainer}>
-        {/* Fase 1 */}
         <div className={styles.chartCard}>
           <h2 className={styles.chartTitle}>Fase 1</h2>
           <ResponsiveContainer width="100%" height={350}>
@@ -207,28 +289,11 @@ export default function VoltajeGraficas() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
               <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'var(--bg-surface)', 
-                  borderColor: 'var(--border-dim)',
-                  color: 'var(--text-primary)'
-                }} 
-                formatter={(value) => [`${value} V`, 'Voltaje']}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="1" 
-                stroke="#00ff9d" 
-                strokeWidth={3} 
-                dot={{ r: 3, fill: "#00ff9d" }}
-                activeDot={{ r: 6 }}
-                name="Fase 1"
-              />
+              <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+              <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={3} dot={{ r: 3, fill: "#00ff9d" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Fase 2 */}
         <div className={styles.chartCard}>
           <h2 className={styles.chartTitle}>Fase 2</h2>
           <ResponsiveContainer width="100%" height={350}>
@@ -236,28 +301,11 @@ export default function VoltajeGraficas() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
               <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'var(--bg-surface)', 
-                  borderColor: 'var(--border-dim)',
-                  color: 'var(--text-primary)'
-                }} 
-                formatter={(value) => [`${value} V`, 'Voltaje']}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="2" 
-                stroke="#ffaa00" 
-                strokeWidth={3} 
-                dot={{ r: 3, fill: "#ffaa00" }}
-                activeDot={{ r: 6 }}
-                name="Fase 2"
-              />
+              <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+              <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={3} dot={{ r: 3, fill: "#ffaa00" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Fase 3 */}
         <div className={styles.chartCard}>
           <h2 className={styles.chartTitle}>Fase 3</h2>
           <ResponsiveContainer width="100%" height={350}>
@@ -265,27 +313,108 @@ export default function VoltajeGraficas() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
               <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'var(--bg-surface)', 
-                  borderColor: 'var(--border-dim)',
-                  color: 'var(--text-primary)'
-                }} 
-                formatter={(value) => [`${value} V`, 'Voltaje']}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="3" 
-                stroke="#ff6b6b" 
-                strokeWidth={3} 
-                dot={{ r: 3, fill: "#ff6b6b" }}
-                activeDot={{ r: 6 }}
-                name="Fase 3"
-              />
+              <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+              <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={3} dot={{ r: 3, fill: "#ff6b6b" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Buscador histórico */}
+      <div className={styles.searchSection}>
+        <h3 className={styles.searchTitle}>📆 Buscar registros históricos</h3>
+        <div className={styles.searchContainer}>
+          <div className={styles.searchPeriodSelector}>
+            <button 
+              className={`${styles.searchPeriodButton} ${searchPeriodo === 'dia' ? styles.active : ''}`}
+              onClick={() => setSearchPeriodo('dia')}
+            >
+              Día
+            </button>
+            <button 
+              className={`${styles.searchPeriodButton} ${searchPeriodo === 'semana' ? styles.active : ''}`}
+              onClick={() => setSearchPeriodo('semana')}
+            >
+              Semana
+            </button>
+            <button 
+              className={`${styles.searchPeriodButton} ${searchPeriodo === 'mes' ? styles.active : ''}`}
+              onClick={() => setSearchPeriodo('mes')}
+            >
+              Mes
+            </button>
+          </div>
+          <div className={styles.searchInputGroup}>
+            <input
+              type="date"
+              value={searchDate}
+              onChange={(e) => setSearchDate(e.target.value)}
+              className={styles.dateInput}
+              max={new Date().toISOString().split('T')[0]}
+            />
+            <button 
+              onClick={handleSearch} 
+              className={styles.searchButton}
+              disabled={searchLoading}
+            >
+              {searchLoading ? 'Buscando...' : '🔍 Buscar'}
+            </button>
+            {searchMode && (
+              <button onClick={clearSearch} className={styles.clearButton}>
+                ✕ Limpiar
+              </button>
+            )}
+          </div>
+          {searchError && <p className={styles.searchError}>{searchError}</p>}
+        </div>
+      </div>
+
+      {/* Resultados de búsqueda histórica */}
+      {searchMode && searchDatos.length > 0 && !searchLoading && (
+        <div className={styles.searchResults}>
+          <h3 className={styles.resultsTitle}>
+            📊 Resultados para {searchPeriodo === 'dia' ? 'el día' : searchPeriodo === 'semana' ? 'la semana' : 'el mes'} seleccionado
+          </h3>
+          <div className={styles.chartsContainer}>
+            <div className={styles.chartCard}>
+              <h2 className={styles.chartTitle}>Fase 1 (Histórico)</h2>
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
+                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
+                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+                  <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+                  <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={3} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className={styles.chartCard}>
+              <h2 className={styles.chartTitle}>Fase 2 (Histórico)</h2>
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
+                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
+                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+                  <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+                  <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={3} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className={styles.chartCard}>
+              <h2 className={styles.chartTitle}>Fase 3 (Histórico)</h2>
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
+                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
+                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+                  <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+                  <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={3} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
