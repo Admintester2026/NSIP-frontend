@@ -55,7 +55,7 @@ export default function VoltajeDashboard() {
     if (ultimo) setSqlData(ultimo);
   }, [ultimo]);
 
-  const fases = ['V1', 'V2', 'V3'];
+  const fases = ['1', '2', '3'];
   const valores = {
     vR: arduinoData?.vR ?? sqlData?.V_R ?? 0,
     vS: arduinoData?.vS ?? sqlData?.V_S ?? 0,
@@ -159,19 +159,19 @@ export default function VoltajeDashboard() {
             <h3 className={styles.infoTitle}>Estado del sistema</h3>
             <div className={styles.statusList}>
               <div className={styles.statusItem}>
-                <span className={styles.statusLabel}>Sensor R:</span>
+                <span className={styles.statusLabel}>Sensor 1:</span>
                 <span className={styles.statusValue} style={{ color: valores.vR > 0 ? 'var(--green)' : 'var(--text-muted)' }}>
                   {valores.vR > 0 ? '✅ Activo' : '⚪ Sin lectura'}
                 </span>
               </div>
               <div className={styles.statusItem}>
-                <span className={styles.statusLabel}>Sensor S:</span>
+                <span className={styles.statusLabel}>Sensor 2:</span>
                 <span className={styles.statusValue} style={{ color: valores.vS > 0 ? 'var(--green)' : 'var(--text-muted)' }}>
                   {valores.vS > 0 ? '✅ Activo' : '⚪ Sin lectura'}
                 </span>
               </div>
               <div className={styles.statusItem}>
-                <span className={styles.statusLabel}>Sensor T:</span>
+                <span className={styles.statusLabel}>Sensor 3:</span>
                 <span className={styles.statusValue} style={{ color: valores.vT > 0 ? 'var(--green)' : 'var(--text-muted)' }}>
                   {valores.vT > 0 ? '✅ Activo' : '⚪ Sin lectura'}
                 </span>
