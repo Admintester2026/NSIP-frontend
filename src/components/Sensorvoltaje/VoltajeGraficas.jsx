@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { voltajeAPI } from '../../../api/voltaje';
-import { usePolling } from '../../../hooks/useAsync';
+import { voltajeAPI } from '../../api/voltaje';
+import { usePolling } from '../../hooks/useAsync';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, AreaChart, Area
