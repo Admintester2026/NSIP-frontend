@@ -1,5 +1,6 @@
 .graficas {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
   animation: fade-in 0.5s ease both;
@@ -12,6 +13,12 @@
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.titleSection {
+  flex: 1;
 }
 
 .title {
@@ -21,65 +28,158 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  margin-bottom: 0.5rem;
 }
 
-.periodSelector {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  justify-content: center;
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
-.periodButton {
-  padding: 0.75rem 2rem;
-  background: var(--bg-raised);
+/* Botón Volver con borde verde neon al hover */
+.backButtonOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: transparent;
   border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
+  border-radius: 0.5rem;
   color: var(--text-secondary);
-  font-size: 1rem;
-  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
 }
 
+.backButtonOutline:hover {
+  border-color: #00ff9d;
+  color: #00ff9d;
+  box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
+}
+
+/* Selector de período */
+.periodSelector {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.periodButton {
+  padding: 0.6rem 1.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 2rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
 .periodButton:hover {
-  border-color: var(--green-dim);
-  color: var(--green);
+  border-color: #00ff9d;
+  color: #00ff9d;
+  transform: translateY(-1px);
 }
 
 .periodButton.active {
-  background: var(--green);
-  border-color: var(--green);
-  color: var(--bg-primary);
+  background: #00ff9d;
+  border-color: #00ff9d;
+  color: #000;
 }
 
+/* Contenedor de tres gráficas en paralelo */
+.chartsContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* Tarjeta de cada gráfica */
 .chartCard {
   background: var(--bg-surface);
+  border-radius: 1rem;
+  padding: 1.25rem;
   border: 1px solid var(--border-dim);
-  border-radius: var(--r-lg);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.chartCard:hover {
+  border-color: var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chartTitle {
-  color: var(--text-primary);
-  margin-bottom: 1rem;
   font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: var(--text-primary);
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-dim);
+  display: inline-block;
+  align-self: center;
 }
 
+/* Contenedor de cada gráfica para que ocupe el espacio */
+.chartCard > div {
+  flex: 1;
+  min-height: 300px;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+  .chartsContainer {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .graficas {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .chartsContainer {
+    grid-template-columns: 1fr;
+  }
+  
+  .periodSelector {
+    gap: 0.5rem;
+  }
+  
+  .periodButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Loading */
 .loadingContainer {
-  min-height: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 400px;
   gap: 1rem;
 }
 
 .loadingSpinner {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border: 3px solid var(--border-dim);
-  border-top-color: var(--green);
+  border-top-color: #00ff9d;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
