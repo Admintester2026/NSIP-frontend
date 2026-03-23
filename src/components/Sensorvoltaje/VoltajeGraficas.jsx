@@ -39,9 +39,9 @@ export default function VoltajeGraficas() {
       // Crear array con 24 horas
       const horas = Array.from({ length: 24 }, (_, i) => ({
         hora: i,
-        R: 0,
-        S: 0,
-        T: 0,
+        1: 0,
+        2: 0,
+        3: 0,
         count: 0
       }));
 
@@ -143,9 +143,9 @@ export default function VoltajeGraficas() {
         } else {
           datosMes.push({
             semana: semanas[semana],
-            R: 0,
-            S: 0,
-            T: 0
+            1: 0,
+            2: 0,
+            3: 0
           });
         }
       }
