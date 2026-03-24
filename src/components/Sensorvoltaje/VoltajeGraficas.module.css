@@ -2,7 +2,7 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem;
   animation: fade-in 0.5s ease both;
 }
 
@@ -10,8 +10,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-dim);
   flex-wrap: wrap;
   gap: 1rem;
@@ -22,22 +22,22 @@
 }
 
 .title {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--green), #fff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .subtitle {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .note {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   margin-left: 0.5rem;
   font-style: italic;
@@ -48,13 +48,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
+  padding: 0.4rem 1rem;
   background: transparent;
   border: 1px solid var(--border-dim);
   border-radius: 0.5rem;
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
 }
 
@@ -67,19 +67,19 @@
 /* Selector de período principal */
 .periodSelector {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: center;
-  margin: 2rem 0;
+  margin: 1rem 0;
   flex-wrap: wrap;
 }
 
 .periodButton {
-  padding: 0.6rem 1.5rem;
+  padding: 0.4rem 1.2rem;
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
   border-radius: 2rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.2s ease;
   color: var(--text-secondary);
@@ -101,16 +101,16 @@
 .chartsContainer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-top: 1rem;
+  gap: 1rem;
+  margin-top: 0.5rem;
   width: 100%;
 }
 
-/* Tarjeta de cada gráfica */
+/* Tarjeta de cada gráfica - MÁS COMPACTA */
 .chartCard {
   background: var(--bg-surface);
-  border-radius: 1rem;
-  padding: 1.25rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
   border: 1px solid var(--border-dim);
   transition: all 0.2s ease;
   display: flex;
@@ -119,69 +119,85 @@
 
 .chartCard:hover {
   border-color: var(--border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Header de gráfica con badge */
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-dim);
 }
 
 .chartTitle {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  margin-bottom: 1rem;
-  text-align: center;
+  margin: 0;
   color: var(--text-primary);
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border-dim);
-  display: inline-block;
-  align-self: center;
 }
 
-/* Contenedor de cada gráfica para que ocupe el espacio */
+.chartBadge {
+  font-size: 0.6rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--bg-raised);
+  border-radius: 1rem;
+  color: var(--green);
+  border: 1px solid var(--green-dim);
+  font-weight: normal;
+}
+
+/* Contenedor de la gráfica - ALTURA REDUCIDA */
 .chartCard > div {
   flex: 1;
-  min-height: 300px;
+  min-height: 200px;
+  height: 200px;
 }
 
 /* Tooltip personalizado - Estilo oscuro con texto claro */
 .customTooltip {
   background-color: rgba(20, 20, 30, 0.95);
-  border-radius: 8px;
-  padding: 8px 12px;
+  border-radius: 6px;
+  padding: 6px 10px;
   border: 1px solid;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .tooltipLabel {
   color: #ffffff;
   font-weight: bold;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-size: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 4px;
+  padding-bottom: 2px;
 }
 
 .tooltipValue {
-  margin: 4px 0;
-  font-size: 0.9rem;
+  margin: 2px 0;
+  font-size: 0.8rem;
 }
 
 /* Sección de búsqueda */
 .searchSection {
-  margin-top: 3rem;
-  padding-top: 2rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
   border-top: 2px solid var(--border-dim);
 }
 
 .searchTitle {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: var(--text-primary);
   text-align: center;
 }
 
 .searchContainer {
   background: var(--bg-surface);
-  border-radius: 1rem;
-  padding: 1.5rem;
+  border-radius: 0.75rem;
+  padding: 1rem;
   border: 1px solid var(--border-dim);
 }
 
@@ -189,16 +205,16 @@
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .searchPeriodButton {
-  padding: 0.5rem 1.25rem;
+  padding: 0.4rem 1rem;
   background: transparent;
   border: 1px solid var(--border-dim);
   border-radius: 2rem;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
   color: var(--text-secondary);
 }
@@ -217,28 +233,28 @@
 .searchInfo {
   color: var(--green);
   text-align: center;
-  margin-top: 1rem;
-  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
   background: rgba(0, 255, 157, 0.1);
-  padding: 0.5rem;
+  padding: 0.4rem;
   border-radius: 0.5rem;
 }
 
 .searchInputGroup {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
 }
 
 .dateInput {
-  padding: 0.6rem 1rem;
+  padding: 0.4rem 0.8rem;
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
   border-radius: 0.5rem;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .dateInput:focus {
@@ -247,19 +263,20 @@
 }
 
 .searchButton {
-  padding: 0.6rem 1.5rem;
+  padding: 0.4rem 1.2rem;
   background: #00ff9d;
   border: none;
   border-radius: 0.5rem;
   color: #000;
   font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .searchButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 
 .searchButton:disabled {
@@ -269,11 +286,12 @@
 }
 
 .clearButton {
-  padding: 0.6rem 1.5rem;
+  padding: 0.4rem 1.2rem;
   background: transparent;
   border: 1px solid var(--border-dim);
   border-radius: 0.5rem;
   color: var(--text-secondary);
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -286,21 +304,21 @@
 .searchError {
   color: #ff6b6b;
   text-align: center;
-  margin-top: 1rem;
-  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
 }
 
 .searchResults {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .resultsTitle {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: var(--text-primary);
   text-align: center;
-  padding: 0.5rem;
+  padding: 0.4rem;
   background: var(--bg-raised);
   border-radius: 0.5rem;
 }
@@ -311,14 +329,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  gap: 1rem;
+  min-height: 300px;
+  gap: 0.75rem;
 }
 
 .loadingSpinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border-dim);
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--border-dim);
   border-top-color: #00ff9d;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -328,11 +346,16 @@
 @media (max-width: 1000px) {
   .chartsContainer {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
   }
   
   .graficas {
     padding: 1rem;
+  }
+  
+  .chartCard > div {
+    min-height: 180px;
+    height: 180px;
   }
 }
 
@@ -342,12 +365,12 @@
   }
   
   .periodSelector {
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
   
   .periodButton {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
   }
   
   .header {
@@ -368,6 +391,11 @@
     width: 100%;
     text-align: center;
   }
+  
+  .chartCard > div {
+    min-height: 200px;
+    height: 200px;
+  }
 }
 
 /* Animaciones */
@@ -384,23 +412,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.chartHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.chartBadge {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.6rem;
-  background: var(--bg-raised);
-  border-radius: 1rem;
-  color: var(--green);
-  border: 1px solid var(--green-dim);
-  font-weight: normal;
 }
