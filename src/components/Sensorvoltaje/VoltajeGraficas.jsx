@@ -32,16 +32,35 @@ export default function VoltajeGraficas() {
     }
   }, [data, periodo]);
 
+  // Función auxiliar para convertir fecha a formato YYYY-MM-DD (parte de fecha)
+  const toDateOnly = (fecha) => {
+    if (!fecha) return '';
+    // Si es string en formato SQL "2026-03-05 10:30:00"
+    if (typeof fecha === 'string') {
+      // Extraer solo la parte de fecha YYYY-MM-DD
+      const match = fecha.match(/(\d{4}-\d{2}-\d{2})/);
+      if (match) return match[1];
+    }
+    // Si es objeto Date
+    if (fecha instanceof Date) {
+      const año = fecha.getFullYear();
+      const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+      const dia = String(fecha.getDate()).padStart(2, '0');
+      return `${año}-${mes}-${dia}`;
+    }
+    return '';
+  };
+
   // Función para filtrar datos por período actual
   const filtrarPorPeriodoActual = (datosCrudos, periodoSeleccionado) => {
     if (!datosCrudos || datosCrudos.length === 0) return [];
     
     const hoy = new Date();
+    const hoyStr = toDateOnly(hoy);
     
     if (periodoSeleccionado === 'dia') {
-      const hoyStr = formatDate(hoy.toISOString());
       return datosCrudos.filter(item => {
-        const itemFecha = formatDate(item.FECHA);
+        const itemFecha = toDateOnly(item.FECHA);
         return itemFecha === hoyStr;
       });
     } 
@@ -51,11 +70,11 @@ export default function VoltajeGraficas() {
       const finSemana = new Date(inicioSemana);
       finSemana.setDate(inicioSemana.getDate() + 6);
       
-      const inicioStr = formatDate(inicioSemana.toISOString());
-      const finStr = formatDate(finSemana.toISOString());
+      const inicioStr = toDateOnly(inicioSemana);
+      const finStr = toDateOnly(finSemana);
       
       return datosCrudos.filter(item => {
-        const itemFecha = formatDate(item.FECHA);
+        const itemFecha = toDateOnly(item.FECHA);
         return itemFecha >= inicioStr && itemFecha <= finStr;
       });
     }
@@ -79,7 +98,6 @@ export default function VoltajeGraficas() {
       return;
     }
 
-    // Filtrar datos según el período actual
     const datosFiltrados = filtrarPorPeriodoActual(datosCrudos, periodoSeleccionado);
 
     if (datosFiltrados.length === 0) {
@@ -87,118 +105,7 @@ export default function VoltajeGraficas() {
       return;
     }
 
-    // Procesar según el período seleccionado
-    if (periodoSeleccionado === 'dia') {
-      const horas = Array.from({ length: 24 }, (_, i) => ({
-        hora: `${i}:00`,
-        '1': 0,
-        '2': 0,
-        '3': 0,
-        count: 0
-      }));
-
-      datosFiltrados.forEach(item => {
-        const fechaStr = item.FECHA;
-        let hora = 0;
-        
-        const timeMatch = fechaStr.match(/(\d{2}):(\d{2}):(\d{2})/);
-        if (timeMatch) {
-          hora = parseInt(timeMatch[1], 10);
-        }
-        
-        horas[hora]['1'] += item.V_R || 0;
-        horas[hora]['2'] += item.V_S || 0;
-        horas[hora]['3'] += item.V_T || 0;
-        horas[hora].count += 1;
-      });
-
-      const datosGrafica = horas.map(h => ({
-        hora: h.hora,
-        '1': h.count > 0 ? parseFloat((h['1'] / h.count).toFixed(1)) : 0,
-        '2': h.count > 0 ? parseFloat((h['2'] / h.count).toFixed(1)) : 0,
-        '3': h.count > 0 ? parseFloat((h['3'] / h.count).toFixed(1)) : 0
-      }));
-
-      setStateCallback(datosGrafica);
-    } 
-    else if (periodoSeleccionado === 'semana') {
-      const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-      const datosSemana = [];
-
-      for (let i = 6; i >= 0; i--) {
-        const fecha = new Date();
-        fecha.setDate(fecha.getDate() - i);
-        const fechaStr = formatDate(fecha.toISOString());
-        
-        const datosDia = datosFiltrados.filter(item => {
-          const itemFecha = formatDate(item.FECHA);
-          return itemFecha === fechaStr;
-        });
-
-        if (datosDia.length > 0) {
-          const sum1 = datosDia.reduce((acc, curr) => acc + (curr.V_R || 0), 0);
-          const sum2 = datosDia.reduce((acc, curr) => acc + (curr.V_S || 0), 0);
-          const sum3 = datosDia.reduce((acc, curr) => acc + (curr.V_T || 0), 0);
-          
-          datosSemana.push({
-            dia: diasSemana[fecha.getDay()],
-            '1': parseFloat((sum1 / datosDia.length).toFixed(1)),
-            '2': parseFloat((sum2 / datosDia.length).toFixed(1)),
-            '3': parseFloat((sum3 / datosDia.length).toFixed(1))
-          });
-        } else {
-          datosSemana.push({
-            dia: diasSemana[fecha.getDay()],
-            '1': 0,
-            '2': 0,
-            '3': 0
-          });
-        }
-      }
-      setStateCallback(datosSemana);
-    }
-    else if (periodoSeleccionado === 'mes') {
-      const semanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
-      const datosMes = [];
-
-      const hoy = new Date();
-      const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-      
-      for (let semana = 0; semana < 5; semana++) {
-        const inicioSemana = new Date(primerDiaMes);
-        inicioSemana.setDate(inicioSemana.getDate() + (semana * 7));
-        const finSemana = new Date(inicioSemana);
-        finSemana.setDate(finSemana.getDate() + 6);
-
-        const datosSemana = datosFiltrados.filter(item => {
-          const itemFechaStr = formatDate(item.FECHA);
-          const inicioStr = formatDate(inicioSemana.toISOString());
-          const finStr = formatDate(finSemana.toISOString());
-          return itemFechaStr >= inicioStr && itemFechaStr <= finStr;
-        });
-
-        if (datosSemana.length > 0) {
-          const sum1 = datosSemana.reduce((acc, curr) => acc + (curr.V_R || 0), 0);
-          const sum2 = datosSemana.reduce((acc, curr) => acc + (curr.V_S || 0), 0);
-          const sum3 = datosSemana.reduce((acc, curr) => acc + (curr.V_T || 0), 0);
-          
-          datosMes.push({
-            semana: semanas[semana],
-            '1': parseFloat((sum1 / datosSemana.length).toFixed(1)),
-            '2': parseFloat((sum2 / datosSemana.length).toFixed(1)),
-            '3': parseFloat((sum3 / datosSemana.length).toFixed(1))
-          });
-        } else {
-          datosMes.push({
-            semana: semanas[semana],
-            '1': 0,
-            '2': 0,
-            '3': 0
-          });
-        }
-      }
-      setStateCallback(datosMes);
-    }
+    procesarDatosPorPeriodo(datosFiltrados, periodoSeleccionado, setStateCallback);
   };
 
   // Función para procesar datos históricos (SIN filtrar por período actual)
@@ -208,10 +115,12 @@ export default function VoltajeGraficas() {
       return;
     }
 
-    // NO FILTRAR - usar los datos tal cual vienen de la búsqueda
-    const datosFiltrados = datosCrudos;
+    procesarDatosPorPeriodo(datosCrudos, periodoSeleccionado, setStateCallback);
+  };
 
-    if (datosFiltrados.length === 0) {
+  // Función común para procesar datos según el período
+  const procesarDatosPorPeriodo = (datos, periodoSeleccionado, setStateCallback) => {
+    if (!datos || datos.length === 0) {
       setStateCallback([]);
       return;
     }
@@ -225,7 +134,7 @@ export default function VoltajeGraficas() {
         count: 0
       }));
 
-      datosFiltrados.forEach(item => {
+      datos.forEach(item => {
         const fechaStr = item.FECHA;
         let hora = 0;
         
@@ -253,24 +162,23 @@ export default function VoltajeGraficas() {
       const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
       const datosSemana = [];
 
-      // Obtener los 7 días de la semana seleccionada
-      // Primero, encontrar el domingo de esa semana
-      const fechaBase = new Date(datosFiltrados[0]?.FECHA);
-      if (isNaN(fechaBase)) {
+      // Obtener el domingo de la semana basado en la primera fecha de los datos
+      const primeraFecha = new Date(datos[0]?.FECHA);
+      if (isNaN(primeraFecha)) {
         setStateCallback([]);
         return;
       }
       
-      const domingo = new Date(fechaBase);
-      domingo.setDate(fechaBase.getDate() - fechaBase.getDay());
+      const domingo = new Date(primeraFecha);
+      domingo.setDate(primeraFecha.getDate() - primeraFecha.getDay());
       
       for (let i = 0; i < 7; i++) {
         const fecha = new Date(domingo);
         fecha.setDate(domingo.getDate() + i);
-        const fechaStr = formatDate(fecha.toISOString());
+        const fechaStr = toDateOnly(fecha);
         
-        const datosDia = datosFiltrados.filter(item => {
-          const itemFecha = formatDate(item.FECHA);
+        const datosDia = datos.filter(item => {
+          const itemFecha = toDateOnly(item.FECHA);
           return itemFecha === fechaStr;
         });
 
@@ -300,12 +208,13 @@ export default function VoltajeGraficas() {
       const semanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
       const datosMes = [];
 
-      const primerDiaMes = new Date(datosFiltrados[0]?.FECHA);
-      if (isNaN(primerDiaMes)) {
+      const primeraFecha = new Date(datos[0]?.FECHA);
+      if (isNaN(primeraFecha)) {
         setStateCallback([]);
         return;
       }
-      primerDiaMes.setDate(1);
+      
+      const primerDiaMes = new Date(primeraFecha.getFullYear(), primeraFecha.getMonth(), 1);
       
       for (let semana = 0; semana < 5; semana++) {
         const inicioSemana = new Date(primerDiaMes);
@@ -313,10 +222,10 @@ export default function VoltajeGraficas() {
         const finSemana = new Date(inicioSemana);
         finSemana.setDate(inicioSemana.getDate() + 6);
 
-        const datosSemana = datosFiltrados.filter(item => {
-          const itemFechaStr = formatDate(item.FECHA);
-          const inicioStr = formatDate(inicioSemana.toISOString());
-          const finStr = formatDate(finSemana.toISOString());
+        const datosSemana = datos.filter(item => {
+          const itemFechaStr = toDateOnly(item.FECHA);
+          const inicioStr = toDateOnly(inicioSemana);
+          const finStr = toDateOnly(finSemana);
           return itemFechaStr >= inicioStr && itemFechaStr <= finStr;
         });
 
@@ -359,7 +268,7 @@ export default function VoltajeGraficas() {
       const allData = await voltajeAPI.getHistorico(10000);
       
       if (!allData || allData.length === 0) {
-        setSearchError('No hay datos disponibles');
+        setSearchError('No hay datos disponibles en la base de datos');
         setSearchMode(false);
         return;
       }
@@ -367,19 +276,30 @@ export default function VoltajeGraficas() {
       let filteredData = [];
       const searchDateObj = new Date(searchDate);
       
+      // Ajustar para evitar problemas de zona horaria
+      // Crear fecha UTC para evitar desplazamientos
+      const año = searchDateObj.getFullYear();
+      const mes = searchDateObj.getMonth();
+      const dia = searchDateObj.getDate();
+      
       if (searchPeriodo === 'dia') {
-        const fechaBuscar = formatDate(searchDateObj.toISOString());
+        // Buscar registros de ese día específico (00:00:00 a 23:59:59)
+        const fechaBuscar = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        
         filteredData = allData.filter(item => {
-          const itemFecha = formatDate(item.FECHA);
+          const itemFecha = toDateOnly(item.FECHA);
           return itemFecha === fechaBuscar;
         });
       } 
       else if (searchPeriodo === 'semana') {
-        // Obtener el domingo de la semana de la fecha seleccionada
-        const fechaInicio = new Date(searchDateObj);
-        fechaInicio.setDate(searchDateObj.getDate() - searchDateObj.getDay());
+        // Calcular domingo de la semana seleccionada
+        const fechaInicio = new Date(año, mes, dia);
+        fechaInicio.setDate(dia - fechaInicio.getDay());
+        fechaInicio.setHours(0, 0, 0, 0);
+        
         const fechaFin = new Date(fechaInicio);
         fechaFin.setDate(fechaInicio.getDate() + 6);
+        fechaFin.setHours(23, 59, 59, 999);
         
         filteredData = allData.filter(item => {
           const itemFecha = new Date(item.FECHA);
@@ -387,25 +307,28 @@ export default function VoltajeGraficas() {
         });
       }
       else if (searchPeriodo === 'mes') {
-        const mes = searchDateObj.getMonth();
-        const año = searchDateObj.getFullYear();
+        // Buscar registros del mes seleccionado
+        const mesSeleccionado = mes;
+        const añoSeleccionado = año;
         
         filteredData = allData.filter(item => {
           const itemFecha = new Date(item.FECHA);
-          return itemFecha.getMonth() === mes && itemFecha.getFullYear() === año;
+          return itemFecha.getMonth() === mesSeleccionado && 
+                 itemFecha.getFullYear() === añoSeleccionado;
         });
       }
 
       if (filteredData.length === 0) {
-        setSearchError(`No se encontraron registros para ${searchPeriodo === 'dia' ? 'el día' : searchPeriodo === 'semana' ? 'la semana' : 'el mes'} seleccionado`);
+        const fechaFormateada = `${dia}/${mes + 1}/${año}`;
+        setSearchError(`No se encontraron registros para ${searchPeriodo === 'dia' ? `el día ${fechaFormateada}` : searchPeriodo === 'semana' ? `la semana del ${fechaFormateada}` : `el mes ${mes + 1}/${año}`}`);
         setSearchMode(false);
       } else {
-        // USAR la función de procesamiento histórico (sin filtrar por período actual)
         procesarDatosHistoricos(filteredData, searchPeriodo, setSearchDatos);
+        setSearchError('');
       }
     } catch (err) {
       console.error('Error en búsqueda:', err);
-      setSearchError('Error al buscar datos');
+      setSearchError('Error al buscar datos. Intenta nuevamente.');
     } finally {
       setSearchLoading(false);
     }
