@@ -214,6 +214,16 @@
   color: #000;
 }
 
+.searchInfo {
+  color: var(--green);
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  background: rgba(0, 255, 157, 0.1);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
 .searchInputGroup {
   display: flex;
   gap: 1rem;
@@ -374,4 +384,23 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.chartBadge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--bg-raised);
+  border-radius: 1rem;
+  color: var(--green);
+  border: 1px solid var(--green-dim);
+  font-weight: normal;
 }

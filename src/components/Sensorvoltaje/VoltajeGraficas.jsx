@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../api/voltaje';
 import { usePolling } from '../../hooks/useAsync';
-import { formatDate, toSQLDate, formatDisplayDate } from '../../utils/dateUtils';
+import { formatDate, toSQLDateOnly, formatDisplayDate } from '../../utils/dateUtils';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
@@ -21,6 +21,7 @@ export default function VoltajeGraficas() {
   const [searchDatos, setSearchDatos] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [searchInfo, setSearchInfo] = useState('');
 
   const fetchHistorico = useCallback(() => voltajeAPI.getHistorico(5000), []);
   const { data } = usePolling(fetchHistorico, 60000);
@@ -88,6 +89,143 @@ export default function VoltajeGraficas() {
     return datosCrudos;
   };
 
+  // Función para procesar datos por día (agrupa por hora)
+  const procesarDia = (datos, setStateCallback) => {
+    const horas = Array.from({ length: 24 }, (_, i) => ({
+      hora: `${i}:00`,
+      '1': 0,
+      '2': 0,
+      '3': 0,
+      count: 0
+    }));
+
+    datos.forEach(item => {
+      const fechaStr = item.FECHA;
+      let hora = 0;
+      
+      const timeMatch = fechaStr.match(/(\d{2}):(\d{2}):(\d{2})/);
+      if (timeMatch) {
+        hora = parseInt(timeMatch[1], 10);
+      }
+      
+      horas[hora]['1'] += item.V_R || 0;
+      horas[hora]['2'] += item.V_S || 0;
+      horas[hora]['3'] += item.V_T || 0;
+      horas[hora].count += 1;
+    });
+
+    const datosGrafica = horas.map(h => ({
+      hora: h.hora,
+      '1': h.count > 0 ? parseFloat((h['1'] / h.count).toFixed(1)) : 0,
+      '2': h.count > 0 ? parseFloat((h['2'] / h.count).toFixed(1)) : 0,
+      '3': h.count > 0 ? parseFloat((h['3'] / h.count).toFixed(1)) : 0
+    }));
+
+    setStateCallback(datosGrafica);
+  };
+
+  // Función para procesar datos por semana (agrupa por día de la semana)
+  const procesarSemana = (datos, setStateCallback, esHistorico = false, fechaReferencia = null) => {
+    const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const datosSemana = [];
+
+    // Determinar el domingo de la semana a mostrar
+    let domingo;
+    if (esHistorico && fechaReferencia) {
+      domingo = new Date(fechaReferencia);
+      domingo.setDate(fechaReferencia.getDate() - fechaReferencia.getDay());
+    } else {
+      const hoy = new Date();
+      domingo = new Date(hoy);
+      domingo.setDate(hoy.getDate() - hoy.getDay());
+    }
+    
+    for (let i = 0; i < 7; i++) {
+      const fecha = new Date(domingo);
+      fecha.setDate(domingo.getDate() + i);
+      const fechaStr = toSQLDateOnly(fecha);
+      
+      const datosDia = datos.filter(item => {
+        const itemFecha = toSQLDateOnly(item.FECHA);
+        return itemFecha === fechaStr;
+      });
+
+      if (datosDia.length > 0) {
+        const sum1 = datosDia.reduce((acc, curr) => acc + (curr.V_R || 0), 0);
+        const sum2 = datosDia.reduce((acc, curr) => acc + (curr.V_S || 0), 0);
+        const sum3 = datosDia.reduce((acc, curr) => acc + (curr.V_T || 0), 0);
+        
+        datosSemana.push({
+          dia: diasSemana[fecha.getDay()],
+          '1': parseFloat((sum1 / datosDia.length).toFixed(1)),
+          '2': parseFloat((sum2 / datosDia.length).toFixed(1)),
+          '3': parseFloat((sum3 / datosDia.length).toFixed(1)),
+          registros: datosDia.length
+        });
+      } else {
+        datosSemana.push({
+          dia: diasSemana[fecha.getDay()],
+          '1': 0,
+          '2': 0,
+          '3': 0,
+          registros: 0
+        });
+      }
+    }
+    setStateCallback(datosSemana);
+  };
+
+  // Función para procesar datos por mes (agrupa por semana)
+  const procesarMes = (datos, setStateCallback, esHistorico = false, fechaReferencia = null) => {
+    const semanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
+    const datosMes = [];
+
+    let primerDiaMes;
+    if (esHistorico && fechaReferencia) {
+      primerDiaMes = new Date(fechaReferencia.getFullYear(), fechaReferencia.getMonth(), 1);
+    } else {
+      const hoy = new Date();
+      primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    }
+    
+    for (let semana = 0; semana < 5; semana++) {
+      const inicioSemana = new Date(primerDiaMes);
+      inicioSemana.setDate(primerDiaMes.getDate() + (semana * 7));
+      const finSemana = new Date(inicioSemana);
+      finSemana.setDate(inicioSemana.getDate() + 6);
+
+      const datosSemana = datos.filter(item => {
+        const itemFechaStr = toSQLDateOnly(item.FECHA);
+        const inicioStr = toSQLDateOnly(inicioSemana);
+        const finStr = toSQLDateOnly(finSemana);
+        return itemFechaStr >= inicioStr && itemFechaStr <= finStr;
+      });
+
+      if (datosSemana.length > 0) {
+        const sum1 = datosSemana.reduce((acc, curr) => acc + (curr.V_R || 0), 0);
+        const sum2 = datosSemana.reduce((acc, curr) => acc + (curr.V_S || 0), 0);
+        const sum3 = datosSemana.reduce((acc, curr) => acc + (curr.V_T || 0), 0);
+        
+        datosMes.push({
+          semana: semanas[semana],
+          '1': parseFloat((sum1 / datosSemana.length).toFixed(1)),
+          '2': parseFloat((sum2 / datosSemana.length).toFixed(1)),
+          '3': parseFloat((sum3 / datosSemana.length).toFixed(1)),
+          registros: datosSemana.length
+        });
+      } else {
+        datosMes.push({
+          semana: semanas[semana],
+          '1': 0,
+          '2': 0,
+          '3': 0,
+          registros: 0
+        });
+      }
+    }
+    setStateCallback(datosMes);
+  };
+
   // Función para procesar datos de las gráficas principales
   const procesarDatosActuales = (datosCrudos, periodoSeleccionado, setStateCallback) => {
     if (!datosCrudos || datosCrudos.length === 0) {
@@ -102,149 +240,32 @@ export default function VoltajeGraficas() {
       return;
     }
 
-    procesarDatosPorPeriodo(datosFiltrados, periodoSeleccionado, setStateCallback);
+    if (periodoSeleccionado === 'dia') {
+      procesarDia(datosFiltrados, setStateCallback);
+    } 
+    else if (periodoSeleccionado === 'semana') {
+      procesarSemana(datosFiltrados, setStateCallback, false);
+    }
+    else if (periodoSeleccionado === 'mes') {
+      procesarMes(datosFiltrados, setStateCallback, false);
+    }
   };
 
   // Función para procesar datos históricos
-  const procesarDatosHistoricos = (datosCrudos, periodoSeleccionado, setStateCallback) => {
+  const procesarDatosHistoricos = (datosCrudos, periodoSeleccionado, setStateCallback, fechaReferencia) => {
     if (!datosCrudos || datosCrudos.length === 0) {
-      setStateCallback([]);
-      return;
-    }
-    procesarDatosPorPeriodo(datosCrudos, periodoSeleccionado, setStateCallback);
-  };
-
-  // Función común para procesar datos según el período
-  const procesarDatosPorPeriodo = (datos, periodoSeleccionado, setStateCallback) => {
-    if (!datos || datos.length === 0) {
       setStateCallback([]);
       return;
     }
 
     if (periodoSeleccionado === 'dia') {
-      const horas = Array.from({ length: 24 }, (_, i) => ({
-        hora: `${i}:00`,
-        '1': 0,
-        '2': 0,
-        '3': 0,
-        count: 0
-      }));
-
-      datos.forEach(item => {
-        const fechaStr = item.FECHA;
-        let hora = 0;
-        
-        const timeMatch = fechaStr.match(/(\d{2}):(\d{2}):(\d{2})/);
-        if (timeMatch) {
-          hora = parseInt(timeMatch[1], 10);
-        }
-        
-        horas[hora]['1'] += item.V_R || 0;
-        horas[hora]['2'] += item.V_S || 0;
-        horas[hora]['3'] += item.V_T || 0;
-        horas[hora].count += 1;
-      });
-
-      const datosGrafica = horas.map(h => ({
-        hora: h.hora,
-        '1': h.count > 0 ? parseFloat((h['1'] / h.count).toFixed(1)) : 0,
-        '2': h.count > 0 ? parseFloat((h['2'] / h.count).toFixed(1)) : 0,
-        '3': h.count > 0 ? parseFloat((h['3'] / h.count).toFixed(1)) : 0
-      }));
-
-      setStateCallback(datosGrafica);
+      procesarDia(datosCrudos, setStateCallback);
     } 
     else if (periodoSeleccionado === 'semana') {
-      const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-      const datosSemana = [];
-
-      const primeraFecha = new Date(datos[0]?.FECHA);
-      if (isNaN(primeraFecha)) {
-        setStateCallback([]);
-        return;
-      }
-      
-      const domingo = new Date(primeraFecha);
-      domingo.setDate(primeraFecha.getDate() - primeraFecha.getDay());
-      
-      for (let i = 0; i < 7; i++) {
-        const fecha = new Date(domingo);
-        fecha.setDate(domingo.getDate() + i);
-        const fechaStr = toSQLDateOnly(fecha);
-        
-        const datosDia = datos.filter(item => {
-          const itemFecha = toSQLDateOnly(item.FECHA);
-          return itemFecha === fechaStr;
-        });
-
-        if (datosDia.length > 0) {
-          const sum1 = datosDia.reduce((acc, curr) => acc + (curr.V_R || 0), 0);
-          const sum2 = datosDia.reduce((acc, curr) => acc + (curr.V_S || 0), 0);
-          const sum3 = datosDia.reduce((acc, curr) => acc + (curr.V_T || 0), 0);
-          
-          datosSemana.push({
-            dia: diasSemana[fecha.getDay()],
-            '1': parseFloat((sum1 / datosDia.length).toFixed(1)),
-            '2': parseFloat((sum2 / datosDia.length).toFixed(1)),
-            '3': parseFloat((sum3 / datosDia.length).toFixed(1))
-          });
-        } else {
-          datosSemana.push({
-            dia: diasSemana[fecha.getDay()],
-            '1': 0,
-            '2': 0,
-            '3': 0
-          });
-        }
-      }
-      setStateCallback(datosSemana);
+      procesarSemana(datosCrudos, setStateCallback, true, fechaReferencia);
     }
     else if (periodoSeleccionado === 'mes') {
-      const semanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
-      const datosMes = [];
-
-      const primeraFecha = new Date(datos[0]?.FECHA);
-      if (isNaN(primeraFecha)) {
-        setStateCallback([]);
-        return;
-      }
-      
-      const primerDiaMes = new Date(primeraFecha.getFullYear(), primeraFecha.getMonth(), 1);
-      
-      for (let semana = 0; semana < 5; semana++) {
-        const inicioSemana = new Date(primerDiaMes);
-        inicioSemana.setDate(primerDiaMes.getDate() + (semana * 7));
-        const finSemana = new Date(inicioSemana);
-        finSemana.setDate(inicioSemana.getDate() + 6);
-
-        const datosSemana = datos.filter(item => {
-          const itemFechaStr = toSQLDateOnly(item.FECHA);
-          const inicioStr = toSQLDateOnly(inicioSemana);
-          const finStr = toSQLDateOnly(finSemana);
-          return itemFechaStr >= inicioStr && itemFechaStr <= finStr;
-        });
-
-        if (datosSemana.length > 0) {
-          const sum1 = datosSemana.reduce((acc, curr) => acc + (curr.V_R || 0), 0);
-          const sum2 = datosSemana.reduce((acc, curr) => acc + (curr.V_S || 0), 0);
-          const sum3 = datosSemana.reduce((acc, curr) => acc + (curr.V_T || 0), 0);
-          
-          datosMes.push({
-            semana: semanas[semana],
-            '1': parseFloat((sum1 / datosSemana.length).toFixed(1)),
-            '2': parseFloat((sum2 / datosSemana.length).toFixed(1)),
-            '3': parseFloat((sum3 / datosSemana.length).toFixed(1))
-          });
-        } else {
-          datosMes.push({
-            semana: semanas[semana],
-            '1': 0,
-            '2': 0,
-            '3': 0
-          });
-        }
-      }
-      setStateCallback(datosMes);
+      procesarMes(datosCrudos, setStateCallback, true, fechaReferencia);
     }
   };
 
@@ -257,7 +278,7 @@ export default function VoltajeGraficas() {
 
     setSearchLoading(true);
     setSearchError('');
-    setSearchMode(true);
+    setSearchInfo('');
 
     try {
       const allData = await voltajeAPI.getHistorico(10000);
@@ -269,48 +290,53 @@ export default function VoltajeGraficas() {
       }
 
       let filteredData = [];
-      
-      // IMPORTANTE: El input type date devuelve YYYY-MM-DD directamente
-      // No usar new Date() para evitar problemas de zona horaria
-      const fechaSeleccionada = searchDate; // formato "2026-03-05"
-      
-      const [año, mes, dia] = fechaSeleccionada.split('-').map(Number);
+      const [año, mes, dia] = searchDate.split('-').map(Number);
+      const fechaSeleccionada = new Date(año, mes - 1, dia);
       
       if (searchPeriodo === 'dia') {
-        // Buscar registros de ese día específico
         const fechaBuscar = `${año}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-        
         filteredData = allData.filter(item => {
           const itemFecha = toSQLDateOnly(item.FECHA);
           return itemFecha === fechaBuscar;
         });
         
-        if (filteredData.length === 0) {
+        if (filteredData.length > 0) {
+          setSearchInfo(`Mostrando datos del día ${dia}/${mes}/${año} (${filteredData.length} registros)`);
+          procesarDatosHistoricos(filteredData, searchPeriodo, setSearchDatos, fechaSeleccionada);
+          setSearchMode(true);
+        } else {
           setSearchError(`No se encontraron registros para el día ${dia}/${mes}/${año}`);
+          setSearchMode(false);
         }
       } 
       else if (searchPeriodo === 'semana') {
         // Calcular domingo de la semana seleccionada
-        const fechaInicio = new Date(año, mes - 1, dia);
-        fechaInicio.setDate(dia - fechaInicio.getDay());
-        fechaInicio.setHours(0, 0, 0, 0);
+        const domingo = new Date(fechaSeleccionada);
+        domingo.setDate(dia - fechaSeleccionada.getDay());
         
-        const fechaFin = new Date(fechaInicio);
-        fechaFin.setDate(fechaInicio.getDate() + 6);
-        fechaFin.setHours(23, 59, 59, 999);
+        const inicioStr = toSQLDateOnly(domingo);
+        const finSemana = new Date(domingo);
+        finSemana.setDate(domingo.getDate() + 6);
+        const finStr = toSQLDateOnly(finSemana);
         
         filteredData = allData.filter(item => {
-          const itemFecha = new Date(item.FECHA);
-          return itemFecha >= fechaInicio && itemFecha <= fechaFin;
+          const itemFecha = toSQLDateOnly(item.FECHA);
+          return itemFecha >= inicioStr && itemFecha <= finStr;
         });
         
-        if (filteredData.length === 0) {
+        if (filteredData.length > 0) {
+          const fechaInicioFormateada = `${domingo.getDate()}/${domingo.getMonth() + 1}/${domingo.getFullYear()}`;
+          const fechaFinFormateada = `${finSemana.getDate()}/${finSemana.getMonth() + 1}/${finSemana.getFullYear()}`;
+          setSearchInfo(`Mostrando promedio por día de la semana del ${fechaInicioFormateada} al ${fechaFinFormateada} (${filteredData.length} registros totales)`);
+          procesarDatosHistoricos(filteredData, searchPeriodo, setSearchDatos, domingo);
+          setSearchMode(true);
+        } else {
           setSearchError(`No se encontraron registros para la semana del ${dia}/${mes}/${año}`);
+          setSearchMode(false);
         }
       }
       else if (searchPeriodo === 'mes') {
-        // Buscar registros del mes seleccionado
-        const mesSeleccionado = mes - 1; // JS meses 0-11
+        const mesSeleccionado = mes - 1;
         const añoSeleccionado = año;
         
         filteredData = allData.filter(item => {
@@ -319,16 +345,14 @@ export default function VoltajeGraficas() {
                  itemFecha.getFullYear() === añoSeleccionado;
         });
         
-        if (filteredData.length === 0) {
+        if (filteredData.length > 0) {
+          setSearchInfo(`Mostrando promedio por semana del mes ${mes}/${año} (${filteredData.length} registros totales)`);
+          procesarDatosHistoricos(filteredData, searchPeriodo, setSearchDatos, fechaSeleccionada);
+          setSearchMode(true);
+        } else {
           setSearchError(`No se encontraron registros para el mes ${mes}/${año}`);
+          setSearchMode(false);
         }
-      }
-
-      if (filteredData.length > 0) {
-        procesarDatosHistoricos(filteredData, searchPeriodo, setSearchDatos);
-        setSearchError('');
-      } else {
-        setSearchMode(false);
       }
     } catch (err) {
       console.error('Error en búsqueda:', err);
@@ -343,6 +367,7 @@ export default function VoltajeGraficas() {
     setSearchDate('');
     setSearchDatos([]);
     setSearchError('');
+    setSearchInfo('');
   };
 
   const xAxisKey = periodo === 'dia' ? 'hora' : periodo === 'semana' ? 'dia' : 'semana';
@@ -394,10 +419,15 @@ export default function VoltajeGraficas() {
         </button>
       </div>
 
-      {/* Tres gráficas principales */}
+      {/* Gráficas principales con indicador de tipo */}
       <div className={styles.chartsContainer}>
         <div className={styles.chartCard}>
-          <h2 className={styles.chartTitle}>Fase 1</h2>
+          <div className={styles.chartHeader}>
+            <h2 className={styles.chartTitle}>Fase 1</h2>
+            <span className={styles.chartBadge}>
+              {periodo === 'dia' ? 'Promedio por hora' : periodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
+            </span>
+          </div>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={datos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
@@ -419,7 +449,12 @@ export default function VoltajeGraficas() {
           </ResponsiveContainer>
         </div>
         <div className={styles.chartCard}>
-          <h2 className={styles.chartTitle}>Fase 2</h2>
+          <div className={styles.chartHeader}>
+            <h2 className={styles.chartTitle}>Fase 2</h2>
+            <span className={styles.chartBadge}>
+              {periodo === 'dia' ? 'Promedio por hora' : periodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
+            </span>
+          </div>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={datos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
@@ -441,7 +476,12 @@ export default function VoltajeGraficas() {
           </ResponsiveContainer>
         </div>
         <div className={styles.chartCard}>
-          <h2 className={styles.chartTitle}>Fase 3</h2>
+          <div className={styles.chartHeader}>
+            <h2 className={styles.chartTitle}>Fase 3</h2>
+            <span className={styles.chartBadge}>
+              {periodo === 'dia' ? 'Promedio por hora' : periodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
+            </span>
+          </div>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={datos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
@@ -509,6 +549,7 @@ export default function VoltajeGraficas() {
               </button>
             )}
           </div>
+          {searchInfo && <p className={styles.searchInfo}>{searchInfo}</p>}
           {searchError && <p className={styles.searchError}>{searchError}</p>}
         </div>
       </div>
@@ -517,11 +558,16 @@ export default function VoltajeGraficas() {
       {searchMode && searchDatos.length > 0 && !searchLoading && (
         <div className={styles.searchResults}>
           <h3 className={styles.resultsTitle}>
-            📊 Resultados para {searchPeriodo === 'dia' ? 'el día' : searchPeriodo === 'semana' ? 'la semana' : 'el mes'} seleccionado
+            📊 Resultados históricos
           </h3>
           <div className={styles.chartsContainer}>
             <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>Fase 1 (Histórico)</h2>
+              <div className={styles.chartHeader}>
+                <h2 className={styles.chartTitle}>Fase 1</h2>
+                <span className={styles.chartBadge}>
+                  {searchPeriodo === 'dia' ? 'Promedio por hora' : searchPeriodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
+                </span>
+              </div>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
@@ -543,7 +589,12 @@ export default function VoltajeGraficas() {
               </ResponsiveContainer>
             </div>
             <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>Fase 2 (Histórico)</h2>
+              <div className={styles.chartHeader}>
+                <h2 className={styles.chartTitle}>Fase 2</h2>
+                <span className={styles.chartBadge}>
+                  {searchPeriodo === 'dia' ? 'Promedio por hora' : searchPeriodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
+                </span>
+              </div>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
@@ -565,7 +616,12 @@ export default function VoltajeGraficas() {
               </ResponsiveContainer>
             </div>
             <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>Fase 3 (Histórico)</h2>
+              <div className={styles.chartHeader}>
+                <h2 className={styles.chartTitle}>Fase 3</h2>
+                <span className={styles.chartBadge}>
+                  {searchPeriodo === 'dia' ? 'Promedio por hora' : searchPeriodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
+                </span>
+              </div>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
