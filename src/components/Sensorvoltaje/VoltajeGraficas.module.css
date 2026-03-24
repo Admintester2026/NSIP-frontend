@@ -122,14 +122,14 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Header de gráfica con badge */
+/* Header de gráfica con badge - MÁS COMPACTO */
 .chartHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 0.25rem;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .chartTitle {
@@ -149,11 +149,23 @@
   font-weight: normal;
 }
 
+/* Contenedor de la gráfica - ELIMINADO ESPACIO EXTRA */
+.chartCard .recharts-wrapper {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
 /* Contenedor de la gráfica - ALTURA REDUCIDA */
 .chartCard > div {
   flex: 1;
-  min-height: 200px;
-  height: 200px;
+  min-height: 180px;
+  height: 180px;
+}
+
+/* Ajustar el contenedor de recharts para que ocupe todo el espacio */
+.chartCard .recharts-responsive-container {
+  height: 180px !important;
+  min-height: 180px !important;
 }
 
 /* Tooltip personalizado - Estilo oscuro con texto claro */
@@ -354,8 +366,13 @@
   }
   
   .chartCard > div {
-    min-height: 180px;
-    height: 180px;
+    min-height: 160px;
+    height: 160px;
+  }
+  
+  .chartCard .recharts-responsive-container {
+    height: 160px !important;
+    min-height: 160px !important;
   }
 }
 
@@ -395,6 +412,11 @@
   .chartCard > div {
     min-height: 200px;
     height: 200px;
+  }
+  
+  .chartCard .recharts-responsive-container {
+    height: 200px !important;
+    min-height: 200px !important;
   }
 }
 
