@@ -43,7 +43,7 @@
   font-style: italic;
 }
 
-/* Botón Volver con borde verde neon al hover */
+/* Botón Volver */
 .backButtonOutline {
   display: inline-flex;
   align-items: center;
@@ -64,7 +64,7 @@
   box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
 }
 
-/* Selector de período principal */
+/* Selector de período */
 .periodSelector {
   display: flex;
   gap: 0.5rem;
@@ -97,7 +97,7 @@
   color: #000;
 }
 
-/* Contenedor de tres gráficas en paralelo */
+/* Contenedor de gráficas */
 .chartsContainer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -106,7 +106,7 @@
   width: 100%;
 }
 
-/* Tarjeta de cada gráfica - MÁS COMPACTA */
+/* Tarjeta de gráfica */
 .chartCard {
   background: var(--bg-surface);
   border-radius: 0.75rem;
@@ -122,14 +122,15 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Header de gráfica con badge - MÁS COMPACTO */
+/* Header compacto */
 .chartHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: none;
+  flex-shrink: 0;
 }
 
 .chartTitle {
@@ -147,28 +148,31 @@
   color: var(--green);
   border: 1px solid var(--green-dim);
   font-weight: normal;
+  white-space: nowrap;
 }
 
-/* Contenedor de la gráfica - ELIMINADO ESPACIO EXTRA */
+/* Contenedor del gráfico - SIN espacio extra */
 .chartCard .recharts-wrapper {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
 
-/* Contenedor de la gráfica - ALTURA REDUCIDA */
-.chartCard > div {
+/* Contenedor de la gráfica - que ocupe el espacio justo */
+.chartCard > :nth-child(2) {
   flex: 1;
-  min-height: 180px;
-  height: 180px;
+  min-height: 160px;
+  width: 100%;
+  margin-top: 4px;
 }
 
-/* Ajustar el contenedor de recharts para que ocupe todo el espacio */
+/* Ajuste para recharts */
 .chartCard .recharts-responsive-container {
-  height: 180px !important;
-  min-height: 180px !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 140px;
 }
 
-/* Tooltip personalizado - Estilo oscuro con texto claro */
+/* Tooltip */
 .customTooltip {
   background-color: rgba(20, 20, 30, 0.95);
   border-radius: 6px;
@@ -184,11 +188,6 @@
   font-size: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   padding-bottom: 2px;
-}
-
-.tooltipValue {
-  margin: 2px 0;
-  font-size: 0.8rem;
 }
 
 /* Sección de búsqueda */
@@ -365,14 +364,8 @@
     padding: 1rem;
   }
   
-  .chartCard > div {
-    min-height: 160px;
-    height: 160px;
-  }
-  
-  .chartCard .recharts-responsive-container {
-    height: 160px !important;
-    min-height: 160px !important;
+  .chartCard > :nth-child(2) {
+    min-height: 140px;
   }
 }
 
@@ -409,14 +402,8 @@
     text-align: center;
   }
   
-  .chartCard > div {
-    min-height: 200px;
-    height: 200px;
-  }
-  
-  .chartCard .recharts-responsive-container {
-    height: 200px !important;
-    min-height: 200px !important;
+  .chartCard > :nth-child(2) {
+    min-height: 180px;
   }
 }
 
