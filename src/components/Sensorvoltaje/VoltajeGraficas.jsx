@@ -129,7 +129,6 @@ export default function VoltajeGraficas() {
     const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const datosSemana = [];
 
-    // Determinar el domingo de la semana a mostrar
     let domingo;
     if (esHistorico && fechaReferencia) {
       domingo = new Date(fechaReferencia);
@@ -310,7 +309,6 @@ export default function VoltajeGraficas() {
         }
       } 
       else if (searchPeriodo === 'semana') {
-        // Calcular domingo de la semana seleccionada
         const domingo = new Date(fechaSeleccionada);
         domingo.setDate(dia - fechaSeleccionada.getDay());
         
@@ -419,7 +417,7 @@ export default function VoltajeGraficas() {
         </button>
       </div>
 
-      {/* Gráficas principales con indicador de tipo */}
+      {/* Gráficas principales con indicador de tipo - ALTURA CORREGIDA */}
       <div className={styles.chartsContainer}>
         <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
@@ -428,23 +426,23 @@ export default function VoltajeGraficas() {
               {periodo === 'dia' ? 'Promedio por hora' : periodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={datos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={datos} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
-              <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
-              <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+              <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" tick={{ fontSize: 10 }} />
+              <YAxis stroke="var(--text-muted)" domain={[0, 250]} tick={{ fontSize: 10 }} />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: 'rgba(20, 20, 30, 0.95)', 
                   borderColor: '#00ff9d',
                   borderRadius: '8px',
-                  padding: '8px 12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                  padding: '6px 10px',
+                  fontSize: '12px'
                 }} 
                 labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                 formatter={(value) => [<span style={{ color: '#00ff9d' }}>{value} V</span>, 'Voltaje']}
               />
-              <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={3} dot={{ r: 3, fill: "#00ff9d" }} />
+              <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={2} dot={{ r: 2, fill: "#00ff9d" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -455,23 +453,23 @@ export default function VoltajeGraficas() {
               {periodo === 'dia' ? 'Promedio por hora' : periodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={datos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={datos} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
-              <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
-              <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+              <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" tick={{ fontSize: 10 }} />
+              <YAxis stroke="var(--text-muted)" domain={[0, 250]} tick={{ fontSize: 10 }} />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: 'rgba(20, 20, 30, 0.95)', 
                   borderColor: '#ffaa00',
                   borderRadius: '8px',
-                  padding: '8px 12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                  padding: '6px 10px',
+                  fontSize: '12px'
                 }} 
                 labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                 formatter={(value) => [<span style={{ color: '#ffaa00' }}>{value} V</span>, 'Voltaje']}
               />
-              <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={3} dot={{ r: 3, fill: "#ffaa00" }} />
+              <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={2} dot={{ r: 2, fill: "#ffaa00" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -482,23 +480,23 @@ export default function VoltajeGraficas() {
               {periodo === 'dia' ? 'Promedio por hora' : periodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={datos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={datos} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
-              <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
-              <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+              <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" tick={{ fontSize: 10 }} />
+              <YAxis stroke="var(--text-muted)" domain={[0, 250]} tick={{ fontSize: 10 }} />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: 'rgba(20, 20, 30, 0.95)', 
                   borderColor: '#ff6b6b',
                   borderRadius: '8px',
-                  padding: '8px 12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                  padding: '6px 10px',
+                  fontSize: '12px'
                 }} 
                 labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                 formatter={(value) => [<span style={{ color: '#ff6b6b' }}>{value} V</span>, 'Voltaje']}
               />
-              <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={3} dot={{ r: 3, fill: "#ff6b6b" }} />
+              <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={2} dot={{ r: 2, fill: "#ff6b6b" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -554,7 +552,7 @@ export default function VoltajeGraficas() {
         </div>
       </div>
 
-      {/* Resultados de búsqueda histórica */}
+      {/* Resultados de búsqueda histórica - ALTURA CORREGIDA */}
       {searchMode && searchDatos.length > 0 && !searchLoading && (
         <div className={styles.searchResults}>
           <h3 className={styles.resultsTitle}>
@@ -568,23 +566,23 @@ export default function VoltajeGraficas() {
                   {searchPeriodo === 'dia' ? 'Promedio por hora' : searchPeriodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
                 </span>
               </div>
-              <ResponsiveContainer width="100%" height={350}>
-                <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={searchDatos} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
-                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
-                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} tick={{ fontSize: 10 }} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'rgba(20, 20, 30, 0.95)', 
                       borderColor: '#00ff9d',
                       borderRadius: '8px',
-                      padding: '8px 12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                      padding: '6px 10px',
+                      fontSize: '12px'
                     }} 
                     labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                     formatter={(value) => [<span style={{ color: '#00ff9d' }}>{value} V</span>, 'Voltaje']}
                   />
-                  <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={3} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={2} dot={{ r: 2 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -595,23 +593,23 @@ export default function VoltajeGraficas() {
                   {searchPeriodo === 'dia' ? 'Promedio por hora' : searchPeriodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
                 </span>
               </div>
-              <ResponsiveContainer width="100%" height={350}>
-                <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={searchDatos} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
-                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
-                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} tick={{ fontSize: 10 }} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'rgba(20, 20, 30, 0.95)', 
                       borderColor: '#ffaa00',
                       borderRadius: '8px',
-                      padding: '8px 12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                      padding: '6px 10px',
+                      fontSize: '12px'
                     }} 
                     labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                     formatter={(value) => [<span style={{ color: '#ffaa00' }}>{value} V</span>, 'Voltaje']}
                   />
-                  <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={3} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={2} dot={{ r: 2 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -622,23 +620,23 @@ export default function VoltajeGraficas() {
                   {searchPeriodo === 'dia' ? 'Promedio por hora' : searchPeriodo === 'semana' ? 'Promedio por día' : 'Promedio por semana'}
                 </span>
               </div>
-              <ResponsiveContainer width="100%" height={350}>
-                <LineChart data={searchDatos} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={searchDatos} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
-                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
-                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
+                  <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="var(--text-muted)" domain={[0, 250]} tick={{ fontSize: 10 }} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'rgba(20, 20, 30, 0.95)', 
                       borderColor: '#ff6b6b',
                       borderRadius: '8px',
-                      padding: '8px 12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                      padding: '6px 10px',
+                      fontSize: '12px'
                     }} 
                     labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                     formatter={(value) => [<span style={{ color: '#ff6b6b' }}>{value} V</span>, 'Voltaje']}
                   />
-                  <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={3} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={2} dot={{ r: 2 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
