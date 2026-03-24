@@ -61,6 +61,65 @@ export function formatTime(isoString) {
   return '--:--:--';
 }
 
-// Alias para mantener compatibilidad con nombres existentes
+/**
+ * Convierte una fecha a formato YYYY-MM-DD (formato SQL)
+ * @param {string|Date} fecha - Fecha en cualquier formato
+ * @returns {string} Fecha en formato YYYY-MM-DD
+ */
+export function toSQLDate(fecha) {
+  if (!fecha) return '';
+  
+  let año, mes, dia;
+  
+  if (fecha instanceof Date) {
+    año = fecha.getFullYear();
+    mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    dia = String(fecha.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+  }
+  
+  if (typeof fecha === 'string') {
+    // Formato SQL: "2026-03-05 10:30:00"
+    const sqlMatch = fecha.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (sqlMatch) {
+      return `${sqlMatch[1]}-${sqlMatch[2]}-${sqlMatch[3]}`;
+    }
+    
+    // Formato con barras: "2026/03/05"
+    const barMatch = fecha.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+    if (barMatch) {
+      return `${barMatch[1]}-${barMatch[2]}-${barMatch[3]}`;
+    }
+  }
+  
+  return '';
+}
+
+/**
+ * Convierte una fecha de calendario (input type date) a formato YYYY-MM-DD
+ * @param {string} dateInput - Fecha del input type date (YYYY-MM-DD)
+ * @returns {string} Misma fecha en formato YYYY-MM-DD
+ */
+export function parseDateInput(dateInput) {
+  if (!dateInput) return '';
+  // El input type date ya devuelve YYYY-MM-DD
+  return dateInput;
+}
+
+/**
+ * Formatea una fecha para mostrar en la UI (DD/MM/YYYY)
+ * @param {string} sqlDate - Fecha en formato YYYY-MM-DD
+ * @returns {string} Fecha formateada como DD/MM/YYYY
+ */
+export function formatDisplayDate(sqlDate) {
+  if (!sqlDate) return '';
+  const match = sqlDate.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    return `${match[3]}/${match[2]}/${match[1]}`;
+  }
+  return sqlDate;
+}
+
+// Alias para mantener compatibilidad
 export const formatDateOnly = formatDate;
 export const formatTimeOnly = formatTime;

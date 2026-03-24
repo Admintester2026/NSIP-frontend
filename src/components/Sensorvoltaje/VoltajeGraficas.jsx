@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../api/voltaje';
 import { usePolling } from '../../hooks/useAsync';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, toSQLDate, formatDisplayDate } from '../../utils/dateUtils';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
@@ -32,16 +32,13 @@ export default function VoltajeGraficas() {
     }
   }, [data, periodo]);
 
-  // Función auxiliar para convertir fecha a formato YYYY-MM-DD (parte de fecha)
-  const toDateOnly = (fecha) => {
+  // Función auxiliar para convertir fecha a YYYY-MM-DD (formato SQL)
+  const toSQLDateOnly = (fecha) => {
     if (!fecha) return '';
-    // Si es string en formato SQL "2026-03-05 10:30:00"
     if (typeof fecha === 'string') {
-      // Extraer solo la parte de fecha YYYY-MM-DD
-      const match = fecha.match(/(\d{4}-\d{2}-\d{2})/);
-      if (match) return match[1];
+      const match = fecha.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (match) return `${match[1]}-${match[2]}-${match[3]}`;
     }
-    // Si es objeto Date
     if (fecha instanceof Date) {
       const año = fecha.getFullYear();
       const mes = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -56,11 +53,11 @@ export default function VoltajeGraficas() {
     if (!datosCrudos || datosCrudos.length === 0) return [];
     
     const hoy = new Date();
-    const hoyStr = toDateOnly(hoy);
+    const hoyStr = toSQLDateOnly(hoy);
     
     if (periodoSeleccionado === 'dia') {
       return datosCrudos.filter(item => {
-        const itemFecha = toDateOnly(item.FECHA);
+        const itemFecha = toSQLDateOnly(item.FECHA);
         return itemFecha === hoyStr;
       });
     } 
@@ -70,11 +67,11 @@ export default function VoltajeGraficas() {
       const finSemana = new Date(inicioSemana);
       finSemana.setDate(inicioSemana.getDate() + 6);
       
-      const inicioStr = toDateOnly(inicioSemana);
-      const finStr = toDateOnly(finSemana);
+      const inicioStr = toSQLDateOnly(inicioSemana);
+      const finStr = toSQLDateOnly(finSemana);
       
       return datosCrudos.filter(item => {
-        const itemFecha = toDateOnly(item.FECHA);
+        const itemFecha = toSQLDateOnly(item.FECHA);
         return itemFecha >= inicioStr && itemFecha <= finStr;
       });
     }
@@ -91,7 +88,7 @@ export default function VoltajeGraficas() {
     return datosCrudos;
   };
 
-  // Función para procesar datos de las gráficas principales (con filtro de período actual)
+  // Función para procesar datos de las gráficas principales
   const procesarDatosActuales = (datosCrudos, periodoSeleccionado, setStateCallback) => {
     if (!datosCrudos || datosCrudos.length === 0) {
       setStateCallback([]);
@@ -108,13 +105,12 @@ export default function VoltajeGraficas() {
     procesarDatosPorPeriodo(datosFiltrados, periodoSeleccionado, setStateCallback);
   };
 
-  // Función para procesar datos históricos (SIN filtrar por período actual)
+  // Función para procesar datos históricos
   const procesarDatosHistoricos = (datosCrudos, periodoSeleccionado, setStateCallback) => {
     if (!datosCrudos || datosCrudos.length === 0) {
       setStateCallback([]);
       return;
     }
-
     procesarDatosPorPeriodo(datosCrudos, periodoSeleccionado, setStateCallback);
   };
 
@@ -162,7 +158,6 @@ export default function VoltajeGraficas() {
       const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
       const datosSemana = [];
 
-      // Obtener el domingo de la semana basado en la primera fecha de los datos
       const primeraFecha = new Date(datos[0]?.FECHA);
       if (isNaN(primeraFecha)) {
         setStateCallback([]);
@@ -175,10 +170,10 @@ export default function VoltajeGraficas() {
       for (let i = 0; i < 7; i++) {
         const fecha = new Date(domingo);
         fecha.setDate(domingo.getDate() + i);
-        const fechaStr = toDateOnly(fecha);
+        const fechaStr = toSQLDateOnly(fecha);
         
         const datosDia = datos.filter(item => {
-          const itemFecha = toDateOnly(item.FECHA);
+          const itemFecha = toSQLDateOnly(item.FECHA);
           return itemFecha === fechaStr;
         });
 
@@ -223,9 +218,9 @@ export default function VoltajeGraficas() {
         finSemana.setDate(inicioSemana.getDate() + 6);
 
         const datosSemana = datos.filter(item => {
-          const itemFechaStr = toDateOnly(item.FECHA);
-          const inicioStr = toDateOnly(inicioSemana);
-          const finStr = toDateOnly(finSemana);
+          const itemFechaStr = toSQLDateOnly(item.FECHA);
+          const inicioStr = toSQLDateOnly(inicioSemana);
+          const finStr = toSQLDateOnly(finSemana);
           return itemFechaStr >= inicioStr && itemFechaStr <= finStr;
         });
 
@@ -274,26 +269,29 @@ export default function VoltajeGraficas() {
       }
 
       let filteredData = [];
-      const searchDateObj = new Date(searchDate);
       
-      // Ajustar para evitar problemas de zona horaria
-      // Crear fecha UTC para evitar desplazamientos
-      const año = searchDateObj.getFullYear();
-      const mes = searchDateObj.getMonth();
-      const dia = searchDateObj.getDate();
+      // IMPORTANTE: El input type date devuelve YYYY-MM-DD directamente
+      // No usar new Date() para evitar problemas de zona horaria
+      const fechaSeleccionada = searchDate; // formato "2026-03-05"
+      
+      const [año, mes, dia] = fechaSeleccionada.split('-').map(Number);
       
       if (searchPeriodo === 'dia') {
-        // Buscar registros de ese día específico (00:00:00 a 23:59:59)
-        const fechaBuscar = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        // Buscar registros de ese día específico
+        const fechaBuscar = `${año}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         
         filteredData = allData.filter(item => {
-          const itemFecha = toDateOnly(item.FECHA);
+          const itemFecha = toSQLDateOnly(item.FECHA);
           return itemFecha === fechaBuscar;
         });
+        
+        if (filteredData.length === 0) {
+          setSearchError(`No se encontraron registros para el día ${dia}/${mes}/${año}`);
+        }
       } 
       else if (searchPeriodo === 'semana') {
         // Calcular domingo de la semana seleccionada
-        const fechaInicio = new Date(año, mes, dia);
+        const fechaInicio = new Date(año, mes - 1, dia);
         fechaInicio.setDate(dia - fechaInicio.getDay());
         fechaInicio.setHours(0, 0, 0, 0);
         
@@ -305,10 +303,14 @@ export default function VoltajeGraficas() {
           const itemFecha = new Date(item.FECHA);
           return itemFecha >= fechaInicio && itemFecha <= fechaFin;
         });
+        
+        if (filteredData.length === 0) {
+          setSearchError(`No se encontraron registros para la semana del ${dia}/${mes}/${año}`);
+        }
       }
       else if (searchPeriodo === 'mes') {
         // Buscar registros del mes seleccionado
-        const mesSeleccionado = mes;
+        const mesSeleccionado = mes - 1; // JS meses 0-11
         const añoSeleccionado = año;
         
         filteredData = allData.filter(item => {
@@ -316,15 +318,17 @@ export default function VoltajeGraficas() {
           return itemFecha.getMonth() === mesSeleccionado && 
                  itemFecha.getFullYear() === añoSeleccionado;
         });
+        
+        if (filteredData.length === 0) {
+          setSearchError(`No se encontraron registros para el mes ${mes}/${año}`);
+        }
       }
 
-      if (filteredData.length === 0) {
-        const fechaFormateada = `${dia}/${mes + 1}/${año}`;
-        setSearchError(`No se encontraron registros para ${searchPeriodo === 'dia' ? `el día ${fechaFormateada}` : searchPeriodo === 'semana' ? `la semana del ${fechaFormateada}` : `el mes ${mes + 1}/${año}`}`);
-        setSearchMode(false);
-      } else {
+      if (filteredData.length > 0) {
         procesarDatosHistoricos(filteredData, searchPeriodo, setSearchDatos);
         setSearchError('');
+      } else {
+        setSearchMode(false);
       }
     } catch (err) {
       console.error('Error en búsqueda:', err);
