@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { voltajeAPI } from '../../api/voltaje';
 import { usePolling } from '../../hooks/useAsync';
-import { formatDate, formatDateTime } from '../../utils/dateUtils';
+import { formatDate } from '../../utils/dateUtils';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
@@ -32,6 +32,49 @@ export default function VoltajeGraficas() {
     }
   }, [data, periodo]);
 
+  // Función para filtrar datos por período actual
+  const filtrarPorPeriodoActual = (datosCrudos, periodoSeleccionado) => {
+    if (!datosCrudos || datosCrudos.length === 0) return [];
+    
+    const hoy = new Date();
+    const hoyStr = formatDate(hoy.toISOString());
+    
+    if (periodoSeleccionado === 'dia') {
+      // Filtrar solo registros de hoy
+      return datosCrudos.filter(item => {
+        const itemFecha = formatDate(item.FECHA);
+        return itemFecha === hoyStr;
+      });
+    } 
+    else if (periodoSeleccionado === 'semana') {
+      // Calcular el inicio de la semana (domingo)
+      const inicioSemana = new Date(hoy);
+      inicioSemana.setDate(hoy.getDate() - hoy.getDay());
+      const finSemana = new Date(inicioSemana);
+      finSemana.setDate(inicioSemana.getDate() + 6);
+      
+      const inicioStr = formatDate(inicioSemana.toISOString());
+      const finStr = formatDate(finSemana.toISOString());
+      
+      return datosCrudos.filter(item => {
+        const itemFecha = formatDate(item.FECHA);
+        return itemFecha >= inicioStr && itemFecha <= finStr;
+      });
+    }
+    else if (periodoSeleccionado === 'mes') {
+      // Filtrar solo registros del mes actual
+      const mesActual = hoy.getMonth();
+      const añoActual = hoy.getFullYear();
+      
+      return datosCrudos.filter(item => {
+        const itemFecha = new Date(item.FECHA);
+        return itemFecha.getMonth() === mesActual && itemFecha.getFullYear() === añoActual;
+      });
+    }
+    
+    return datosCrudos;
+  };
+
   // Función para procesar datos (reutilizable)
   const procesarDatos = (datosCrudos, periodoSeleccionado, setStateCallback) => {
     if (!datosCrudos || datosCrudos.length === 0) {
@@ -39,8 +82,15 @@ export default function VoltajeGraficas() {
       return;
     }
 
+    // Filtrar datos según el período actual
+    const datosFiltrados = filtrarPorPeriodoActual(datosCrudos, periodoSeleccionado);
+
+    if (datosFiltrados.length === 0) {
+      setStateCallback([]);
+      return;
+    }
+
     if (periodoSeleccionado === 'dia') {
-      const datosFiltrados = datosCrudos;
       const horas = Array.from({ length: 24 }, (_, i) => ({
         hora: `${i}:00`,
         '1': 0,
@@ -77,12 +127,13 @@ export default function VoltajeGraficas() {
       const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
       const datosSemana = [];
 
+      // Obtener los últimos 7 días (desde hoy hacia atrás)
       for (let i = 6; i >= 0; i--) {
         const fecha = new Date();
         fecha.setDate(fecha.getDate() - i);
         const fechaStr = formatDate(fecha.toISOString());
         
-        const datosDia = datosCrudos.filter(item => {
+        const datosDia = datosFiltrados.filter(item => {
           const itemFecha = formatDate(item.FECHA);
           return itemFecha === fechaStr;
         });
@@ -122,7 +173,7 @@ export default function VoltajeGraficas() {
         const finSemana = new Date(inicioSemana);
         finSemana.setDate(finSemana.getDate() + 6);
 
-        const datosSemana = datosCrudos.filter(item => {
+        const datosSemana = datosFiltrados.filter(item => {
           const itemFechaStr = formatDate(item.FECHA);
           const inicioStr = formatDate(inicioSemana.toISOString());
           const finStr = formatDate(finSemana.toISOString());
@@ -165,7 +216,6 @@ export default function VoltajeGraficas() {
     setSearchMode(true);
 
     try {
-      // Obtener todos los datos
       const allData = await voltajeAPI.getHistorico(10000);
       
       if (!allData || allData.length === 0) {
@@ -174,12 +224,10 @@ export default function VoltajeGraficas() {
         return;
       }
 
-      // Filtrar según el período seleccionado
       let filteredData = [];
       const searchDateObj = new Date(searchDate);
       
       if (searchPeriodo === 'dia') {
-        // Filtrar por día específico
         const fechaBuscar = formatDate(searchDateObj.toISOString());
         filteredData = allData.filter(item => {
           const itemFecha = formatDate(item.FECHA);
@@ -187,9 +235,8 @@ export default function VoltajeGraficas() {
         });
       } 
       else if (searchPeriodo === 'semana') {
-        // Filtrar por semana específica (7 días desde la fecha seleccionada)
         const fechaInicio = new Date(searchDateObj);
-        fechaInicio.setDate(fechaInicio.getDate() - fechaInicio.getDay()); // Domingo de esa semana
+        fechaInicio.setDate(fechaInicio.getDate() - fechaInicio.getDay());
         const fechaFin = new Date(fechaInicio);
         fechaFin.setDate(fechaFin.getDate() + 6);
         
@@ -199,7 +246,6 @@ export default function VoltajeGraficas() {
         });
       }
       else if (searchPeriodo === 'mes') {
-        // Filtrar por mes específico
         const mes = searchDateObj.getMonth();
         const año = searchDateObj.getFullYear();
         
@@ -223,7 +269,6 @@ export default function VoltajeGraficas() {
     }
   };
 
-  // Limpiar búsqueda
   const clearSearch = () => {
     setSearchMode(false);
     setSearchDate('');
@@ -289,7 +334,17 @@ export default function VoltajeGraficas() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
               <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-              <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(20, 20, 30, 0.95)', 
+                  borderColor: '#00ff9d',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }} 
+                labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
+                formatter={(value) => [<span style={{ color: '#00ff9d' }}>{value} V</span>, 'Voltaje']}
+              />
               <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={3} dot={{ r: 3, fill: "#00ff9d" }} />
             </LineChart>
           </ResponsiveContainer>
@@ -301,7 +356,17 @@ export default function VoltajeGraficas() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
               <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-              <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(20, 20, 30, 0.95)', 
+                  borderColor: '#ffaa00',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }} 
+                labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
+                formatter={(value) => [<span style={{ color: '#ffaa00' }}>{value} V</span>, 'Voltaje']}
+              />
               <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={3} dot={{ r: 3, fill: "#ffaa00" }} />
             </LineChart>
           </ResponsiveContainer>
@@ -313,7 +378,17 @@ export default function VoltajeGraficas() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-muted)" />
               <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-              <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(20, 20, 30, 0.95)', 
+                  borderColor: '#ff6b6b',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }} 
+                labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
+                formatter={(value) => [<span style={{ color: '#ff6b6b' }}>{value} V</span>, 'Voltaje']}
+              />
               <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={3} dot={{ r: 3, fill: "#ff6b6b" }} />
             </LineChart>
           </ResponsiveContainer>
@@ -383,7 +458,17 @@ export default function VoltajeGraficas() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
                   <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
                   <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-                  <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(20, 20, 30, 0.95)', 
+                      borderColor: '#00ff9d',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    }} 
+                    labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
+                    formatter={(value) => [<span style={{ color: '#00ff9d' }}>{value} V</span>, 'Voltaje']}
+                  />
                   <Line type="monotone" dataKey="1" stroke="#00ff9d" strokeWidth={3} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -395,7 +480,17 @@ export default function VoltajeGraficas() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
                   <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
                   <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-                  <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(20, 20, 30, 0.95)', 
+                      borderColor: '#ffaa00',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    }} 
+                    labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
+                    formatter={(value) => [<span style={{ color: '#ffaa00' }}>{value} V</span>, 'Voltaje']}
+                  />
                   <Line type="monotone" dataKey="2" stroke="#ffaa00" strokeWidth={3} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -407,7 +502,17 @@ export default function VoltajeGraficas() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" />
                   <XAxis dataKey={searchXAxisKey} stroke="var(--text-muted)" />
                   <YAxis stroke="var(--text-muted)" domain={[0, 250]} />
-                  <Tooltip formatter={(value) => [`${value} V`, 'Voltaje']} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(20, 20, 30, 0.95)', 
+                      borderColor: '#ff6b6b',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    }} 
+                    labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
+                    formatter={(value) => [<span style={{ color: '#ff6b6b' }}>{value} V</span>, 'Voltaje']}
+                  />
                   <Line type="monotone" dataKey="3" stroke="#ff6b6b" strokeWidth={3} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>

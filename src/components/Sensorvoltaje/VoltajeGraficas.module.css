@@ -36,6 +36,13 @@
   font-size: 0.9rem;
 }
 
+.note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  font-style: italic;
+}
+
 /* Botón Volver con borde verde neon al hover */
 .backButtonOutline {
   display: inline-flex;
@@ -57,7 +64,7 @@
   box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
 }
 
-/* Selector de período */
+/* Selector de período principal */
 .periodSelector {
   display: flex;
   gap: 0.75rem;
@@ -133,181 +140,29 @@
   min-height: 300px;
 }
 
-/* Responsive */
-@media (max-width: 1000px) {
-  .chartsContainer {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-  
-  .graficas {
-    padding: 1rem;
-  }
+/* Tooltip personalizado - Estilo oscuro con texto claro */
+.customTooltip {
+  background-color: rgba(20, 20, 30, 0.95);
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-@media (max-width: 700px) {
-  .chartsContainer {
-    grid-template-columns: 1fr;
-  }
-  
-  .periodSelector {
-    gap: 0.5rem;
-  }
-  
-  .periodButton {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.tooltipLabel {
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 4px;
 }
 
-/* Loading */
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 1rem;
+.tooltipValue {
+  margin: 4px 0;
+  font-size: 0.9rem;
 }
 
-.loadingSpinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border-dim);
-  border-top-color: #00ff9d;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-/* Botón Volver con borde verde neon al hover */
-.backButtonOutline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: transparent;
-  border: 1px solid var(--border-dim);
-  border-radius: 0.5rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.backButtonOutline:hover {
-  border-color: #00ff9d;
-  color: #00ff9d;
-  box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
-}
-
-/* Contenedor de tres gráficas en paralelo */
-.chartsContainer {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.chartCard {
-  background: var(--bg-surface);
-  border-radius: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--border-dim);
-  transition: all 0.2s ease;
-}
-
-.chartCard:hover {
-  border-color: var(--border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.chartTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  text-align: center;
-  color: var(--text-primary);
-}
-
-/* Selector de período */
-.periodSelector {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  margin: 1.5rem 0;
-}
-
-.periodButton {
-  padding: 0.5rem 1.25rem;
-  background: transparent;
-  border: 1px solid var(--border-dim);
-  border-radius: 2rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  color: var(--text-secondary);
-}
-
-.periodButton:hover {
-  border-color: #00ff9d;
-  color: #00ff9d;
-}
-
-.periodButton.active {
-  background: #00ff9d;
-  border-color: #00ff9d;
-  color: #000;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .chartsContainer {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-/* Loading */
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 1rem;
-}
-
-.loadingSpinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border-dim);
-  border-top-color: #00ff9d;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
 /* Sección de búsqueda */
 .searchSection {
   margin-top: 3rem;
@@ -440,9 +295,83 @@
   border-radius: 0.5rem;
 }
 
-.note {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-left: 0.5rem;
-  font-style: italic;
+/* Loading */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-dim);
+  border-top-color: #00ff9d;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+  .chartsContainer {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .graficas {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .chartsContainer {
+    grid-template-columns: 1fr;
+  }
+  
+  .periodSelector {
+    gap: 0.5rem;
+  }
+  
+  .periodButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .searchPeriodSelector {
+    flex-wrap: wrap;
+  }
+  
+  .searchInputGroup {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .dateInput, .searchButton, .clearButton {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Animaciones */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
