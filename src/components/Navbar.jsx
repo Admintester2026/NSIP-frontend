@@ -1,3 +1,4 @@
+// FRONTEND/src/components/Navbar.jsx
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './Navbar.module.css';
@@ -26,6 +27,15 @@ export default function Navbar() {
     setMantenimientoOpen(false);
   }, [location]);
 
+  // Verificar si una ruta está activa (para submenús)
+  const isMantenimientoActive = () => {
+    return location.pathname.startsWith('/mantenimiento');
+  };
+
+  const isModulosActive = () => {
+    return location.pathname.startsWith('/modulos');
+  };
+
   return (
     <nav className={styles.navbar}>
       <div className={styles.navContainer}>
@@ -42,10 +52,10 @@ export default function Navbar() {
             Inicio
           </Link>
 
-          {/* Menú Módulos */}
+          {/* Menú Módulos (Arduinos) */}
           <div className={styles.dropdown}>
             <button 
-              className={`${styles.dropdownButton} ${modulosOpen ? styles.active : ''}`}
+              className={`${styles.dropdownButton} ${modulosOpen || isModulosActive() ? styles.active : ''}`}
               onClick={() => {
                 setModulosOpen(!modulosOpen);
                 setMantenimientoOpen(false);
@@ -66,7 +76,6 @@ export default function Navbar() {
                   <span className={styles.statusBadge}>ACTIVO</span>
                 </Link>
                 
-                {/* Módulo de Voltaje - AHORA ACTIVO */}
                 <Link to="/modulos/voltaje" className={styles.dropdownItem}>
                   <span className={styles.dropdownIcon}>⚡</span>
                   <div className={styles.dropdownContent}>
@@ -82,7 +91,7 @@ export default function Navbar() {
           {/* Menú Mantenimiento */}
           <div className={styles.dropdown}>
             <button 
-              className={`${styles.dropdownButton} ${mantenimientoOpen ? styles.active : ''}`}
+              className={`${styles.dropdownButton} ${mantenimientoOpen || isMantenimientoActive() ? styles.active : ''}`}
               onClick={() => {
                 setMantenimientoOpen(!mantenimientoOpen);
                 setModulosOpen(false);
@@ -94,14 +103,34 @@ export default function Navbar() {
             
             {mantenimientoOpen && (
               <div className={styles.dropdownMenu}>
-                <div className={`${styles.dropdownItem} ${styles.disabled}`}>
-                  <span className={styles.dropdownIcon}>📋</span>
+                <Link to="/mantenimiento/equipos" className={styles.dropdownItem}>
+                  <span className={styles.dropdownIcon}>🔧</span>
+                  <div className={styles.dropdownContent}>
+                    <span className={styles.dropdownTitle}>Equipos</span>
+                    <span className={styles.dropdownDesc}>Gestión de equipos y maquinaria</span>
+                  </div>
+                  <span className={styles.statusBadge}>ACTIVO</span>
+                </Link>
+                
+                <Link to="/mantenimiento/ordenes" className={styles.dropdownItem}>
+                  <span className={styles.dropdownIcon}>📝</span>
                   <div className={styles.dropdownContent}>
                     <span className={styles.dropdownTitle}>Órdenes de Trabajo</span>
-                    <span className={styles.dropdownDesc}>Gestión de mantenimiento</span>
+                    <span className={styles.dropdownDesc}>Pendientes, urgentes y próximas</span>
                   </div>
                   <span className={`${styles.statusBadge} ${styles.comingSoon}`}>PRÓXIMAMENTE</span>
-                </div>
+                </Link>
+                
+                <div className={styles.dropdownDivider} />
+                
+                <Link to="/mantenimiento/papelera" className={styles.dropdownItem}>
+                  <span className={styles.dropdownIcon}>🗑️</span>
+                  <div className={styles.dropdownContent}>
+                    <span className={styles.dropdownTitle}>Papelera</span>
+                    <span className={styles.dropdownDesc}>Equipos eliminados</span>
+                  </div>
+                  <span className={`${styles.statusBadge} ${styles.comingSoon}`}>PRÓXIMAMENTE</span>
+                </Link>
               </div>
             )}
           </div>
