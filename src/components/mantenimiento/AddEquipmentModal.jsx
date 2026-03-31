@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { mantenimientoAPI } from '../../../api/mantenimiento';
+import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './AddEquipmentModal.module.css';
 
 export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
