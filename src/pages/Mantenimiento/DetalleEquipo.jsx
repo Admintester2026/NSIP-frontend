@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { mantenimientoAPI } from '../../../api/mantenimiento';
-import { useAsync } from '../../../hooks/useAsync';
+import { mantenimientoAPI } from '../../api/mantenimiento';
+import { useAsync } from '../../hooks/useAsync';
 import styles from './styles/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -32,7 +32,7 @@ export default function DetalleEquipo() {
   }, [errorEquipo]);
 
   const handleDelete = async () => {
-    if (window.confirm(`¿Estás seguro de eliminar "${equipo?.nombre}"?`)) {
+    if (window.confirm(`Â¿EstÃ¡s seguro de eliminar "${equipo?.nombre}"?`)) {
       try {
         await mantenimientoAPI.deleteEquipo(id);
         navigate('/mantenimiento/equipos');
@@ -45,7 +45,7 @@ export default function DetalleEquipo() {
   const getEstadoClass = () => {
     switch (equipo?.estado) {
       case 'activo': return styles.estadoActivo;
-      case 'dañado': return styles.estadoDanado;
+      case 'daÃ±ado': return styles.estadoDanado;
       case 'suspension': return styles.estadoSuspension;
       case 'baja': return styles.estadoBaja;
       default: return '';
@@ -55,7 +55,7 @@ export default function DetalleEquipo() {
   const getEstadoTexto = () => {
     switch (equipo?.estado) {
       case 'activo': return 'Activo';
-      case 'dañado': return 'Dañado';
+      case 'daÃ±ado': return 'DaÃ±ado';
       case 'suspension': return 'Suspendido';
       case 'baja': return 'Dado de Baja';
       default: return equipo?.estado;
@@ -74,11 +74,11 @@ export default function DetalleEquipo() {
   if (error || !equipo) {
     return (
       <div className={styles.errorContainer}>
-        <span className={styles.errorIcon}>⚠️</span>
+        <span className={styles.errorIcon}>âš ï¸</span>
         <h2>Error al cargar el equipo</h2>
         <p>{error || 'El equipo no existe o ha sido eliminado'}</p>
         <Link to="/mantenimiento/equipos" className={styles.backButton}>
-          ← Volver a Equipos
+          â† Volver a Equipos
         </Link>
       </div>
     );
@@ -88,24 +88,24 @@ export default function DetalleEquipo() {
     <div className={styles.detalle}>
       <div className={styles.header}>
         <Link to="/mantenimiento/equipos" className={styles.backLink}>
-          ← Volver a Equipos
+          â† Volver a Equipos
         </Link>
         <div className={styles.headerActions}>
           <button className={styles.editButton} onClick={() => setActiveTab('editar')}>
-            ✏️ Editar
+            âœï¸ Editar
           </button>
           <button className={styles.deleteButton} onClick={handleDelete}>
-            🗑️ Eliminar
+            ðŸ—‘ï¸ Eliminar
           </button>
         </div>
       </div>
 
       <div className={styles.content}>
-        {/* Información básica */}
+        {/* InformaciÃ³n bÃ¡sica */}
         <div className={styles.infoCard}>
           <div className={styles.infoHeader}>
             <div className={styles.iconContainer}>
-              <span className={styles.icon}>🔧</span>
+              <span className={styles.icon}>ðŸ”§</span>
             </div>
             <div>
               <h1 className={styles.nombre}>{equipo.nombre}</h1>
@@ -117,20 +117,20 @@ export default function DetalleEquipo() {
 
           {equipo.ubicacion && (
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>📍 Ubicación:</span>
+              <span className={styles.infoLabel}>ðŸ“ UbicaciÃ³n:</span>
               <span className={styles.infoValue}>{equipo.ubicacion}</span>
             </div>
           )}
 
           {equipo.descripcion && (
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>📝 Descripción:</span>
+              <span className={styles.infoLabel}>ðŸ“ DescripciÃ³n:</span>
               <span className={styles.infoValue}>{equipo.descripcion}</span>
             </div>
           )}
 
           <div className={styles.infoRow}>
-            <span className={styles.infoLabel}>📅 Registrado:</span>
+            <span className={styles.infoLabel}>ðŸ“… Registrado:</span>
             <span className={styles.infoValue}>
               {new Date(equipo.fecha_registro).toLocaleString()}
             </span>
@@ -138,7 +138,7 @@ export default function DetalleEquipo() {
 
           {equipo.categorias?.length > 0 && (
             <div className={styles.categorias}>
-              <span className={styles.infoLabel}>🏷️ Categorías:</span>
+              <span className={styles.infoLabel}>ðŸ·ï¸ CategorÃ­as:</span>
               <div className={styles.categoriasList}>
                 {equipo.categorias.map((cat, idx) => (
                   <span key={idx} className={styles.categoriaTag}>
@@ -157,19 +157,19 @@ export default function DetalleEquipo() {
             <div className={styles.filesGrid}>
               {equipo.foto_url && (
                 <a href={equipo.foto_url} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
-                  <span className={styles.fileIcon}>📷</span>
+                  <span className={styles.fileIcon}>ðŸ“·</span>
                   <span>Ver foto</span>
                 </a>
               )}
               {equipo.ficha_tecnica_url && (
                 <a href={equipo.ficha_tecnica_url} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
-                  <span className={styles.fileIcon}>📄</span>
-                  <span>Ficha técnica</span>
+                  <span className={styles.fileIcon}>ðŸ“„</span>
+                  <span>Ficha tÃ©cnica</span>
                 </a>
               )}
               {equipo.manual_url && (
                 <a href={equipo.manual_url} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
-                  <span className={styles.fileIcon}>📘</span>
+                  <span className={styles.fileIcon}>ðŸ“˜</span>
                   <span>Manual de usuario</span>
                 </a>
               )}
@@ -184,25 +184,25 @@ export default function DetalleEquipo() {
               className={`${styles.tab} ${activeTab === 'info' ? styles.active : ''}`}
               onClick={() => setActiveTab('info')}
             >
-              ℹ️ Información
+              â„¹ï¸ InformaciÃ³n
             </button>
             <button
               className={`${styles.tab} ${activeTab === 'mantenimientos' ? styles.active : ''}`}
               onClick={() => setActiveTab('mantenimientos')}
             >
-              🔧 Mantenimientos
+              ðŸ”§ Mantenimientos
             </button>
             <button
               className={`${styles.tab} ${activeTab === 'historial' ? styles.active : ''}`}
               onClick={() => setActiveTab('historial')}
             >
-              📜 Historial
+              ðŸ“œ Historial
             </button>
             <button
               className={`${styles.tab} ${activeTab === 'incidencias' ? styles.active : ''}`}
               onClick={() => setActiveTab('incidencias')}
             >
-              ⚠️ Incidencias
+              âš ï¸ Incidencias
             </button>
           </div>
 
@@ -211,13 +211,13 @@ export default function DetalleEquipo() {
               <div className={styles.infoTab}>
                 <div className={styles.placeholderCard}>
                   <p className={styles.placeholderText}>
-                    Información detallada del equipo. Próximamente:
+                    InformaciÃ³n detallada del equipo. PrÃ³ximamente:
                   </p>
                   <ul className={styles.placeholderList}>
-                    <li>Especificaciones técnicas</li>
+                    <li>Especificaciones tÃ©cnicas</li>
                     <li>Historial de cambios</li>
-                    <li>Configuración actual</li>
-                    <li>Documentación asociada</li>
+                    <li>ConfiguraciÃ³n actual</li>
+                    <li>DocumentaciÃ³n asociada</li>
                   </ul>
                 </div>
               </div>
@@ -226,12 +226,12 @@ export default function DetalleEquipo() {
             {activeTab === 'mantenimientos' && (
               <div className={styles.placeholderCard}>
                 <p className={styles.placeholderText}>
-                  Gestión de mantenimientos. Próximamente:
+                  GestiÃ³n de mantenimientos. PrÃ³ximamente:
                 </p>
                 <ul className={styles.placeholderList}>
                   <li>Mantenimientos programados</li>
                   <li>Mantenimientos realizados</li>
-                  <li>Próximos mantenimientos</li>
+                  <li>PrÃ³ximos mantenimientos</li>
                   <li>Calendario de rutinas</li>
                 </ul>
               </div>
@@ -240,10 +240,10 @@ export default function DetalleEquipo() {
             {activeTab === 'historial' && (
               <div className={styles.placeholderCard}>
                 <p className={styles.placeholderText}>
-                  Historial de cambios. Próximamente:
+                  Historial de cambios. PrÃ³ximamente:
                 </p>
                 <ul className={styles.placeholderList}>
-                  <li>Cambios en configuración</li>
+                  <li>Cambios en configuraciÃ³n</li>
                   <li>Reemplazo de piezas</li>
                   <li>Actualizaciones</li>
                   <li>Registro de operadores</li>
@@ -254,11 +254,11 @@ export default function DetalleEquipo() {
             {activeTab === 'incidencias' && (
               <div className={styles.placeholderCard}>
                 <p className={styles.placeholderText}>
-                  Registro de incidencias. Próximamente:
+                  Registro de incidencias. PrÃ³ximamente:
                 </p>
                 <ul className={styles.placeholderList}>
                   <li>Reporte de fallas</li>
-                  <li>Daños registrados</li>
+                  <li>DaÃ±os registrados</li>
                   <li>Soluciones aplicadas</li>
                   <li>Costos asociados</li>
                 </ul>
