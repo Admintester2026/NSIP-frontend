@@ -1,10 +1,9 @@
-﻿//Update 1
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
-import { usePolling } from '../../hooks/useAsync';
-import EquipmentCard from '../../components/mantenimiento/EquipmentCard';
-import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal';
+import { usePolling } from '../../../hooks/useAsync';
+import EquipmentCard from '../../../components/mantenimiento/EquipmentCard';
+import AddEquipmentModal from '../../../components/mantenimiento/AddEquipmentModal';
 import styles from './styles/Equipos.module.css';
 
 export default function Equipos() {
@@ -20,7 +19,7 @@ export default function Equipos() {
   const fetchEquipos = useCallback(() => mantenimientoAPI.getEquipos('activo'), []);
   const { data: equiposData, loading: equiposLoading, refetch } = usePolling(fetchEquipos, 30000);
 
-  // Obtener categorÃ­as
+  // Obtener categorías
   const fetchCategorias = useCallback(() => mantenimientoAPI.getCategorias(), []);
   const { data: categoriasData } = usePolling(fetchCategorias, 60000);
 
@@ -75,7 +74,7 @@ export default function Equipos() {
 
   const handleCloseModal = () => {
     setShowAddModal(false);
-    refetch(); // Refrescar lista despuÃ©s de agregar
+    refetch(); // Refrescar lista después de agregar
   };
 
   if (loading && equipos.length === 0) {
@@ -93,17 +92,17 @@ export default function Equipos() {
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Mantenimiento de Equipos</h1>
-          <p className={styles.subtitle}>GestiÃ³n de equipos y maquinaria industrial</p>
+          <p className={styles.subtitle}>Gestión de equipos y maquinaria industrial</p>
         </div>
         <div className={styles.navTabs}>
           <Link to="/mantenimiento/equipos" className={`${styles.tab} ${styles.active}`}>
-            ðŸ“‹ Equipos
+            📋 Equipos
           </Link>
           <Link to="/mantenimiento/ordenes" className={styles.tab}>
-            ðŸ“ Ã“rdenes de Trabajo
+            📝 Órdenes de Trabajo
           </Link>
           <Link to="/mantenimiento/papelera" className={styles.tab}>
-            ðŸ—‘ï¸ Papelera
+            🗑️ Papelera
           </Link>
         </div>
       </div>
@@ -113,12 +112,12 @@ export default function Equipos() {
         <div className={styles.searchBox}>
           <input
             type="text"
-            placeholder="Buscar por nombre o ubicaciÃ³n..."
+            placeholder="Buscar por nombre o ubicación..."
             value={searchTerm}
             onChange={handleSearch}
             className={styles.searchInput}
           />
-          <span className={styles.searchIcon}>ðŸ”</span>
+          <span className={styles.searchIcon}>🔍</span>
         </div>
 
         <div className={styles.categoriaFilter}>
@@ -160,9 +159,9 @@ export default function Equipos() {
           ))
         ) : (
           <div className={styles.emptyState}>
-            <span className={styles.emptyIcon}>ðŸ”§</span>
+            <span className={styles.emptyIcon}>🔧</span>
             <h3>No hay equipos registrados</h3>
-            <p>Haz clic en el botÃ³n "+" para agregar tu primer equipo</p>
+            <p>Haz clic en el botón "+" para agregar tu primer equipo</p>
             {searchTerm && (
               <button 
                 className={styles.clearSearch}
@@ -171,14 +170,14 @@ export default function Equipos() {
                   applyFilters(equipos, '', selectedCategoria);
                 }}
               >
-                Limpiar bÃºsqueda
+                Limpiar búsqueda
               </button>
             )}
           </div>
         )}
       </div>
 
-      {/* BotÃ³n flotante */}
+      {/* Botón flotante */}
       <button className={styles.fab} onClick={handleAddEquipo}>
         <span className={styles.fabIcon}>+</span>
       </button>
