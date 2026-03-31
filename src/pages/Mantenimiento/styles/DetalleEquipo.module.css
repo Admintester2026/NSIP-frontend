@@ -1,0 +1,387 @@
+.detalle {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.backLink {
+  color: var(--green);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.backLink:hover {
+  transform: translateX(-4px);
+  color: var(--green-bright);
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.editButton, .deleteButton {
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.editButton {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+}
+
+.editButton:hover {
+  border-color: var(--green);
+  color: var(--green);
+  transform: translateY(-1px);
+}
+
+.deleteButton {
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.deleteButton:hover {
+  background: var(--red);
+  color: var(--bg-primary);
+  transform: translateY(-1px);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.infoCard, .filesCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+
+.infoHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.iconContainer {
+  width: 64px;
+  height: 64px;
+  background: var(--bg-raised);
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  font-size: 2.5rem;
+}
+
+.nombre {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.estadoBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.estadoActivo {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+}
+
+.estadoDanado {
+  background: rgba(255, 77, 77, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+}
+
+.estadoSuspension {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+}
+
+.estadoBaja {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.infoRow {
+  display: flex;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  width: 120px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.infoValue {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.categorias {
+  display: flex;
+  padding: 0.75rem 0;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.categoriasList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.categoriaTag {
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-raised);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-dim);
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.filesGrid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fileLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.fileLink:hover {
+  border-color: var(--green);
+  color: var(--green);
+  transform: translateY(-2px);
+}
+
+.fileIcon {
+  font-size: 1.1rem;
+}
+
+.tabsContainer {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-raised);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--green);
+  background: var(--bg-surface);
+}
+
+.tab.active {
+  color: var(--green);
+  border-bottom: 2px solid var(--green);
+}
+
+.tabContent {
+  padding: 1.5rem;
+}
+
+.placeholderCard {
+  text-align: center;
+  padding: 2rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+}
+
+.placeholderText {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.placeholderList {
+  list-style: none;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.8;
+}
+
+.placeholderList li {
+  padding: 0.25rem 0;
+}
+
+.loadingContainer, .errorContainer {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--border-dim);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.errorIcon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.errorContainer h2 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.errorContainer p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.backButton {
+  padding: 0.75rem 1.5rem;
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  border-radius: var(--r-md);
+  color: var(--green);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: var(--green);
+  color: var(--bg-primary);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .detalle {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .editButton, .deleteButton {
+    flex: 1;
+    text-align: center;
+  }
+
+  .infoHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .infoRow {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .infoLabel {
+    width: auto;
+  }
+
+  .tabs {
+    justify-content: center;
+  }
+
+  .tab {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .tabContent {
+    padding: 1rem;
+  }
+}
