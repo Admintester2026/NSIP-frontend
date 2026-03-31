@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
-import { usePolling } from '../../../hooks/useAsync';
-import EquipmentCard from '../../../components/mantenimiento/EquipmentCard';
-import AddEquipmentModal from '../../../components/mantenimiento/AddEquipmentModal';
+import { usePolling } from '../../hooks/useAsync';
+import EquipmentCard from '../../components/mantenimiento/EquipmentCard';
+import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal';
 import styles from './styles/Equipos.module.css';
 
 export default function Equipos() {
@@ -74,7 +74,7 @@ export default function Equipos() {
 
   const handleCloseModal = () => {
     setShowAddModal(false);
-    refetch(); // Refrescar lista después de agregar
+    refetch();
   };
 
   if (loading && equipos.length === 0) {
@@ -88,7 +88,6 @@ export default function Equipos() {
 
   return (
     <div className={styles.equipos}>
-      {/* Cabecera */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Mantenimiento de Equipos</h1>
@@ -107,7 +106,6 @@ export default function Equipos() {
         </div>
       </div>
 
-      {/* Barra de filtros */}
       <div className={styles.filterBar}>
         <div className={styles.searchBox}>
           <input
@@ -143,19 +141,14 @@ export default function Equipos() {
         </div>
       </div>
 
-      {/* Contador */}
       <div className={styles.counter}>
         {filteredEquipos.length} equipo{filteredEquipos.length !== 1 ? 's' : ''} encontrado{filteredEquipos.length !== 1 ? 's' : ''}
       </div>
 
-      {/* Grid de equipos */}
       <div className={styles.equiposGrid}>
         {filteredEquipos.length > 0 ? (
           filteredEquipos.map(equipo => (
-            <EquipmentCard
-              key={equipo.id}
-              equipo={equipo}
-            />
+            <EquipmentCard key={equipo.id} equipo={equipo} />
           ))
         ) : (
           <div className={styles.emptyState}>
@@ -177,12 +170,10 @@ export default function Equipos() {
         )}
       </div>
 
-      {/* Botón flotante */}
       <button className={styles.fab} onClick={handleAddEquipo}>
         <span className={styles.fabIcon}>+</span>
       </button>
 
-      {/* Modal de agregar equipo */}
       {showAddModal && (
         <AddEquipmentModal
           isOpen={showAddModal}
