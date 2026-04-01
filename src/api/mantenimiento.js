@@ -1,5 +1,4 @@
-// API para el módulo de mantenimiento
-const API_BASE = '/api/mantenimiento';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://192.168.3.65:3000/api/mantenimiento';
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -17,7 +16,6 @@ async function handleResponse(response) {
 }
 
 export const mantenimientoAPI = {
-  // Equipos
   getEquipos: async (estado = 'activo') => {
     const url = estado ? `${API_BASE}/equipos?estado=${estado}` : `${API_BASE}/equipos`;
     const response = await fetch(url);
@@ -56,28 +54,9 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  cambiarEstado: async (id, estado) => {
-    const response = await fetch(`${API_BASE}/equipos/${id}/estado`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado })
-    });
-    return handleResponse(response);
-  },
-
-  // Categorías
   getCategorias: async () => {
     const response = await fetch(`${API_BASE}/categorias`);
     const data = await handleResponse(response);
     return data.datos || [];
-  },
-
-  createCategoria: async (categoriaData) => {
-    const response = await fetch(`${API_BASE}/categorias`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(categoriaData)
-    });
-    return handleResponse(response);
   }
 };
