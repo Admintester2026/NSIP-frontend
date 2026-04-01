@@ -2,9 +2,5 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "vite",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/api/:match*", "destination": "http://192.168.3.124:3000/api/:match*" },
-    { "source": "/(.*)", "destination": "/" }
-  ]
+  "outputDirectory": "dist"
 }
