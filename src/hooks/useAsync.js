@@ -43,3 +43,46 @@ export function usePolling(asyncFunction, interval = 30000) {
 
   return { data, loading, error, refetch: fetchData };
 }
+
+export function useMutation(mutationFn, options = {}) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const mounted = useRef(true);
+
+  const execute = useCallback(async (...args) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await mutationFn(...args);
+      if (mounted.current) {
+        setData(result);
+        if (options.onSuccess) {
+          options.onSuccess(result);
+        }
+      }
+      return result;
+    } catch (err) {
+      if (mounted.current) {
+        setError(err);
+        if (options.onError) {
+          options.onError(err);
+        }
+      }
+      throw err;
+    } finally {
+      if (mounted.current) {
+        setLoading(false);
+      }
+    }
+  }, [mutationFn, options]);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  return { data, loading, error, execute };
+}
