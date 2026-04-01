@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api/mantenimiento';
+// src/api/mantenimiento.js
+const API_BASE = import.meta.env.VITE_API_URL;
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -16,26 +17,25 @@ async function handleResponse(response) {
 }
 
 export const mantenimientoAPI = {
-  // Equipos
   getEquipos: async (estado = 'activo') => {
-    // Si usa VITE_API_URL, ya incluye /api, así que solo agregamos /mantenimiento/equipos
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const url = estado ? `${baseUrl}/equipos?estado=${estado}` : `${baseUrl}/equipos`;
+    const url = `${API_BASE}/mantenimiento/equipos${estado ? `?estado=${estado}` : ''}`;
+    console.log('URL getEquipos:', url); // Para debug
     const response = await fetch(url);
     const data = await handleResponse(response);
     return data.datos || [];
   },
 
   getEquipoById: async (id) => {
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const response = await fetch(`${baseUrl}/equipos/${id}`);
+    const url = `${API_BASE}/mantenimiento/equipos/${id}`;
+    console.log('URL getEquipoById:', url);
+    const response = await fetch(url);
     const data = await handleResponse(response);
     return data.datos;
   },
 
   createEquipo: async (equipoData) => {
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const response = await fetch(`${baseUrl}/equipos`, {
+    const url = `${API_BASE}/mantenimiento/equipos`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(equipoData)
@@ -44,8 +44,8 @@ export const mantenimientoAPI = {
   },
 
   updateEquipo: async (id, equipoData) => {
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const response = await fetch(`${baseUrl}/equipos/${id}`, {
+    const url = `${API_BASE}/mantenimiento/equipos/${id}`;
+    const response = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(equipoData)
@@ -54,38 +54,18 @@ export const mantenimientoAPI = {
   },
 
   deleteEquipo: async (id) => {
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const response = await fetch(`${baseUrl}/equipos/${id}`, {
+    const url = `${API_BASE}/mantenimiento/equipos/${id}`;
+    const response = await fetch(url, {
       method: 'DELETE'
     });
     return handleResponse(response);
   },
 
-  cambiarEstado: async (id, estado) => {
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const response = await fetch(`${baseUrl}/equipos/${id}/estado`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado })
-    });
-    return handleResponse(response);
-  },
-
-  // Categorías
   getCategorias: async () => {
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const response = await fetch(`${baseUrl}/categorias`);
+    const url = `${API_BASE}/mantenimiento/categorias`;
+    console.log('URL getCategorias:', url);
+    const response = await fetch(url);
     const data = await handleResponse(response);
     return data.datos || [];
-  },
-
-  createCategoria: async (categoriaData) => {
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/mantenimiento`;
-    const response = await fetch(`${baseUrl}/categorias`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(categoriaData)
-    });
-    return handleResponse(response);
   }
 };
