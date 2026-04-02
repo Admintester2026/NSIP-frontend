@@ -2,7 +2,12 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import styles from './EquipmentCard.module.css';
 
-export default function EquipmentCard({ equipo, onEdit, ultimoMantenimiento, proximoMantenimiento }) {
+export default function EquipmentCard({ 
+  equipo, 
+  onEdit, 
+  ultimoMantenimiento = null, 
+  proximoMantenimiento = null 
+}) {
   const [imageError, setImageError] = useState(false);
 
   const getEstadoClass = () => {
@@ -21,7 +26,7 @@ export default function EquipmentCard({ equipo, onEdit, ultimoMantenimiento, pro
       case 'dañado': return 'Dañado';
       case 'suspension': return 'Suspendido';
       case 'baja': return 'Dado de Baja';
-      default: return equipo.estado;
+      default: return equipo.estado || 'Desconocido';
     }
   };
 
@@ -43,6 +48,7 @@ export default function EquipmentCard({ equipo, onEdit, ultimoMantenimiento, pro
   const formatDate = (dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return null;
     return date.toLocaleDateString('es-MX', { 
       day: '2-digit', 
       month: 'short', 
@@ -55,6 +61,10 @@ export default function EquipmentCard({ equipo, onEdit, ultimoMantenimiento, pro
     e.stopPropagation();
     if (onEdit) onEdit(equipo);
   };
+
+  // Obtener fecha del último mantenimiento
+  const ultimoMantFecha = ultimoMantenimiento?.fecha || ultimoMantenimiento;
+  const proximoMantFecha = proximoMantenimiento?.fecha || proximoMantenimiento;
 
   return (
     <div className={styles.cardWrapper}>
@@ -99,16 +109,16 @@ export default function EquipmentCard({ equipo, onEdit, ultimoMantenimiento, pro
 
         {/* Información de mantenimientos */}
         <div className={styles.mantenimientoInfo}>
-          {ultimoMantenimiento && (
+          {ultimoMantFecha && (
             <div className={styles.ultimoMant}>
               <span className={styles.mantIcon}>🔧</span>
-              <span>Último: {formatDate(ultimoMantenimiento)}</span>
+              <span>Último: {formatDate(ultimoMantFecha)}</span>
             </div>
           )}
-          {proximoMantenimiento && (
+          {proximoMantFecha && (
             <div className={styles.proximoMant}>
               <span className={styles.mantIcon}>⏰</span>
-              <span>Próximo: {formatDate(proximoMantenimiento)}</span>
+              <span>Próximo: {formatDate(proximoMantFecha)}</span>
             </div>
           )}
         </div>
@@ -142,7 +152,7 @@ export default function EquipmentCard({ equipo, onEdit, ultimoMantenimiento, pro
 
         <div className={styles.cardFooter}>
           <span className={styles.fecha}>
-            📅 {formatDate(equipo.fecha_registro)}
+            📅 {formatDate(equipo.fecha_registro) || 'Fecha desconocida'}
           </span>
           <span className={styles.verDetalle}>
             Ver detalles →

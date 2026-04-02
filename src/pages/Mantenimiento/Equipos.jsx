@@ -4,12 +4,12 @@ import { mantenimientoAPI } from '../../api/mantenimiento';
 import { usePolling } from '../../hooks/useAsync';
 import EquipmentCard from '../../components/mantenimiento/EquipmentCard';
 import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal';
+import FiltrosBar from '../../components/mantenimiento/FiltrosBar';
 import styles from './styles/Equipos.module.css';
 
 export default function Equipos() {
   const [equipos, setEquipos] = useState([]);
   const [filteredEquipos, setFilteredEquipos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('todas');
   const [selectedEstado, setSelectedEstado] = useState('activo');
@@ -18,14 +18,12 @@ export default function Equipos() {
   const [inactivosExpandidos, setInactivosExpandidos] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [equipoEditando, setEquipoEditando] = useState(null);
 
   // Obtener equipos con polling según estado seleccionado
   const fetchEquipos = useCallback(() => mantenimientoAPI.getEquipos(selectedEstado), [selectedEstado]);
   const { data: equiposData, refetch } = usePolling(fetchEquipos, 30000);
-
-  // Obtener categorías
-  const fetchCategorias = useCallback(() => mantenimientoAPI.getCategorias(), []);
-  const { data: categoriasData } = usePolling(fetchCategorias, 60000);
 
   useEffect(() => {
     if (equiposData) {
@@ -34,12 +32,6 @@ export default function Equipos() {
       setLoading(false);
     }
   }, [equiposData]);
-
-  useEffect(() => {
-    if (categoriasData) {
-      setCategorias(categoriasData);
-    }
-  }, [categoriasData]);
 
   // Función para ordenar equipos
   const ordenarEquipos = (equiposList) => {
@@ -99,37 +91,46 @@ export default function Equipos() {
     e.estado === 'dañado' || e.estado === 'suspension' || e.estado === 'baja'
   );
 
-  const handleSearch = (e) => {
-    const term = e.target.value;
+  const handleSearchChange = (term) => {
     setSearchTerm(term);
     applyFilters(equipos, term, selectedCategoria);
   };
 
-  const handleCategoriaFilter = (catNombre) => {
+  const handleCategoriaChange = (catNombre) => {
     setSelectedCategoria(catNombre);
     applyFilters(equipos, searchTerm, catNombre);
   };
 
-  const handleEstadoChange = (e) => {
-    setSelectedEstado(e.target.value);
+  const handleEstadoChange = (estado) => {
+    setSelectedEstado(estado);
   };
 
-  const handleOrdenChange = (e) => {
-    setOrdenPor(e.target.value);
+  const handleOrdenChange = (orden) => {
+    setOrdenPor(orden);
     applyFilters(equipos, searchTerm, selectedCategoria);
   };
 
-  const toggleOrdenDir = () => {
+  const handleOrdenDirToggle = () => {
     setOrdenDir(ordenDir === 'asc' ? 'desc' : 'asc');
     applyFilters(equipos, searchTerm, selectedCategoria);
   };
 
   const handleAddEquipo = () => {
+    setEditMode(false);
+    setEquipoEditando(null);
+    setShowAddModal(true);
+  };
+
+  const handleEditEquipo = (equipo) => {
+    setEditMode(true);
+    setEquipoEditando(equipo);
     setShowAddModal(true);
   };
 
   const handleCloseModal = () => {
     setShowAddModal(false);
+    setEditMode(false);
+    setEquipoEditando(null);
     refetch();
   };
 
@@ -169,91 +170,34 @@ export default function Equipos() {
         </div>
       </div>
 
-      {/* Barra de filtros */}
-      <div className={styles.filterBar}>
-        <div className={styles.searchBox}>
-          <input
-            type="text"
-            placeholder="Buscar por nombre o ubicación..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className={styles.searchInput}
-          />
-          <span className={styles.searchIcon}>🔍</span>
-          {searchTerm && (
-            <button className={styles.clearSearchBtn} onClick={clearFilters}>✕</button>
-          )}
+      {/* Barra de filtros modularizada */}
+      <FiltrosBar
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        selectedCategoria={selectedCategoria}
+        onCategoriaChange={handleCategoriaChange}
+        selectedEstado={selectedEstado}
+        onEstadoChange={handleEstadoChange}
+        ordenPor={ordenPor}
+        onOrdenChange={handleOrdenChange}
+        ordenDir={ordenDir}
+        onOrdenDirToggle={handleOrdenDirToggle}
+        onClearFilters={clearFilters}
+      />
+
+      {/* Contador y acciones */}
+      <div className={styles.counterBar}>
+        <div className={styles.counter}>
+          📊 Total: {filteredEquipos.length} equipo{filteredEquipos.length !== 1 ? 's' : ''}
         </div>
-
-        <div className={styles.filtersRow}>
-          {/* Filtro por estado */}
-          <div className={styles.estadoFilter}>
-            <label className={styles.filterLabel}>Estado:</label>
-            <select 
-              className={styles.estadoSelect}
-              value={selectedEstado}
-              onChange={handleEstadoChange}
-            >
-              <option value="activo">Activos</option>
-              <option value="dañado">Dañados</option>
-              <option value="suspension">Suspendidos</option>
-              <option value="baja">Dados de Baja</option>
-              <option value="todos">Todos</option>
-            </select>
-          </div>
-
-          {/* Ordenamiento */}
-          <div className={styles.ordenFilter}>
-            <label className={styles.filterLabel}>Ordenar por:</label>
-            <select 
-              className={styles.ordenSelect}
-              value={ordenPor}
-              onChange={handleOrdenChange}
-            >
-              <option value="nombre">Nombre</option>
-              <option value="fecha">Fecha de registro</option>
-              <option value="estado">Estado</option>
-            </select>
-            <button 
-              className={styles.ordenDirBtn}
-              onClick={toggleOrdenDir}
-              title={ordenDir === 'asc' ? 'Ascendente' : 'Descendente'}
-            >
-              {ordenDir === 'asc' ? '↑' : '↓'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtro de categorías */}
-      <div className={styles.categoriaFilterBar}>
-        <span className={styles.categoriaFilterLabel}>Categorías:</span>
-        <div className={styles.categoriaFilter}>
-          <button
-            className={`${styles.categoriaButton} ${selectedCategoria === 'todas' ? styles.active : ''}`}
-            onClick={() => handleCategoriaFilter('todas')}
-          >
-            Todas
+        <div className={styles.actionButtons}>
+          <button className={styles.actionBtn} onClick={clearFilters} title="Limpiar filtros">
+            🧹
           </button>
-          {categorias.map(cat => (
-            <button
-              key={cat.id}
-              className={`${styles.categoriaButton} ${selectedCategoria === cat.nombre ? styles.active : ''}`}
-              onClick={() => handleCategoriaFilter(cat.nombre)}
-            >
-              <span 
-                className={styles.categoriaDot} 
-                style={{ backgroundColor: cat.color }}
-              ></span>
-              {cat.nombre}
-            </button>
-          ))}
+          <button className={styles.actionBtn} onClick={handleAddEquipo} title="Agregar equipo">
+            ➕
+          </button>
         </div>
-      </div>
-
-      {/* Contador */}
-      <div className={styles.counter}>
-        Total: {filteredEquipos.length} equipo{filteredEquipos.length !== 1 ? 's' : ''}
       </div>
 
       {/* Sección de equipos activos */}
@@ -264,7 +208,11 @@ export default function Equipos() {
         {equiposActivos.length > 0 ? (
           <div className={styles.equiposGrid}>
             {equiposActivos.map(equipo => (
-              <EquipmentCard key={equipo.id} equipo={equipo} />
+              <EquipmentCard 
+                key={equipo.id} 
+                equipo={equipo} 
+                onEdit={handleEditEquipo}
+              />
             ))}
           </div>
         ) : (
@@ -289,7 +237,11 @@ export default function Equipos() {
           {inactivosExpandidos && (
             <div className={styles.equiposGrid}>
               {equiposInactivos.map(equipo => (
-                <EquipmentCard key={equipo.id} equipo={equipo} />
+                <EquipmentCard 
+                  key={equipo.id} 
+                  equipo={equipo} 
+                  onEdit={handleEditEquipo}
+                />
               ))}
             </div>
           )}
@@ -302,28 +254,17 @@ export default function Equipos() {
           <span className={styles.emptyIcon}>🔧</span>
           <h3>No hay equipos registrados</h3>
           <p>Haz clic en el botón "+" para agregar tu primer equipo</p>
-          {(searchTerm || selectedCategoria !== 'todas') && (
-            <button 
-              className={styles.clearSearch}
-              onClick={clearFilters}
-            >
-              Limpiar filtros
-            </button>
-          )}
         </div>
       )}
 
-      {/* Botón flotante */}
-      <button className={styles.fab} onClick={handleAddEquipo}>
-        <span className={styles.fabIcon}>+</span>
-      </button>
-
-      {/* Modal */}
+      {/* Modal de agregar/editar equipo */}
       {showAddModal && (
         <AddEquipmentModal
           isOpen={showAddModal}
           onClose={handleCloseModal}
           onSuccess={() => refetch()}
+          editMode={editMode}
+          equipoData={equipoEditando}
         />
       )}
     </div>

@@ -6,7 +6,9 @@
   min-height: 100vh;
 }
 
-/* Header */
+/* ==========================================
+   HEADER Y NAVEGACIÓN
+   ========================================== */
 .header {
   display: flex;
   align-items: center;
@@ -63,189 +65,54 @@
   color: #000;
 }
 
-/* Barra de filtros principal */
-.filterBar {
+/* ==========================================
+   CONTADOR Y ACCIONES
+   ========================================== */
+.counterBar {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
   background: #1a1a1a;
-  padding: 1rem;
   border-radius: 12px;
   border: 1px solid #333;
 }
 
-.searchBox {
-  flex: 2;
-  position: relative;
-  min-width: 250px;
+.counter {
+  color: #888;
+  font-size: 0.85rem;
 }
 
-.searchInput {
-  width: 100%;
-  padding: 0.75rem 2rem 0.75rem 2.5rem;
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 0.9rem;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: #00ff9d;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #888;
-}
-
-.clearSearchBtn {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
   color: #888;
   cursor: pointer;
   font-size: 1rem;
-  padding: 0;
-}
-
-.clearSearchBtn:hover {
-  color: #ff4d4d;
-}
-
-.filtersRow {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* Filtro de estado */
-.estadoFilter, .ordenFilter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #2a2a2a;
-  padding: 0.25rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid #444;
-}
-
-.filterLabel {
-  color: #888;
-  font-size: 0.8rem;
-}
-
-.estadoSelect, .ordenSelect {
-  background: #1a1a1a;
-  border: 1px solid #444;
-  border-radius: 6px;
-  padding: 0.25rem 0.5rem;
-  color: #fff;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.estadoSelect:focus, .ordenSelect:focus {
-  outline: none;
-  border-color: #00ff9d;
-}
-
-.ordenDirBtn {
-  background: #1a1a1a;
-  border: 1px solid #444;
-  border-radius: 6px;
-  padding: 0.25rem 0.5rem;
-  color: #888;
-  cursor: pointer;
-  font-size: 0.85rem;
   transition: all 0.2s ease;
-}
-
-.ordenDirBtn:hover {
-  border-color: #00ff9d;
-  color: #00ff9d;
-}
-
-/* Filtro de categorías */
-.categoriaFilterBar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 0.75rem;
-  background: #1a1a1a;
-  border-radius: 12px;
-  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.categoriaFilterLabel {
-  color: #888;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.categoriaFilter {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-  flex: 1;
-}
-
-.categoriaButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 20px;
-  color: #888;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.categoriaButton:hover {
+.actionBtn:hover {
   border-color: #00ff9d;
   color: #00ff9d;
+  transform: translateY(-1px);
 }
 
-.categoriaButton.active {
-  background: rgba(0, 255, 157, 0.2);
-  border-color: #00ff9d;
-  color: #00ff9d;
-}
-
-.categoriaDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-/* Contador */
-.counter {
-  margin-bottom: 1.5rem;
-  padding: 0.5rem 1rem;
-  background: #1a1a1a;
-  border-radius: 8px;
-  color: #888;
-  font-size: 0.85rem;
-  display: inline-block;
-}
-
-/* Secciones de equipos */
+/* ==========================================
+   SECCIONES DE EQUIPOS
+   ========================================== */
 .seccionEquipos {
   margin-bottom: 2rem;
 }
@@ -274,6 +141,7 @@
   width: 100%;
   text-align: left;
   border-bottom: 1px solid #333;
+  transition: color 0.2s ease;
 }
 
 .seccionTituloCollapsible:hover {
@@ -283,6 +151,7 @@
 .collapseIcon {
   font-size: 0.9rem;
   color: #888;
+  transition: transform 0.2s ease;
 }
 
 .emptySubsection {
@@ -293,7 +162,9 @@
   color: #666;
 }
 
-/* Grid de equipos */
+/* ==========================================
+   GRID DE EQUIPOS
+   ========================================== */
 .equiposGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -322,7 +193,9 @@
   background: #00ff9d;
 }
 
-/* Loading */
+/* ==========================================
+   LOADING
+   ========================================== */
 .loadingContainer {
   min-height: 400px;
   display: flex;
@@ -341,7 +214,9 @@
   animation: spin 1s linear infinite;
 }
 
-/* Empty state */
+/* ==========================================
+   EMPTY STATE
+   ========================================== */
 .emptyState {
   text-align: center;
   padding: 4rem;
@@ -383,7 +258,9 @@
   color: #00ff9d;
 }
 
-/* Botón flotante */
+/* ==========================================
+   BOTÓN FLOTANTE (FAB)
+   ========================================== */
 .fab {
   position: fixed;
   bottom: 2rem;
@@ -410,7 +287,9 @@
   line-height: 1;
 }
 
-/* Animaciones */
+/* ==========================================
+   ANIMACIONES
+   ========================================== */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -426,7 +305,9 @@
   }
 }
 
-/* Responsive */
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
 @media (max-width: 1024px) {
   .equipos {
     padding: 1rem;
@@ -452,22 +333,14 @@
     text-align: center;
   }
   
-  .filterBar {
+  .counterBar {
     flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
   }
   
-  .filtersRow {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .estadoFilter, .ordenFilter {
-    flex: 1;
-  }
-  
-  .categoriaFilterBar {
-    flex-direction: column;
-    align-items: flex-start;
+  .actionButtons {
+    justify-content: center;
   }
   
   .equiposGrid {
