@@ -1,16 +1,21 @@
+// src/components/mantenimiento/AddEquipmentModal.jsx
 import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './AddEquipmentModal.module.css';
 
-export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
+export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode = false, equipoData = null }) {
   const [formData, setFormData] = useState({
+    id: null,
     nombre: '',
     ubicacion: '',
     descripcion: '',
     categorias: [],
     foto: null,
+    foto_url: '',
     ficha_tecnica: null,
-    manual: null
+    ficha_tecnica_url: '',
+    manual: null,
+    manual_url: ''
   });
   
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([]);
@@ -23,12 +28,46 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
   const fichaInputRef = useRef(null);
   const manualInputRef = useRef(null);
 
+  // Cargar datos cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       cargarCategorias();
       cargarSugerenciasNombres();
+      
+      // Si es modo edición, cargar los datos del equipo
+      if (editMode && equipoData) {
+        setFormData({
+          id: equipoData.id,
+          nombre: equipoData.nombre || '',
+          ubicacion: equipoData.ubicacion || '',
+          descripcion: equipoData.descripcion || '',
+          categorias: equipoData.categorias?.map(cat => cat.id) || [],
+          foto: null,
+          foto_url: equipoData.foto_url || '',
+          ficha_tecnica: null,
+          ficha_tecnica_url: equipoData.ficha_tecnica_url || '',
+          manual: null,
+          manual_url: equipoData.manual_url || ''
+        });
+      } else {
+        // Resetear formulario en modo creación
+        setFormData({
+          id: null,
+          nombre: '',
+          ubicacion: '',
+          descripcion: '',
+          categorias: [],
+          foto: null,
+          foto_url: '',
+          ficha_tecnica: null,
+          ficha_tecnica_url: '',
+          manual: null,
+          manual_url: ''
+        });
+      }
+      setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, editMode, equipoData]);
 
   const cargarCategorias = async () => {
     try {
@@ -41,7 +80,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
 
   const cargarSugerenciasNombres = async () => {
     try {
-      const equipos = await mantenimientoAPI.getEquipos();
+      const equipos = await mantenimientoAPI.getEquipos('todos');
       const nombresUnicos = [...new Set(equipos.map(e => e.nombre))];
       setNombreSugerencias(nombresUnicos);
     } catch (err) {
@@ -53,7 +92,8 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    if (name === 'nombre' && value.length > 2) {
+    // Solo mostrar sugerencias en modo creación y si no es edición
+    if (!editMode && name === 'nombre' && value.length > 2) {
       const sugerenciasFiltradas = nombreSugerencias.filter(
         nombre => nombre.toLowerCase().includes(value.toLowerCase())
       );
@@ -104,14 +144,14 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
   const uploadFile = async (file, tipo) => {
     if (!file) return null;
     
-    const formData = new FormData();
-    formData.append('archivo', file);
-    formData.append('tipo', tipo);
+    const formDataFile = new FormData();
+    formDataFile.append('archivo', file);
+    formDataFile.append('tipo', tipo);
     
     try {
       const response = await fetch('/api/mantenimiento/upload', {
         method: 'POST',
-        body: formData
+        body: formDataFile
       });
       const data = await response.json();
       return data.url;
@@ -131,11 +171,22 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
         throw new Error('El nombre del equipo es requerido');
       }
 
-      const fotoUrl = await uploadFile(formData.foto, 'foto');
-      const fichaUrl = await uploadFile(formData.ficha_tecnica, 'ficha');
-      const manualUrl = await uploadFile(formData.manual, 'manual');
+      // Subir archivos nuevos (si hay)
+      let fotoUrl = formData.foto_url;
+      let fichaUrl = formData.ficha_tecnica_url;
+      let manualUrl = formData.manual_url;
 
-      const equipoData = {
+      if (formData.foto) {
+        fotoUrl = await uploadFile(formData.foto, 'foto');
+      }
+      if (formData.ficha_tecnica) {
+        fichaUrl = await uploadFile(formData.ficha_tecnica, 'ficha');
+      }
+      if (formData.manual) {
+        manualUrl = await uploadFile(formData.manual, 'manual');
+      }
+
+      const equipoDataToSend = {
         nombre: formData.nombre.trim(),
         ubicacion: formData.ubicacion.trim() || null,
         descripcion: formData.descripcion.trim() || null,
@@ -145,22 +196,33 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
         manual_url: manualUrl
       };
 
-      await mantenimientoAPI.createEquipo(equipoData);
+      if (editMode && formData.id) {
+        // Actualizar equipo existente
+        await mantenimientoAPI.updateEquipo(formData.id, equipoDataToSend);
+      } else {
+        // Crear nuevo equipo
+        await mantenimientoAPI.createEquipo(equipoDataToSend);
+      }
       
+      // Limpiar formulario
       setFormData({
+        id: null,
         nombre: '',
         ubicacion: '',
         descripcion: '',
         categorias: [],
         foto: null,
+        foto_url: '',
         ficha_tecnica: null,
-        manual: null
+        ficha_tecnica_url: '',
+        manual: null,
+        manual_url: ''
       });
       
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setError(err.message || 'Error al crear el equipo');
+      setError(err.message || `Error al ${editMode ? 'actualizar' : 'crear'} el equipo`);
     } finally {
       setLoading(false);
     }
@@ -172,7 +234,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Agregar Nuevo Equipo</h2>
+          <h2>{editMode ? '✏️ Editar Equipo' : '➕ Agregar Nuevo Equipo'}</h2>
           <button className={styles.modalClose} onClick={onClose}>✕</button>
         </div>
 
@@ -197,7 +259,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
                 placeholder="Ej: Centrífuga, Microscopio, Reactor..."
                 autoComplete="off"
               />
-              {sugerencias.length > 0 && (
+              {sugerencias.length > 0 && !editMode && (
                 <div className={styles.sugerencias}>
                   {sugerencias.map((sug, idx) => (
                     <div
@@ -267,7 +329,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
                   className={styles.fileButton}
                   onClick={() => fotoInputRef.current?.click()}
                 >
-                  📷 {formData.foto ? 'Cambiar foto' : 'Seleccionar foto'}
+                  📷 {formData.foto || formData.foto_url ? 'Cambiar foto' : 'Seleccionar foto'}
                 </button>
                 <input
                   ref={fotoInputRef}
@@ -276,8 +338,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
                   onChange={(e) => handleFileChange(e, 'foto')}
                   className={styles.hiddenInput}
                 />
-                {formData.foto && (
-                  <span className={styles.fileName}>{formData.foto.name}</span>
+                {(formData.foto || formData.foto_url) && (
+                  <span className={styles.fileName}>
+                    {formData.foto ? formData.foto.name : 'Foto actual'}
+                  </span>
                 )}
               </div>
             </div>
@@ -290,7 +354,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
                   className={styles.fileButton}
                   onClick={() => fichaInputRef.current?.click()}
                 >
-                  📄 {formData.ficha_tecnica ? 'Cambiar archivo' : 'Subir ficha técnica'}
+                  📄 {formData.ficha_tecnica || formData.ficha_tecnica_url ? 'Cambiar archivo' : 'Subir ficha técnica'}
                 </button>
                 <input
                   ref={fichaInputRef}
@@ -299,8 +363,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
                   onChange={(e) => handleFileChange(e, 'ficha_tecnica')}
                   className={styles.hiddenInput}
                 />
-                {formData.ficha_tecnica && (
-                  <span className={styles.fileName}>{formData.ficha_tecnica.name}</span>
+                {(formData.ficha_tecnica || formData.ficha_tecnica_url) && (
+                  <span className={styles.fileName}>
+                    {formData.ficha_tecnica ? formData.ficha_tecnica.name : 'Archivo actual'}
+                  </span>
                 )}
               </div>
             </div>
@@ -313,7 +379,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
                   className={styles.fileButton}
                   onClick={() => manualInputRef.current?.click()}
                 >
-                  📘 {formData.manual ? 'Cambiar manual' : 'Subir manual'}
+                  📘 {formData.manual || formData.manual_url ? 'Cambiar manual' : 'Subir manual'}
                 </button>
                 <input
                   ref={manualInputRef}
@@ -322,8 +388,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
                   onChange={(e) => handleFileChange(e, 'manual')}
                   className={styles.hiddenInput}
                 />
-                {formData.manual && (
-                  <span className={styles.fileName}>{formData.manual.name}</span>
+                {(formData.manual || formData.manual_url) && (
+                  <span className={styles.fileName}>
+                    {formData.manual ? formData.manual.name : 'Manual actual'}
+                  </span>
                 )}
               </div>
             </div>
@@ -334,7 +402,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess }) {
               Cancelar
             </button>
             <button type="submit" className={styles.submitButton} disabled={loading}>
-              {loading ? 'Guardando...' : 'Agregar Equipo'}
+              {loading ? 'Guardando...' : (editMode ? 'Actualizar Equipo' : 'Agregar Equipo')}
             </button>
           </div>
         </form>
