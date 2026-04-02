@@ -1,4 +1,3 @@
-/* src/components/mantenimiento/FiltrosBar.module.css */
 .filtrosBar {
   background: var(--bg-surface);
   border: 1px solid var(--border-dim);
@@ -10,7 +9,6 @@
   gap: 1rem;
 }
 
-/* Sección de búsqueda */
 .searchSection {
   width: 100%;
 }
@@ -71,7 +69,6 @@
   color: var(--red);
 }
 
-/* Fila de filtros */
 .filtersRow {
   display: flex;
   gap: 1rem;
@@ -126,7 +123,25 @@
   color: var(--green);
 }
 
-/* Sección de categorías */
+.clearFiltersBtn {
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clearFiltersBtn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
 .categoriaSection {
   display: flex;
   align-items: flex-start;
@@ -183,31 +198,6 @@
   transition: box-shadow 0.2s ease;
 }
 
-/* Botón limpiar filtros */
-.clearFiltersSection {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-dim);
-}
-
-.clearFiltersBtn {
-  padding: 0.4rem 1rem;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.clearFiltersBtn:hover {
-  border-color: var(--red);
-  color: var(--red);
-}
-
-/* Responsive */
 @media (max-width: 768px) {
   .filtrosBar {
     padding: 1rem;
@@ -220,6 +210,10 @@
   
   .filterGroup {
     justify-content: space-between;
+  }
+  
+  .clearFiltersBtn {
+    justify-content: center;
   }
   
   .categoriaSection {

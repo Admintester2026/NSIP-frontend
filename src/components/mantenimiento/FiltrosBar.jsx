@@ -19,7 +19,6 @@ export default function FiltrosBar({
   const [categorias, setCategorias] = useState([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
 
-  // Cargar categorías al montar el componente
   useEffect(() => {
     cargarCategorias();
   }, []);
@@ -33,12 +32,6 @@ export default function FiltrosBar({
       console.error('Error cargando categorías:', err);
     } finally {
       setLoadingCategorias(false);
-    }
-  };
-
-  const handleClearFilters = () => {
-    if (onClearFilters) {
-      onClearFilters();
     }
   };
 
@@ -56,7 +49,7 @@ export default function FiltrosBar({
           />
           <span className={styles.searchIcon}>🔍</span>
           {searchTerm && (
-            <button className={styles.clearSearchBtn} onClick={handleClearFilters}>
+            <button className={styles.clearSearchBtn} onClick={onClearFilters}>
               ✕
             </button>
           )}
@@ -65,7 +58,6 @@ export default function FiltrosBar({
 
       {/* Filtros de estado y orden */}
       <div className={styles.filtersRow}>
-        {/* Filtro por estado */}
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Estado:</label>
           <select 
@@ -81,7 +73,6 @@ export default function FiltrosBar({
           </select>
         </div>
 
-        {/* Ordenamiento */}
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Ordenar por:</label>
           <select 
@@ -101,6 +92,11 @@ export default function FiltrosBar({
             {ordenDir === 'asc' ? '↑' : '↓'}
           </button>
         </div>
+
+        {/* Botón limpiar filtros aquí */}
+        <button className={styles.clearFiltersBtn} onClick={onClearFilters} title="Limpiar todos los filtros">
+          🧹 Limpiar filtros
+        </button>
       </div>
 
       {/* Filtro de categorías */}
@@ -135,15 +131,6 @@ export default function FiltrosBar({
           ))}
         </div>
       </div>
-
-      {/* Botón limpiar filtros */}
-      {(searchTerm || selectedCategoria !== 'todas') && (
-        <div className={styles.clearFiltersSection}>
-          <button className={styles.clearFiltersBtn} onClick={handleClearFilters}>
-            🧹 Limpiar filtros
-          </button>
-        </div>
-      )}
     </div>
   );
 }

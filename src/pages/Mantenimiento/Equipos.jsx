@@ -21,6 +21,8 @@ export default function Equipos() {
   const [editMode, setEditMode] = useState(false);
   const [equipoEditando, setEquipoEditando] = useState(null);
   const [selectedEquipos, setSelectedEquipos] = useState(new Set());
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const fetchEquipos = useCallback(() => mantenimientoAPI.getEquipos(selectedEstado), [selectedEstado]);
   const { data: equiposData, refetch } = usePolling(fetchEquipos, 30000);
@@ -79,7 +81,6 @@ export default function Equipos() {
 
     filtered = ordenarEquipos(filtered);
     setFilteredEquipos(filtered);
-    // Limpiar selección al filtrar
     setSelectedEquipos(new Set());
   };
 
@@ -126,10 +127,25 @@ export default function Equipos() {
         setEquipoEditando(equipo);
         setShowAddModal(true);
       }
+    } else if (selectedEquipos.size === 0) {
+      setAlertMessage('Por favor, selecciona un equipo para editar');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+    } else {
+      setAlertMessage('Solo puedes editar un equipo a la vez');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
     }
   };
 
   const handleDeleteSelected = async () => {
+    if (selectedEquipos.size === 0) {
+      setAlertMessage('Por favor, selecciona al menos un equipo para eliminar');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+      return;
+    }
+    
     if (window.confirm(`¿Estás seguro de eliminar ${selectedEquipos.size} equipo(s)?`)) {
       for (const id of selectedEquipos) {
         await mantenimientoAPI.deleteEquipo(id);
@@ -186,6 +202,13 @@ export default function Equipos() {
 
   return (
     <div className={styles.equipos}>
+      {/* Alerta flotante */}
+      {showAlert && (
+        <div className={styles.alert}>
+          <span>⚠️</span> {alertMessage}
+        </div>
+      )}
+
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Mantenimiento de Equipos</h1>
@@ -224,31 +247,31 @@ export default function Equipos() {
           {numSelected > 0 && ` | ✅ Seleccionados: ${numSelected}`}
         </div>
         <div className={styles.actionButtons}>
-          {numSelected > 0 && (
-            <>
-              <button className={styles.actionBtn} onClick={handleSelectAll} title="Deseleccionar todo">
-                🔘
-              </button>
-              {numSelected === 1 && (
-                <button className={styles.actionBtn} onClick={handleEditSelected} title="Editar seleccionado">
-                  ✏️
-                </button>
-              )}
-              <button className={`${styles.actionBtn} ${styles.danger}`} onClick={handleDeleteSelected} title="Eliminar seleccionados">
-                🗑️
-              </button>
-            </>
-          )}
-          {numSelected === 0 && filteredEquipos.length > 0 && (
-            <button className={styles.actionBtn} onClick={handleSelectAll} title="Seleccionar todos">
-              ☑️
-            </button>
-          )}
-          <button className={styles.actionBtn} onClick={clearFilters} title="Limpiar filtros">
-            🧹
+          <button 
+            className={`${styles.actionBtn} ${numSelected > 0 ? styles.active : ''}`} 
+            onClick={handleSelectAll}
+            title={numSelected === filteredEquipos.length ? "Deseleccionar todos" : "Seleccionar todos"}
+          >
+            ☑️ Seleccionar
           </button>
-          <button className={styles.actionBtn} onClick={handleAddEquipo} title="Agregar equipo">
-            ➕
+          <button 
+            className={`${styles.actionBtn} ${numSelected === 1 ? styles.active : styles.disabled}`} 
+            onClick={handleEditSelected}
+            disabled={numSelected !== 1}
+            title={numSelected !== 1 ? "Selecciona un equipo para editar" : "Editar equipo"}
+          >
+            ✏️ Editar
+          </button>
+          <button 
+            className={`${styles.actionBtn} ${numSelected > 0 ? styles.active : styles.disabled} ${styles.danger}`} 
+            onClick={handleDeleteSelected}
+            disabled={numSelected === 0}
+            title={numSelected === 0 ? "Selecciona al menos un equipo para eliminar" : "Eliminar seleccionados"}
+          >
+            🗑️ Eliminar
+          </button>
+          <button className={styles.actionBtn} onClick={handleAddEquipo} title="Agregar nuevo equipo">
+            ➕ Añadir
           </button>
         </div>
       </div>
@@ -305,7 +328,7 @@ export default function Equipos() {
         <div className={styles.emptyState}>
           <span className={styles.emptyIcon}>🔧</span>
           <h3>No hay equipos registrados</h3>
-          <p>Haz clic en el botón "+" para agregar tu primer equipo</p>
+          <p>Haz clic en el botón "Añadir" para agregar tu primer equipo</p>
         </div>
       )}
 
