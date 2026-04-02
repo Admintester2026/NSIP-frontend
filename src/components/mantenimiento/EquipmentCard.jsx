@@ -4,7 +4,8 @@ import styles from './EquipmentCard.module.css';
 
 export default function EquipmentCard({ 
   equipo, 
-  onEdit, 
+  isSelected,
+  onSelect,
   ultimoMantenimiento = null, 
   proximoMantenimiento = null 
 }) {
@@ -44,7 +45,6 @@ export default function EquipmentCard({
   const categoriasMostrar = categoriasList.slice(0, 3);
   const tieneMas = categoriasList.length > 3;
 
-  // Formatear fecha
   const formatDate = (dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
@@ -56,23 +56,24 @@ export default function EquipmentCard({
     });
   };
 
-  const handleEditClick = (e) => {
+  const handleSelectClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onEdit) onEdit(equipo);
+    if (onSelect) onSelect(equipo.id);
   };
 
-  // Obtener fecha del último mantenimiento
   const ultimoMantFecha = ultimoMantenimiento?.fecha || ultimoMantenimiento;
   const proximoMantFecha = proximoMantenimiento?.fecha || proximoMantenimiento;
 
   return (
-    <div className={styles.cardWrapper}>
+    <div className={`${styles.cardWrapper} ${isSelected ? styles.selected : ''}`}>
       <Link to={`/mantenimiento/equipo/${equipo.id}`} className={styles.card}>
-        {/* Botón de edición rápida */}
-        <button className={styles.editButton} onClick={handleEditClick} title="Editar equipo">
-          ✏️
-        </button>
+        {/* Checkbox de selección */}
+        <div className={styles.checkboxContainer} onClick={handleSelectClick}>
+          <div className={`${styles.checkbox} ${isSelected ? styles.checked : ''}`}>
+            {isSelected && <span className={styles.checkmark}>✓</span>}
+          </div>
+        </div>
 
         <div className={styles.cardHeader}>
           <div className={styles.iconContainer}>
@@ -87,7 +88,6 @@ export default function EquipmentCard({
           {equipo.nombre}
         </h3>
 
-        {/* Foto del equipo */}
         {equipo.foto_url && !imageError && (
           <div className={styles.fotoContainer}>
             <img 
@@ -107,7 +107,6 @@ export default function EquipmentCard({
           </div>
         )}
 
-        {/* Información de mantenimientos */}
         <div className={styles.mantenimientoInfo}>
           {ultimoMantFecha && (
             <div className={styles.ultimoMant}>
@@ -123,7 +122,6 @@ export default function EquipmentCard({
           )}
         </div>
 
-        {/* Categorías */}
         {categoriasMostrar.length > 0 && (
           <div className={styles.categorias}>
             {categoriasMostrar.map((cat, idx) => (

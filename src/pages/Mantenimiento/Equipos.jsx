@@ -20,8 +20,8 @@ export default function Equipos() {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [equipoEditando, setEquipoEditando] = useState(null);
+  const [selectedEquipos, setSelectedEquipos] = useState(new Set());
 
-  // Obtener equipos con polling según estado seleccionado
   const fetchEquipos = useCallback(() => mantenimientoAPI.getEquipos(selectedEstado), [selectedEstado]);
   const { data: equiposData, refetch } = usePolling(fetchEquipos, 30000);
 
@@ -33,7 +33,6 @@ export default function Equipos() {
     }
   }, [equiposData]);
 
-  // Función para ordenar equipos
   const ordenarEquipos = (equiposList) => {
     return [...equiposList].sort((a, b) => {
       let valA, valB;
@@ -64,7 +63,6 @@ export default function Equipos() {
   const applyFilters = (data, search, categoria) => {
     let filtered = [...data];
 
-    // Filtrar por búsqueda
     if (search.trim() !== '') {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(item =>
@@ -73,19 +71,18 @@ export default function Equipos() {
       );
     }
 
-    // Filtrar por categoría
     if (categoria !== 'todas') {
       filtered = filtered.filter(item =>
         item.categorias?.some(cat => cat.nombre === categoria)
       );
     }
 
-    // Aplicar ordenamiento
     filtered = ordenarEquipos(filtered);
     setFilteredEquipos(filtered);
+    // Limpiar selección al filtrar
+    setSelectedEquipos(new Set());
   };
 
-  // Separar equipos por estado
   const equiposActivos = filteredEquipos.filter(e => e.estado === 'activo');
   const equiposInactivos = filteredEquipos.filter(e => 
     e.estado === 'dañado' || e.estado === 'suspension' || e.estado === 'baja'
@@ -121,10 +118,45 @@ export default function Equipos() {
     setShowAddModal(true);
   };
 
-  const handleEditEquipo = (equipo) => {
-    setEditMode(true);
-    setEquipoEditando(equipo);
-    setShowAddModal(true);
+  const handleEditSelected = () => {
+    if (selectedEquipos.size === 1) {
+      const equipo = equipos.find(e => e.id === Array.from(selectedEquipos)[0]);
+      if (equipo) {
+        setEditMode(true);
+        setEquipoEditando(equipo);
+        setShowAddModal(true);
+      }
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (window.confirm(`¿Estás seguro de eliminar ${selectedEquipos.size} equipo(s)?`)) {
+      for (const id of selectedEquipos) {
+        await mantenimientoAPI.deleteEquipo(id);
+      }
+      setSelectedEquipos(new Set());
+      refetch();
+    }
+  };
+
+  const handleSelectEquipo = (id) => {
+    setSelectedEquipos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedEquipos.size === filteredEquipos.length) {
+      setSelectedEquipos(new Set());
+    } else {
+      setSelectedEquipos(new Set(filteredEquipos.map(e => e.id)));
+    }
   };
 
   const handleCloseModal = () => {
@@ -132,6 +164,7 @@ export default function Equipos() {
     setEditMode(false);
     setEquipoEditando(null);
     refetch();
+    setSelectedEquipos(new Set());
   };
 
   const clearFilters = () => {
@@ -149,9 +182,10 @@ export default function Equipos() {
     );
   }
 
+  const numSelected = selectedEquipos.size;
+
   return (
     <div className={styles.equipos}>
-      {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Mantenimiento de Equipos</h1>
@@ -170,7 +204,6 @@ export default function Equipos() {
         </div>
       </div>
 
-      {/* Barra de filtros modularizada */}
       <FiltrosBar
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
@@ -185,12 +218,32 @@ export default function Equipos() {
         onClearFilters={clearFilters}
       />
 
-      {/* Contador y acciones */}
       <div className={styles.counterBar}>
         <div className={styles.counter}>
           📊 Total: {filteredEquipos.length} equipo{filteredEquipos.length !== 1 ? 's' : ''}
+          {numSelected > 0 && ` | ✅ Seleccionados: ${numSelected}`}
         </div>
         <div className={styles.actionButtons}>
+          {numSelected > 0 && (
+            <>
+              <button className={styles.actionBtn} onClick={handleSelectAll} title="Deseleccionar todo">
+                🔘
+              </button>
+              {numSelected === 1 && (
+                <button className={styles.actionBtn} onClick={handleEditSelected} title="Editar seleccionado">
+                  ✏️
+                </button>
+              )}
+              <button className={`${styles.actionBtn} ${styles.danger}`} onClick={handleDeleteSelected} title="Eliminar seleccionados">
+                🗑️
+              </button>
+            </>
+          )}
+          {numSelected === 0 && filteredEquipos.length > 0 && (
+            <button className={styles.actionBtn} onClick={handleSelectAll} title="Seleccionar todos">
+              ☑️
+            </button>
+          )}
           <button className={styles.actionBtn} onClick={clearFilters} title="Limpiar filtros">
             🧹
           </button>
@@ -200,7 +253,6 @@ export default function Equipos() {
         </div>
       </div>
 
-      {/* Sección de equipos activos */}
       <section className={styles.seccionEquipos}>
         <h2 className={styles.seccionTitulo}>
           📋 Equipos Activos ({equiposActivos.length})
@@ -210,8 +262,9 @@ export default function Equipos() {
             {equiposActivos.map(equipo => (
               <EquipmentCard 
                 key={equipo.id} 
-                equipo={equipo} 
-                onEdit={handleEditEquipo}
+                equipo={equipo}
+                isSelected={selectedEquipos.has(equipo.id)}
+                onSelect={handleSelectEquipo}
               />
             ))}
           </div>
@@ -222,7 +275,6 @@ export default function Equipos() {
         )}
       </section>
 
-      {/* Sección de equipos inactivos (colapsable) */}
       {equiposInactivos.length > 0 && (
         <section className={styles.seccionEquipos}>
           <button 
@@ -239,8 +291,9 @@ export default function Equipos() {
               {equiposInactivos.map(equipo => (
                 <EquipmentCard 
                   key={equipo.id} 
-                  equipo={equipo} 
-                  onEdit={handleEditEquipo}
+                  equipo={equipo}
+                  isSelected={selectedEquipos.has(equipo.id)}
+                  onSelect={handleSelectEquipo}
                 />
               ))}
             </div>
@@ -248,7 +301,6 @@ export default function Equipos() {
         </section>
       )}
 
-      {/* Estado vacío total */}
       {filteredEquipos.length === 0 && (
         <div className={styles.emptyState}>
           <span className={styles.emptyIcon}>🔧</span>
@@ -257,7 +309,6 @@ export default function Equipos() {
         </div>
       )}
 
-      {/* Modal de agregar/editar equipo */}
       {showAddModal && (
         <AddEquipmentModal
           isOpen={showAddModal}
