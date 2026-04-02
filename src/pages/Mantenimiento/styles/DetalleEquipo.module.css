@@ -1,10 +1,13 @@
-.detalle {
-  max-width: 1000px;
+.detalleEquipo {
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   min-height: 100vh;
 }
 
+/* ==========================================
+   HEADER
+   ========================================== */
 .header {
   display: flex;
   align-items: center;
@@ -21,6 +24,9 @@
   text-decoration: none;
   font-size: 0.9rem;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .backLink:hover {
@@ -33,19 +39,15 @@
   gap: 0.75rem;
 }
 
-.editButton, .deleteButton {
-  padding: 0.5rem 1rem;
-  border-radius: var(--r-md);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-}
-
 .editButton {
+  padding: 0.5rem 1rem;
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
   color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
 }
 
 .editButton:hover {
@@ -54,64 +56,74 @@
   transform: translateY(-1px);
 }
 
-.deleteButton {
-  background: rgba(255, 77, 77, 0.1);
-  border: 1px solid rgba(255, 77, 77, 0.3);
-  color: var(--red);
-}
-
-.deleteButton:hover {
-  background: var(--red);
-  color: var(--bg-primary);
-  transform: translateY(-1px);
-}
-
-.content {
+/* ==========================================
+   HERO SECTION
+   ========================================== */
+.heroSection {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.infoCard, .filesCard {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-lg);
+  gap: 2rem;
+  margin-bottom: 2rem;
   padding: 1.5rem;
-}
-
-.infoHeader {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.iconContainer {
-  width: 64px;
-  height: 64px;
-  background: var(--bg-raised);
+  background: var(--bg-surface);
   border-radius: var(--r-lg);
+  border: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+}
+
+.fotoContainer {
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--bg-raised);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.icon {
-  font-size: 2.5rem;
+.foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fotoPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-raised);
+}
+
+.fotoPlaceholderIcon {
+  font-size: 4rem;
+  opacity: 0.5;
+}
+
+.infoPrincipal {
+  flex: 1;
 }
 
 .nombre {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.badgesRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 .estadoBadge {
-  display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -140,65 +152,289 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.infoRow {
-  display: flex;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.infoRow:last-child {
-  border-bottom: none;
-}
-
-.infoLabel {
-  width: 120px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.infoValue {
-  flex: 1;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-}
-
-.categorias {
-  display: flex;
-  padding: 0.75rem 0;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.categoriasList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.categoriaTag {
+.ubicacionBadge {
   padding: 0.25rem 0.75rem;
   background: var(--bg-raised);
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.descripcion {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.categoriasRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.categoriaTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--bg-raised);
+  border-radius: 20px;
+  font-size: 0.7rem;
   color: var(--text-secondary);
   border: 1px solid var(--border-dim);
 }
 
-.sectionTitle {
+.categoriaDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.metaInfo {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ==========================================
+   TABS
+   ========================================== */
+.tabsContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: var(--green);
+}
+
+.tab.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+/* ==========================================
+   CARDS GENERALES
+   ========================================== */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card.vencido {
+  border-color: rgba(255, 77, 77, 0.3);
+  background: rgba(255, 77, 77, 0.05);
+}
+
+.cardTitle {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
 }
 
-.filesGrid {
+.emptyMessage {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+/* ==========================================
+   MANTENIMIENTOS
+   ========================================== */
+.mantenimientosList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mantenimientoItem {
+  padding: 1rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-dim);
+}
+
+.mantenimientoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mantenimientoTitulo {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prioridadBadge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.prioridadUrgente {
+  background: rgba(255, 77, 77, 0.15);
+  color: var(--red);
+}
+
+.prioridadAlta {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+}
+
+.prioridadMedia {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+}
+
+.prioridadBaja {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
+.mantenimientoInfo {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.tipoTag {
+  padding: 0.15rem 0.5rem;
+  background: var(--bg-surface);
+  border-radius: 20px;
+}
+
+.mantenimientoDesc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+/* ==========================================
+   INCIDENCIAS
+   ========================================== */
+.incidenciasList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.incidenciaItem {
+  padding: 1rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-dim);
+}
+
+.incidenciaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.incidenciaTitulo {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.estadoIncidencia {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.estadoIncidencia.resuelto {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+}
+
+.estadoIncidencia.pendiente {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+}
+
+.incidenciaDesc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.incidenciaInfo {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.gravedadTag {
+  padding: 0.15rem 0.5rem;
+  background: rgba(255, 77, 77, 0.15);
+  border-radius: 20px;
+  color: var(--red);
+}
+
+.solucionText {
+  font-size: 0.8rem;
+  color: var(--green);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+/* ==========================================
+   DOCUMENTOS
+   ========================================== */
+.documentosGrid {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
 }
 
-.fileLink {
+.documentoLink {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -211,88 +447,86 @@
   transition: all 0.2s ease;
 }
 
-.fileLink:hover {
+.documentoLink:hover {
   border-color: var(--green);
   color: var(--green);
   transform: translateY(-2px);
 }
 
-.fileIcon {
+.documentoIcon {
   font-size: 1.1rem;
 }
 
-.tabsContainer {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-}
-
-.tabs {
+/* ==========================================
+   HISTORIAL
+   ========================================== */
+.historialList {
   display: flex;
-  border-bottom: 1px solid var(--border-dim);
-  background: var(--bg-raised);
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.tab {
-  padding: 0.75rem 1.25rem;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.tab:hover {
-  color: var(--green);
-  background: var(--bg-surface);
-}
-
-.tab.active {
-  color: var(--green);
-  border-bottom: 2px solid var(--green);
-}
-
-.tabContent {
-  padding: 1.5rem;
-}
-
-.placeholderCard {
-  text-align: center;
-  padding: 2rem;
+.historialItem {
+  padding: 1rem;
   background: var(--bg-raised);
   border-radius: var(--r-md);
+  border: 1px solid var(--border-dim);
 }
 
-.placeholderText {
+.historialHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.historialFecha {
   color: var(--text-muted);
-  margin-bottom: 1rem;
 }
 
-.placeholderList {
-  list-style: none;
-  padding: 0;
-  color: var(--text-secondary);
+.historialUsuario {
+  color: var(--green);
+}
+
+.historialContenido {
   font-size: 0.85rem;
-  line-height: 1.8;
 }
 
-.placeholderList li {
-  padding: 0.25rem 0;
+.historialCampo {
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.loadingContainer, .errorContainer {
+.valorAnterior {
+  color: var(--red);
+  margin-left: 0.5rem;
+}
+
+.valorNuevo {
+  color: var(--green);
+  margin-left: 0.5rem;
+}
+
+.historialDesc {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+}
+
+/* ==========================================
+   LOADING Y ERROR
+   ========================================== */
+.loadingContainer {
   min-height: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  text-align: center;
-  padding: 2rem;
 }
 
 .loadingSpinner {
@@ -304,20 +538,18 @@
   animation: spin 1s linear infinite;
 }
 
+.errorContainer {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
 .errorIcon {
   font-size: 3rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.errorContainer h2 {
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.errorContainer p {
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
 }
 
 .backButton {
@@ -339,49 +571,47 @@
   to { transform: rotate(360deg); }
 }
 
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
 @media (max-width: 768px) {
-  .detalle {
+  .detalleEquipo {
     padding: 1rem;
   }
 
-  .header {
+  .heroSection {
     flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .headerActions {
-    width: 100%;
-  }
-
-  .editButton, .deleteButton {
-    flex: 1;
+    align-items: center;
     text-align: center;
   }
 
-  .infoHeader {
-    flex-direction: column;
-    text-align: center;
+  .fotoContainer {
+    width: 150px;
+    height: 150px;
   }
 
-  .infoRow {
-    flex-direction: column;
-    gap: 0.25rem;
+  .badgesRow {
+    justify-content: center;
   }
 
-  .infoLabel {
-    width: auto;
+  .categoriasRow {
+    justify-content: center;
   }
 
-  .tabs {
+  .metaInfo {
+    justify-content: center;
+  }
+
+  .tabsContainer {
     justify-content: center;
   }
 
   .tab {
-    padding: 0.6rem 1rem;
+    padding: 0.5rem 1rem;
     font-size: 0.8rem;
   }
 
-  .tabContent {
+  .card {
     padding: 1rem;
   }
 }
