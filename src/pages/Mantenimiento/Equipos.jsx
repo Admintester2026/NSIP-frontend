@@ -250,9 +250,9 @@ export default function Equipos() {
           <button 
             className={`${styles.actionBtn} ${numSelected > 0 ? styles.active : ''}`} 
             onClick={handleSelectAll}
-            title={numSelected === filteredEquipos.length ? "Deseleccionar todos" : "Seleccionar todos"}
+            title={numSelected === filteredEquipos.length && filteredEquipos.length > 0 ? "Deseleccionar todos" : "Seleccionar todos"}
           >
-            ☑️ Seleccionar
+            {numSelected === filteredEquipos.length && filteredEquipos.length > 0 ? '☑️ Deseleccionar' : '☑️ Seleccionar'}
           </button>
           <button 
             className={`${styles.actionBtn} ${numSelected === 1 ? styles.active : styles.disabled}`} 
