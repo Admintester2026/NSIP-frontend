@@ -1,7 +1,7 @@
-﻿// src/pages/mantenimiento/DetalleEquipo.jsx
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
+import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal';
 import styles from './styles/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -15,6 +15,8 @@ export default function DetalleEquipo() {
   const [activeTab, setActiveTab] = useState('mantenimientos');
   const [error, setError] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -40,6 +42,30 @@ export default function DetalleEquipo() {
       setError('Error al cargar los datos del equipo');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditClick = () => {
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditModal(false);
+    cargarDatos(); // Recargar datos después de editar
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await mantenimientoAPI.deleteEquipo(id);
+      navigate('/mantenimiento/equipos');
+    } catch (err) {
+      console.error('Error eliminando equipo:', err);
+      setError('Error al eliminar el equipo');
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -123,14 +149,17 @@ export default function DetalleEquipo() {
 
   return (
     <div className={styles.detalleEquipo}>
-      {/* Header con botón volver */}
+      {/* Header con botones */}
       <div className={styles.header}>
         <Link to="/mantenimiento/equipos" className={styles.backLink}>
           ← Volver a Equipos
         </Link>
         <div className={styles.headerActions}>
-          <button className={styles.editButton} onClick={() => navigate(`/mantenimiento/equipo/${id}/editar`)}>
+          <button className={styles.editButton} onClick={handleEditClick}>
             ✏️ Editar
+          </button>
+          <button className={styles.deleteButton} onClick={handleDeleteClick}>
+            🗑️ Eliminar
           </button>
         </div>
       </div>
@@ -397,6 +426,39 @@ export default function DetalleEquipo() {
           </div>
         )}
       </div>
+
+      {/* Modal de edición (reutiliza el mismo componente) */}
+      <AddEquipmentModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleEditSuccess}
+        editMode={true}
+        equipoData={equipo}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      {showDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmModalHeader}>
+              <span className={styles.confirmIcon}>⚠️</span>
+              <h3>Confirmar Eliminación</h3>
+            </div>
+            <div className={styles.confirmModalBody}>
+              <p>¿Estás seguro de eliminar el equipo <strong>"{equipo.nombre}"</strong>?</p>
+              <p className={styles.confirmWarning}>Esta acción moverá el equipo a la papelera y no podrá deshacerse fácilmente.</p>
+            </div>
+            <div className={styles.confirmModalFooter}>
+              <button className={styles.cancelConfirmBtn} onClick={() => setShowDeleteConfirm(false)}>
+                Cancelar
+              </button>
+              <button className={styles.confirmDeleteBtn} onClick={handleConfirmDelete}>
+                Sí, Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

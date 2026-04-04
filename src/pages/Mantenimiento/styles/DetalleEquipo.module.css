@@ -1,3 +1,5 @@
+/* src/pages/mantenimiento/styles/DetalleEquipo.module.css */
+
 .detalleEquipo {
   max-width: 1200px;
   margin: 0 auto;
@@ -39,20 +41,36 @@
   gap: 0.75rem;
 }
 
-.editButton {
+.editButton, .deleteButton {
   padding: 0.5rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton {
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
   color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
 }
 
 .editButton:hover {
   border-color: var(--green);
   color: var(--green);
+  transform: translateY(-1px);
+}
+
+.deleteButton {
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  color: var(--red);
+}
+
+.deleteButton:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--bg-primary);
   transform: translateY(-1px);
 }
 
@@ -518,6 +536,106 @@
 }
 
 /* ==========================================
+   MODAL DE CONFIRMACIÓN
+   ========================================== */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirmModal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: slideIn 0.2s ease;
+}
+
+.confirmModalHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: rgba(255, 77, 77, 0.1);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.confirmIcon {
+  font-size: 1.5rem;
+}
+
+.confirmModalHeader h3 {
+  color: var(--red);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.confirmModalBody {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.confirmModalBody p {
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.confirmWarning {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.confirmModalFooter {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+.cancelConfirmBtn {
+  flex: 1;
+  padding: 0.6rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelConfirmBtn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.confirmDeleteBtn {
+  flex: 1;
+  padding: 0.6rem;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  border-radius: var(--r-md);
+  color: var(--red);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirmDeleteBtn:hover {
+  background: var(--red);
+  color: var(--bg-primary);
+}
+
+/* ==========================================
    LOADING Y ERROR
    ========================================== */
 .loadingContainer {
@@ -567,8 +685,22 @@
   color: var(--bg-primary);
 }
 
+/* ==========================================
+   ANIMACIONES
+   ========================================== */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ==========================================
@@ -613,5 +745,23 @@
 
   .card {
     padding: 1rem;
+  }
+
+  .confirmModal {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .confirmModalHeader {
+    padding: 1rem;
+  }
+
+  .confirmModalBody {
+    padding: 1rem;
+  }
+
+  .confirmModalFooter {
+    padding: 1rem;
+    flex-direction: column;
   }
 }
