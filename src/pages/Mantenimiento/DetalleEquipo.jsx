@@ -2,6 +2,9 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal';
+import AddMantenimientoModal from '../../components/mantenimiento/AddMantenimientoModal';
+import AddHistorialModal from '../../components/mantenimiento/AddHistorialModal';
+import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModal';
 import styles from './styles/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -15,8 +18,13 @@ export default function DetalleEquipo() {
   const [activeTab, setActiveTab] = useState('mantenimientos');
   const [error, setError] = useState('');
   const [imageError, setImageError] = useState(false);
+  
+  // Estados para modales
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMantModal, setShowMantModal] = useState(false);
+  const [showHistorialModal, setShowHistorialModal] = useState(false);
+  const [showIncidenciaModal, setShowIncidenciaModal] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -45,13 +53,9 @@ export default function DetalleEquipo() {
     }
   };
 
-  const handleEditClick = () => {
-    setShowEditModal(true);
-  };
-
   const handleEditSuccess = () => {
     setShowEditModal(false);
-    cargarDatos(); // Recargar datos después de editar
+    cargarDatos();
   };
 
   const handleDeleteClick = () => {
@@ -155,7 +159,7 @@ export default function DetalleEquipo() {
           ← Volver a Equipos
         </Link>
         <div className={styles.headerActions}>
-          <button className={styles.editButton} onClick={handleEditClick}>
+          <button className={styles.editButton} onClick={() => setShowEditModal(true)}>
             ✏️ Editar
           </button>
           <button className={styles.deleteButton} onClick={handleDeleteClick}>
@@ -218,6 +222,19 @@ export default function DetalleEquipo() {
             <span className={styles.metaItem}>🆔 ID: {equipo.id}</span>
           </div>
         </div>
+      </div>
+
+      {/* Botones de acción rápidos */}
+      <div className={styles.actionButtonsBar}>
+        <button className={styles.actionBtn} onClick={() => setShowMantModal(true)}>
+          🔧 Programar Mantenimiento
+        </button>
+        <button className={styles.actionBtn} onClick={() => setShowHistorialModal(true)}>
+          📝 Registrar Cambio
+        </button>
+        <button className={styles.actionBtn} onClick={() => setShowIncidenciaModal(true)}>
+          ⚠️ Reportar Incidencia
+        </button>
       </div>
 
       {/* Tabs de navegación */}
@@ -427,13 +444,39 @@ export default function DetalleEquipo() {
         )}
       </div>
 
-      {/* Modal de edición (reutiliza el mismo componente) */}
+      {/* MODALES */}
+
+      {/* Modal de edición de equipo */}
       <AddEquipmentModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
         editMode={true}
         equipoData={equipo}
+      />
+
+      {/* Modal de programar mantenimiento */}
+      <AddMantenimientoModal
+        isOpen={showMantModal}
+        onClose={() => setShowMantModal(false)}
+        onSuccess={cargarDatos}
+        equipoId={equipo.id}
+      />
+
+      {/* Modal de registrar historial/cambio */}
+      <AddHistorialModal
+        isOpen={showHistorialModal}
+        onClose={() => setShowHistorialModal(false)}
+        onSuccess={cargarDatos}
+        equipoId={equipo.id}
+      />
+
+      {/* Modal de reportar incidencia */}
+      <AddIncidenciaModal
+        isOpen={showIncidenciaModal}
+        onClose={() => setShowIncidenciaModal(false)}
+        onSuccess={cargarDatos}
+        equipoId={equipo.id}
       />
 
       {/* Modal de confirmación de eliminación */}
