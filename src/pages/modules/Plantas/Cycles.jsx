@@ -7,24 +7,23 @@ import {
   CycleCard, 
   CycleEditor, 
   CycleSummaryBar, 
-  CycleTable,      // ← IMPORTADO (se usará)
+  CycleTable,
   CycleActions,
   GlobalCycleEditor
-  // CycleListSections ELIMINADO - ya no se usa
 } from "./components/Indexcycles";
 import ManualModeWarning from './components/ManualModeWarning';
 import styles from "./styles/IndexCyclesStyles";
 
 export default function Cycles() {
-  // Usar el contexto para el modo
   const { mode } = useMode();
   
   const [cyclesData, setCyclesData] = useState(null);
   const [editingCycle, setEditingCycle] = useState(null);
   const [saveStatus, setSaveStatus] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCycles = useCallback(() => arduinoAPI.getCycles(), []);
-  const { data, loading, error } = usePolling(fetchCycles, 5000);
+  const { data, loading, error, refetch } = usePolling(fetchCycles, 5000);
 
   useEffect(() => {
     if (data?.data) {
@@ -51,7 +50,7 @@ export default function Cycles() {
         
         setTimeout(() => {
           console.log('🔄 Forzando actualización de datos...');
-          fetchCycles();
+          refetch();
         }, 1000);
         
         setTimeout(() => {
@@ -69,6 +68,7 @@ export default function Cycles() {
 
   const { mutate: deleteCycle } = useMutation(
     async ({ relay, cycle }) => {
+      console.log(`🗑️ Eliminando ciclo ${cycle} del relé ${relay}`);
       const result = await arduinoAPI.setCycle({
         relay,
         cycle,
@@ -82,9 +82,15 @@ export default function Cycles() {
     },
     {
       onSuccess: () => {
-        fetchCycles();
+        console.log('✅ Ciclo eliminado correctamente');
+        refetch();
         setSaveStatus({ type: 'success', message: '✅ Ciclo eliminado' });
         setTimeout(() => setSaveStatus(null), 2000);
+      },
+      onError: (error) => {
+        console.error('❌ Error eliminando ciclo:', error);
+        setSaveStatus({ type: 'error', message: `❌ Error al eliminar: ${error.message}` });
+        setTimeout(() => setSaveStatus(null), 3000);
       }
     }
   );
@@ -138,13 +144,47 @@ export default function Cycles() {
     }
   };
 
-  const handleClearAll = () => {
-    if (window.confirm('¿Eliminar TODOS los ciclos de TODOS los relés?')) {
+  const handleClearAll = async () => {
+    if (!window.confirm('⚠️ ¿Eliminar TODOS los ciclos de TODOS los relés?\n\nEsta acción no se puede deshacer.')) {
+      return;
+    }
+    
+    setIsDeleting(true);
+    setSaveStatus({ type: 'info', message: '🔄 Eliminando todos los ciclos...' });
+    
+    try {
+      // Crear un array de promesas para eliminar todos los ciclos
+      const deletePromises = [];
       for (let relay = 1; relay <= 8; relay++) {
         for (let cycle = 0; cycle < 6; cycle++) {
-          deleteCycle({ relay, cycle });
+          deletePromises.push(
+            arduinoAPI.setCycle({
+              relay,
+              cycle,
+              start_h: 0,
+              start_m: 0,
+              end_h: 0,
+              end_m: 0,
+              enabled: false
+            })
+          );
         }
       }
+      
+      // Ejecutar todas las eliminaciones en paralelo
+      await Promise.all(deletePromises);
+      
+      console.log('✅ Todos los ciclos eliminados');
+      setSaveStatus({ type: 'success', message: '✅ Todos los ciclos han sido eliminados' });
+      refetch(); // Recargar los datos
+      
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (error) {
+      console.error('❌ Error eliminando ciclos:', error);
+      setSaveStatus({ type: 'error', message: `❌ Error al eliminar: ${error.message}` });
+      setTimeout(() => setSaveStatus(null), 5000);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -225,7 +265,6 @@ export default function Cycles() {
         ))}
       </div>
 
-      {/* REEMPLAZADO: CycleListSections por CycleTable */}
       <CycleTable 
         cyclesData={cyclesData}
         onEdit={handleEdit}
@@ -234,6 +273,7 @@ export default function Cycles() {
       <CycleActions 
         onClearAll={handleClearAll}
         hasCycles={hasAnyCycles}
+        isDeleting={isDeleting}
       />
 
       {editingCycle && (
