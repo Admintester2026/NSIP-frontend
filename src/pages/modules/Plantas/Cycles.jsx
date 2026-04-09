@@ -31,44 +31,37 @@ export default function Cycles() {
     }
   }, [data]);
 
-  const { mutate: saveCycle } = useMutation(
-    async (cycleData) => {
-      console.log('💾 Enviando al backend:', cycleData);
-      try {
-        const result = await arduinoAPI.setCycle(cycleData);
-        console.log('✅ Respuesta del backend:', result);
-        return result;
-      } catch (error) {
-        console.error('❌ Error en la petición:', error);
-        throw error;
-      }
-    },
-    {
-      onSuccess: (data) => {
-        console.log('🎉 Mutación exitosa:', data);
-        setSaveStatus({ type: 'success', message: '✅ Ciclo guardado' });
-        
-        setTimeout(() => {
-          console.log('🔄 Forzando actualización de datos...');
-          refetch();
-        }, 1000);
-        
-        setTimeout(() => {
-          setSaveStatus(null);
-          setEditingCycle(null);
-        }, 2000);
-      },
-      onError: (error) => {
-        console.error('💥 Error en mutación:', error);
-        setSaveStatus({ type: 'error', message: `❌ ${error.message}` });
-        setTimeout(() => setSaveStatus(null), 3000);
-      }
+  // Función de guardado normal (no useMutation para evitar problemas)
+  const saveCycle = async (cycleData) => {
+    console.log('💾 Enviando al backend:', cycleData);
+    try {
+      const result = await arduinoAPI.setCycle(cycleData);
+      console.log('✅ Respuesta del backend:', result);
+      setSaveStatus({ type: 'success', message: '✅ Ciclo guardado' });
+      
+      setTimeout(() => {
+        console.log('🔄 Forzando actualización de datos...');
+        refetch();
+      }, 1000);
+      
+      setTimeout(() => {
+        setSaveStatus(null);
+        setEditingCycle(null);
+      }, 2000);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error en la petición:', error);
+      setSaveStatus({ type: 'error', message: `❌ ${error.message}` });
+      setTimeout(() => setSaveStatus(null), 3000);
+      throw error;
     }
-  );
+  };
 
-  const { mutate: deleteCycle } = useMutation(
-    async ({ relay, cycle }) => {
-      console.log(`🗑️ Eliminando ciclo ${cycle} del relé ${relay}`);
+  // Función para eliminar un ciclo individual
+  const deleteCycle = async ({ relay, cycle }) => {
+    console.log(`🗑️ Eliminando ciclo ${cycle} del relé ${relay}`);
+    try {
       const result = await arduinoAPI.setCycle({
         relay,
         cycle,
@@ -78,22 +71,18 @@ export default function Cycles() {
         end_m: 0,
         enabled: false
       });
+      console.log('✅ Ciclo eliminado correctamente');
+      refetch();
+      setSaveStatus({ type: 'success', message: '✅ Ciclo eliminado' });
+      setTimeout(() => setSaveStatus(null), 2000);
       return result;
-    },
-    {
-      onSuccess: () => {
-        console.log('✅ Ciclo eliminado correctamente');
-        refetch();
-        setSaveStatus({ type: 'success', message: '✅ Ciclo eliminado' });
-        setTimeout(() => setSaveStatus(null), 2000);
-      },
-      onError: (error) => {
-        console.error('❌ Error eliminando ciclo:', error);
-        setSaveStatus({ type: 'error', message: `❌ Error al eliminar: ${error.message}` });
-        setTimeout(() => setSaveStatus(null), 3000);
-      }
+    } catch (error) {
+      console.error('❌ Error eliminando ciclo:', error);
+      setSaveStatus({ type: 'error', message: `❌ Error al eliminar: ${error.message}` });
+      setTimeout(() => setSaveStatus(null), 3000);
+      throw error;
     }
-  );
+  };
 
   const handleEdit = (relayId, cycleNumber, cycleData) => {
     const [startHour, startMin] = cycleData.start.split(':').map(Number);
@@ -110,7 +99,7 @@ export default function Cycles() {
     });
   };
 
-  const handleSaveGlobal = (globalConfig) => {
+  const handleSaveGlobal = async (globalConfig) => {
     console.log('🌍 Guardando ciclo global:', globalConfig);
     
     if (globalConfig.cycle === undefined || 
@@ -122,25 +111,40 @@ export default function Cycles() {
       return;
     }
 
-    for (let relay = 1; relay <= 8; relay++) {
-      const cycleData = {
-        relay: relay,
-        cycle: globalConfig.cycle,
-        start_h: globalConfig.start_h,
-        start_m: globalConfig.start_m,
-        end_h: globalConfig.end_h,
-        end_m: globalConfig.end_m,
-        enabled: globalConfig.enabled
-      };
+    setSaveStatus({ type: 'info', message: '🔄 Aplicando configuración global...' });
+
+    try {
+      const savePromises = [];
+      for (let relay = 1; relay <= 8; relay++) {
+        const cycleData = {
+          relay: relay,
+          cycle: globalConfig.cycle,
+          start_h: globalConfig.start_h,
+          start_m: globalConfig.start_m,
+          end_h: globalConfig.end_h,
+          end_m: globalConfig.end_m,
+          enabled: globalConfig.enabled
+        };
+        console.log(`📤 Enviando ciclo para relé ${relay}:`, cycleData);
+        savePromises.push(arduinoAPI.setCycle(cycleData));
+      }
       
-      console.log(`📤 Enviando ciclo para relé ${relay}:`, cycleData);
-      saveCycle(cycleData);
+      await Promise.all(savePromises);
+      
+      setSaveStatus({ type: 'success', message: '✅ Configuración global aplicada' });
+      refetch();
+      
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (error) {
+      console.error('❌ Error aplicando configuración global:', error);
+      setSaveStatus({ type: 'error', message: `❌ Error: ${error.message}` });
+      setTimeout(() => setSaveStatus(null), 5000);
     }
   };
 
-  const handleDeleteCycle = (relayId, cycleNumber) => {
+  const handleDeleteCycle = async (relayId, cycleNumber) => {
     if (window.confirm(`¿Eliminar ciclo ${cycleNumber + 1} del relé ${relayId}?`)) {
-      deleteCycle({ relay: relayId, cycle: cycleNumber });
+      await deleteCycle({ relay: relayId, cycle: cycleNumber });
     }
   };
 
@@ -153,7 +157,6 @@ export default function Cycles() {
     setSaveStatus({ type: 'info', message: '🔄 Eliminando todos los ciclos...' });
     
     try {
-      // Crear un array de promesas para eliminar todos los ciclos
       const deletePromises = [];
       for (let relay = 1; relay <= 8; relay++) {
         for (let cycle = 0; cycle < 6; cycle++) {
@@ -171,12 +174,11 @@ export default function Cycles() {
         }
       }
       
-      // Ejecutar todas las eliminaciones en paralelo
       await Promise.all(deletePromises);
       
       console.log('✅ Todos los ciclos eliminados');
       setSaveStatus({ type: 'success', message: '✅ Todos los ciclos han sido eliminados' });
-      refetch(); // Recargar los datos
+      refetch();
       
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (error) {
@@ -186,6 +188,21 @@ export default function Cycles() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleApplyToAll = (relayId, cycleNumber, cycleData) => {
+    console.log('🔄 Aplicando a todos los relés:', cycleData);
+    
+    const globalConfig = {
+      cycle: cycleNumber,
+      start_h: cycleData.start_h,
+      start_m: cycleData.start_m,
+      end_h: cycleData.end_h,
+      end_m: cycleData.end_m,
+      enabled: cycleData.enabled
+    };
+    
+    handleSaveGlobal(globalConfig);
   };
 
   if (loading && !cyclesData) {
@@ -246,21 +263,7 @@ export default function Cycles() {
             relayId={relay.id}
             cycles={relay.cycles}
             onEdit={handleEdit}
-            onApplyToAll={(relayId) => {
-              const firstActive = relay.cycles.find(c => c.enabled);
-              if (firstActive) {
-                const [sh, sm] = firstActive.start.split(':').map(Number);
-                const [eh, em] = firstActive.end.split(':').map(Number);
-                handleSaveGlobal({
-                  cycle: 0,
-                  start_h: sh,
-                  start_m: sm,
-                  end_h: eh,
-                  end_m: em,
-                  enabled: true
-                });
-              }
-            }}
+            onApplyToAll={handleApplyToAll}
           />
         ))}
       </div>
@@ -291,7 +294,7 @@ export default function Cycles() {
               }}
               onSave={saveCycle}
               onCancel={() => setEditingCycle(null)}
-              onApplyToAll={handleSaveGlobal}
+              onApplyToAll={handleApplyToAll}
             />
           </div>
         </div>

@@ -1,3 +1,4 @@
+// src/pages/modules/Plantas/components/cycles/CycleEditor.jsx
 import { useState, useEffect } from 'react';
 import styles from '../../styles/IndexCyclesStyles';
 
@@ -32,7 +33,7 @@ export default function CycleEditor({
     }
   }, [inputMode, startHour, startMin, endHour, endMin]);
 
-  const handleTimeChange = (setter, setTime) => (e) => {
+  const handleManualTimeChange = (setter, setTime) => (e) => {
     const value = e.target.value;
     setTime(value);
     
@@ -48,19 +49,39 @@ export default function CycleEditor({
   };
 
   const handleSave = () => {
-  const dataToSend = {
-    relay: relayId,
-    cycle: cycleNumber,
-    start_h: startHour,
-    start_m: startMin,
-    end_h: endHour,
-    end_m: endMin,
-    enabled: enabled
+    if (!onSave || typeof onSave !== 'function') {
+      console.error('❌ onSave no es una función válida');
+      return;
+    }
+    
+    const dataToSend = {
+      relay: relayId,
+      cycle: cycleNumber,
+      start_h: startHour,
+      start_m: startMin,
+      end_h: endHour,
+      end_m: endMin,
+      enabled: enabled
+    };
+    
+    console.log('🔍 CycleEditor enviando:', dataToSend);
+    onSave(dataToSend);
   };
-  
-  console.log('🔍 CycleEditor enviando:', dataToSend);
-  onSave(dataToSend);
-};
+
+  const handleApplyToAll = () => {
+    if (!onApplyToAll || typeof onApplyToAll !== 'function') {
+      console.error('❌ onApplyToAll no es una función válida');
+      return;
+    }
+    
+    onApplyToAll(relayId, cycleNumber, {
+      start_h: startHour,
+      start_m: startMin,
+      end_h: endHour,
+      end_m: endMin,
+      enabled
+    });
+  };
 
   return (
     <div className={styles.cycleEditor}>
@@ -160,7 +181,7 @@ export default function CycleEditor({
               <input
                 type="text"
                 value={startTime}
-                onChange={handleTimeChange(
+                onChange={handleManualTimeChange(
                   ({ hour, min }) => { setStartHour(hour); setStartMin(min); },
                   setStartTime
                 )}
@@ -177,7 +198,7 @@ export default function CycleEditor({
               <input
                 type="text"
                 value={endTime}
-                onChange={handleTimeChange(
+                onChange={handleManualTimeChange(
                   ({ hour, min }) => { setEndHour(hour); setEndMin(min); },
                   setEndTime
                 )}
@@ -195,13 +216,7 @@ export default function CycleEditor({
           Guardar Ciclo
         </button>
         <button 
-          onClick={() => onApplyToAll(relayId, cycleNumber, {
-            start_h: startHour,
-            start_m: startMin,
-            end_h: endHour,
-            end_m: endMin,
-            enabled
-          })} 
+          onClick={handleApplyToAll} 
           className={styles.applyAllButton}
           disabled={!enabled}
         >
