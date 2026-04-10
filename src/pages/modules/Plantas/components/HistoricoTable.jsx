@@ -1,6 +1,7 @@
 // src/pages/modules/Plantas/components/HistoricoTable.jsx
 import styles from "../styles/index";
 
+
 // ==========================================
 // FUNCIÓN CORREGIDA - Extraer fecha directamente del string
 // ==========================================
