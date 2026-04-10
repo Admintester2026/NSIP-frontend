@@ -2,13 +2,14 @@
 import styles from "../styles/index";
 
 // ==========================================
-// FUNCIÓN CORREGIDA - SIN CONVERSIÓN DE ZONA HORARIA
+// FUNCIÓN CORREGIDA - Extraer fecha directamente del string
 // ==========================================
-function formatDateTimeLocal(isoString) {
-  if (!isoString) return '--/--/---- --:--';
-  try {
-    // NO CONVERTIR - la fecha ya está en hora local en la BD
-    const fecha = new Date(isoString);
+function formatDateTimeLocal(dateString) {
+  if (!dateString) return '--/--/---- --:--';
+  
+  // Si la fecha viene en formato ISO con Z (UTC), convertir a local
+  if (dateString.includes('Z') || dateString.includes('T')) {
+    const fecha = new Date(dateString);
     const año = fecha.getFullYear();
     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const dia = fecha.getDate().toString().padStart(2, '0');
@@ -16,9 +17,21 @@ function formatDateTimeLocal(isoString) {
     const minutos = fecha.getMinutes().toString().padStart(2, '0');
     const segundos = fecha.getSeconds().toString().padStart(2, '0');
     return `${año}/${mes}/${dia} ${horas}:${minutos}:${segundos}`;
-  } catch {
-    return '--/--/---- --:--';
   }
+  
+  // Si la fecha ya viene en formato YYYY-MM-DD HH:MM:SS (local)
+  const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+  if (match) {
+    const año = match[1];
+    const mes = match[2];
+    const dia = match[3];
+    const horas = match[4];
+    const minutos = match[5];
+    const segundos = match[6];
+    return `${año}/${mes}/${dia} ${horas}:${minutos}:${segundos}`;
+  }
+  
+  return '--/--/---- --:--';
 }
 
 export default function HistoricoTable({ historico, limit = 20 }) {
