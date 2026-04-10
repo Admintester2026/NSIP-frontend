@@ -1,3 +1,4 @@
+// src/pages/modules/Plantas/Comparativa.jsx
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { arduinoAPI } from '../../../api/arduino';
@@ -12,10 +13,22 @@ import styles from './Comparativa.module.css';
 const ZONA_HORARIA = -6; // GMT-6 (México)
 const MS_POR_HORA = 60 * 60 * 1000;
 
-// Función de formato (optimizada con memoización)
+// Función de formato segura (con validación de fecha)
 const formatDateTime = (isoString) => {
   if (!isoString) return '--/--/---- --:--';
-  const fecha = new Date(isoString);
+  
+  let fecha;
+  try {
+    fecha = new Date(isoString);
+    // Verificar si la fecha es válida
+    if (isNaN(fecha.getTime())) {
+      return '--/--/---- --:--';
+    }
+  } catch (error) {
+    console.error('Error parsing date:', isoString);
+    return '--/--/---- --:--';
+  }
+  
   const año = fecha.getUTCFullYear();
   const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
   const dia = fecha.getUTCDate().toString().padStart(2, '0');
@@ -25,14 +38,28 @@ const formatDateTime = (isoString) => {
   return `${año}/${mes}/${dia} ${horas}:${minutos}:${segundos}`;
 };
 
-// Función para convertir UTC a hora local
+// Función para convertir UTC a hora local (segura)
 const convertirUtcALocal = (timestamp) => {
-  const fechaUTC = new Date(timestamp);
-  return new Date(fechaUTC.getTime() + (ZONA_HORARIA * MS_POR_HORA));
+  if (!timestamp) {
+    console.warn('Timestamp vacío en convertirUtcALocal');
+    return new Date();
+  }
+  
+  try {
+    const fechaUTC = new Date(timestamp);
+    if (isNaN(fechaUTC.getTime())) {
+      console.warn('Fecha inválida en convertirUtcALocal:', timestamp);
+      return new Date();
+    }
+    return new Date(fechaUTC.getTime() + (ZONA_HORARIA * MS_POR_HORA));
+  } catch (error) {
+    console.error('Error en convertirUtcALocal:', error);
+    return new Date();
+  }
 };
 
 // ==========================================
-// FILTROS CORREGIDOS (misma lógica que Stats.jsx)
+// FILTROS CORREGIDOS
 // ==========================================
 const filtrarPorPeriodo = (data, periodo) => {
   if (!data?.length) return [];
@@ -41,7 +68,17 @@ const filtrarPorPeriodo = (data, periodo) => {
   const hoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate()));
   
   return data.filter(item => {
-    const fechaItem = new Date(item.FECHA);
+    // Validar que item.FECHA existe y es válido
+    if (!item?.FECHA) return false;
+    
+    let fechaItem;
+    try {
+      fechaItem = new Date(item.FECHA);
+      if (isNaN(fechaItem.getTime())) return false;
+    } catch (error) {
+      console.error('Error parseando fecha en filtro:', item.FECHA);
+      return false;
+    }
     
     switch(periodo) {
       case 'dia':
@@ -50,13 +87,10 @@ const filtrarPorPeriodo = (data, periodo) => {
                fechaItem.getUTCDate() === hoy.getUTCDate();
       
       case 'semana': {
-        // Misma semana (Lunes a Domingo)
         const inicioSemana = new Date(hoy);
-        // Si hoy es Domingo (0), restar 6 días para llegar al Lunes
         if (hoy.getUTCDay() === 0) {
           inicioSemana.setUTCDate(hoy.getUTCDate() - 6);
         } else {
-          // Restar (día actual - 1) para llegar al Lunes
           inicioSemana.setUTCDate(hoy.getUTCDate() - (hoy.getUTCDay() - 1));
         }
         inicioSemana.setUTCHours(0, 0, 0, 0);
@@ -68,11 +102,9 @@ const filtrarPorPeriodo = (data, periodo) => {
         return fechaItem >= inicioSemana && fechaItem <= finSemana;
       }
       
-      case 'mes': {
-        // Mismo mes
+      case 'mes':
         return fechaItem.getUTCFullYear() === hoy.getUTCFullYear() &&
                fechaItem.getUTCMonth() === hoy.getUTCMonth();
-      }
       
       default:
         return true;
@@ -137,7 +169,6 @@ const ArduinoStatusTable = ({ arduinoData }) => {
 // COMPONENTE PRINCIPAL
 // ==========================================
 export default function Comparativa() {
-  // Estados
   const [historicoData, setHistoricoData] = useState([]);
   const [arduinoData, setArduinoData] = useState(null);
   const [ultimoSQL, setUltimoSQL] = useState(null);
@@ -166,21 +197,25 @@ export default function Comparativa() {
   useEffect(() => {
     if (status) {
       setArduinoData(status);
+      const timestamp = status.timestamp || new Date().toISOString();
+      // Validar timestamp antes de usar
+      let fechaLocal;
+      try {
+        fechaLocal = convertirUtcALocal(timestamp);
+      } catch (error) {
+        console.error('Error convirtiendo timestamp:', timestamp);
+        fechaLocal = new Date();
+      }
+      
       setHistoricoArduino(prev => {
-        const timestamp = status.timestamp || new Date().toISOString();
-        const fechaLocal = convertirUtcALocal(timestamp);
-        
-        return [
-          { FECHA: fechaLocal.toISOString(), LUZ: status.lux },
-          ...prev
-        ].slice(0, 20);
+        const newItem = { FECHA: fechaLocal.toISOString(), LUZ: status.lux };
+        return [newItem, ...prev].slice(0, 20);
       });
     }
   }, [status]);
 
   useEffect(() => {
     if (ultimo) {
-      // Manejar diferentes formatos de respuesta
       const datos = ultimo.datos || ultimo.data?.datos || 
                     (Array.isArray(ultimo) ? ultimo[0] : ultimo);
       setUltimoSQL(datos);
@@ -188,7 +223,7 @@ export default function Comparativa() {
   }, [ultimo]);
 
   // ==========================================
-  // DATOS FILTRADOS CON useMemo (OPTIMIZACIÓN)
+  // DATOS FILTRADOS CON useMemo
   // ==========================================
   const historicoFiltrado = useMemo(() => 
     filtrarPorPeriodo(historicoData, periodo), 
