@@ -12,7 +12,7 @@ import SearchSection from './components/SearchSection';
 import styles from './styles/index';
 
 // ==========================================
-// FUNCIONES - SIN CONVERSIÓN DE ZONA HORARIA
+// FUNCIONES DE FILTRADO
 // ==========================================
 
 function formatDateTimeLocal(isoString) {
@@ -31,45 +31,80 @@ function formatDateTimeLocal(isoString) {
   }
 }
 
+function esMismoDia(fecha1, fecha2) {
+  return fecha1.getFullYear() === fecha2.getFullYear() &&
+         fecha1.getMonth() === fecha2.getMonth() &&
+         fecha1.getDate() === fecha2.getDate();
+}
+
+function estaEnSemana(fecha, inicioSemana, finSemana) {
+  return fecha >= inicioSemana && fecha <= finSemana;
+}
+
+function esMismoMes(fecha1, fecha2) {
+  return fecha1.getFullYear() === fecha2.getFullYear() &&
+         fecha1.getMonth() === fecha2.getMonth();
+}
+
 function filtrarPorPeriodo(data, periodo) {
   if (!data || data.length === 0) return [];
   
   const ahora = new Date();
-  const añoActual = ahora.getFullYear();
-  const mesActual = ahora.getMonth();
-  const diaActual = ahora.getDate();
+  const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   
-  // Inicio de semana (Lunes)
+  // Calcular inicio y fin de semana
   const diaSemana = ahora.getDay();
   let inicioSemana = new Date(ahora);
-  if (diaSemana === 0) inicioSemana.setDate(ahora.getDate() - 6);
-  else inicioSemana.setDate(ahora.getDate() - (diaSemana - 1));
+  if (diaSemana === 0) {
+    inicioSemana.setDate(ahora.getDate() - 6);
+  } else {
+    inicioSemana.setDate(ahora.getDate() - (diaSemana - 1));
+  }
   inicioSemana.setHours(0, 0, 0, 0);
   
   let finSemana = new Date(inicioSemana);
   finSemana.setDate(inicioSemana.getDate() + 6);
   finSemana.setHours(23, 59, 59, 999);
   
-  return data.filter(item => {
+  console.log(`📅 Filtrando ${periodo} - Hoy: ${hoy.toLocaleDateString()}`);
+  console.log(`📅 Semana: ${inicioSemana.toLocaleDateString()} - ${finSemana.toLocaleDateString()}`);
+  
+  const resultados = data.filter(item => {
     if (!item?.FECHA) return false;
     const fecha = new Date(item.FECHA);
     if (isNaN(fecha.getTime())) return false;
     
     switch(periodo) {
       case 'dia':
-        return fecha.getFullYear() === añoActual &&
-               fecha.getMonth() === mesActual &&
-               fecha.getDate() === diaActual;
+        return esMismoDia(fecha, hoy);
       case 'semana':
-        return fecha >= inicioSemana && fecha <= finSemana;
+        return estaEnSemana(fecha, inicioSemana, finSemana);
       case 'mes':
-        return fecha.getFullYear() === añoActual &&
-               fecha.getMonth() === mesActual;
+        return esMismoMes(fecha, hoy);
       default:
         return true;
     }
   });
+  
+  console.log(`📊 Resultados ${periodo}: ${resultados.length} registros`);
+  
+  // Mostrar distribución por día para depuración (solo en semana)
+  if (periodo === 'semana' && resultados.length > 0) {
+    const porDia = {};
+    resultados.forEach(r => {
+      const fecha = new Date(r.FECHA);
+      const dia = fecha.toLocaleDateString('es-MX', { weekday: 'long' });
+      porDia[dia] = (porDia[dia] || 0) + 1;
+    });
+    console.log('📊 Distribución por día:', porDia);
+  }
+  
+  return resultados;
 }
+
+// ==========================================
+// COMPONENTE PRINCIPAL
+// ==========================================
 
 export default function Stats() {
   const [statsData, setStatsData] = useState(null);
@@ -94,7 +129,7 @@ export default function Stats() {
 
   useEffect(() => {
     if (historico && Array.isArray(historico)) {
-      console.log(`📊 Stats: ${historico.length} registros totales`);
+      console.log(`📊 Stats: ${historico.length} registros totales en BD`);
       setHistoricoData(historico);
     }
   }, [historico]);
@@ -105,9 +140,7 @@ export default function Stats() {
 
   const historicoFiltrado = useMemo(() => {
     if (historicoData.length === 0) return [];
-    const filtrados = filtrarPorPeriodo(historicoData, periodo);
-    console.log(`📊 Período ${periodo}: ${filtrados.length} registros`);
-    return filtrados;
+    return filtrarPorPeriodo(historicoData, periodo);
   }, [historicoData, periodo]);
 
   useEffect(() => {
@@ -136,9 +169,9 @@ export default function Stats() {
       </div>
 
       <div className={styles.dataInfo}>
-        <span className={styles.dataInfoBadge}>📊 Total: {historicoData.length} registros</span>
+        <span className={styles.dataInfoBadge}>📊 Total en BD: {historicoData.length} registros</span>
         <span className={styles.dataInfoBadge}>
-          📅 {periodo === 'dia' ? 'Hoy' : periodo === 'semana' ? 'Esta semana' : 'Este mes'}: {historicoFiltrado.length}
+          📅 {periodo === 'dia' ? 'Hoy' : periodo === 'semana' ? 'Esta semana' : 'Este mes'}: {historicoFiltrado.length} registros
         </span>
       </div>
 
