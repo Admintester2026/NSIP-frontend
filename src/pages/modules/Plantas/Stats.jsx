@@ -11,10 +11,6 @@ import HistoricoTable from './components/HistoricoTable';
 import SearchSection from './components/SearchSection';
 import styles from './styles/index';
 
-// ==========================================
-// FUNCIONES DE FILTRADO
-// ==========================================
-
 function formatDateTimeLocal(isoString) {
   if (!isoString) return '--/--/---- --:--';
   try {
@@ -52,7 +48,6 @@ function filtrarPorPeriodo(data, periodo) {
   const ahora = new Date();
   const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   
-  // Calcular inicio y fin de semana
   const diaSemana = ahora.getDay();
   let inicioSemana = new Date(ahora);
   if (diaSemana === 0) {
@@ -65,9 +60,6 @@ function filtrarPorPeriodo(data, periodo) {
   let finSemana = new Date(inicioSemana);
   finSemana.setDate(inicioSemana.getDate() + 6);
   finSemana.setHours(23, 59, 59, 999);
-  
-  console.log(`📅 Filtrando ${periodo} - Hoy: ${hoy.toLocaleDateString()}`);
-  console.log(`📅 Semana: ${inicioSemana.toLocaleDateString()} - ${finSemana.toLocaleDateString()}`);
   
   const resultados = data.filter(item => {
     if (!item?.FECHA) return false;
@@ -86,25 +78,8 @@ function filtrarPorPeriodo(data, periodo) {
     }
   });
   
-  console.log(`📊 Resultados ${periodo}: ${resultados.length} registros`);
-  
-  // Mostrar distribución por día para depuración (solo en semana)
-  if (periodo === 'semana' && resultados.length > 0) {
-    const porDia = {};
-    resultados.forEach(r => {
-      const fecha = new Date(r.FECHA);
-      const dia = fecha.toLocaleDateString('es-MX', { weekday: 'long' });
-      porDia[dia] = (porDia[dia] || 0) + 1;
-    });
-    console.log('📊 Distribución por día:', porDia);
-  }
-  
   return resultados;
 }
-
-// ==========================================
-// COMPONENTE PRINCIPAL
-// ==========================================
 
 export default function Stats() {
   const [statsData, setStatsData] = useState(null);
@@ -231,7 +206,8 @@ export default function Stats() {
           <RelayStatsTable stats={statsData} />
         </div>
         <div className={styles.tableColumn}>
-          <HistoricoTable historico={historicoFiltrado} limit={limite} />
+          {/* IMPORTANTE: Usar historicoData (todos los registros) no historicoFiltrado */}
+          <HistoricoTable historico={historicoData} limit={limite} />
         </div>
       </div>
 
