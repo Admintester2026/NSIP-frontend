@@ -1,4 +1,3 @@
-// src/pages/modules/Plantas/Comparativa.jsx
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { arduinoAPI } from '../../../api/arduino';
@@ -10,22 +9,43 @@ import styles from './Comparativa.module.css';
 // ==========================================
 // CONSTANTES Y UTILIDADES
 // ==========================================
-const ZONA_HORARIA = -6; // GMT-6 (México)
+const ZONA_HORARIA = -6;
 const MS_POR_HORA = 60 * 60 * 1000;
 
-// Función de formato segura (con validación de fecha)
+// Función para validar si una fecha es válida
+const esFechaValida = (fecha) => {
+  if (!fecha) return false;
+  
+  // Verificar formato inválido como 2000-00-00
+  if (typeof fecha === 'string') {
+    const match = fecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const año = parseInt(match[1]);
+      const mes = parseInt(match[2]);
+      const dia = parseInt(match[3]);
+      // Mes 0 es inválido, día 0 es inválido
+      if (mes === 0 || dia === 0) return false;
+    }
+  }
+  
+  try {
+    const dateObj = new Date(fecha);
+    return !isNaN(dateObj.getTime());
+  } catch {
+    return false;
+  }
+};
+
+// Función de formato segura
 const formatDateTime = (isoString) => {
   if (!isoString) return '--/--/---- --:--';
+  if (!esFechaValida(isoString)) return '--/--/---- --:--';
   
   let fecha;
   try {
     fecha = new Date(isoString);
-    // Verificar si la fecha es válida
-    if (isNaN(fecha.getTime())) {
-      return '--/--/---- --:--';
-    }
+    if (isNaN(fecha.getTime())) return '--/--/---- --:--';
   } catch (error) {
-    console.error('Error parsing date:', isoString);
     return '--/--/---- --:--';
   }
   
@@ -40,17 +60,12 @@ const formatDateTime = (isoString) => {
 
 // Función para convertir UTC a hora local (segura)
 const convertirUtcALocal = (timestamp) => {
-  if (!timestamp) {
-    console.warn('Timestamp vacío en convertirUtcALocal');
-    return new Date();
-  }
+  if (!timestamp) return new Date();
+  if (!esFechaValida(timestamp)) return new Date();
   
   try {
     const fechaUTC = new Date(timestamp);
-    if (isNaN(fechaUTC.getTime())) {
-      console.warn('Fecha inválida en convertirUtcALocal:', timestamp);
-      return new Date();
-    }
+    if (isNaN(fechaUTC.getTime())) return new Date();
     return new Date(fechaUTC.getTime() + (ZONA_HORARIA * MS_POR_HORA));
   } catch (error) {
     console.error('Error en convertirUtcALocal:', error);
@@ -68,15 +83,14 @@ const filtrarPorPeriodo = (data, periodo) => {
   const hoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate()));
   
   return data.filter(item => {
-    // Validar que item.FECHA existe y es válido
     if (!item?.FECHA) return false;
+    if (!esFechaValida(item.FECHA)) return false;
     
     let fechaItem;
     try {
       fechaItem = new Date(item.FECHA);
       if (isNaN(fechaItem.getTime())) return false;
     } catch (error) {
-      console.error('Error parseando fecha en filtro:', item.FECHA);
       return false;
     }
     
@@ -151,13 +165,13 @@ const ArduinoStatusTable = ({ arduinoData }) => {
                     </div>
                   ))}
                 </div>
-              </td>
-            </tr>
-            <tr>
+               </td>
+             </tr>
+             <tr>
               <td colSpan="2"><strong>Luz:</strong> {arduinoData.lux?.toFixed(1)} lux</td>
               <td colSpan="2"><strong>Modo:</strong> {arduinoData.mode === 'auto' ? 'Automático' : 'Manual'}</td>
               <td><strong>SD:</strong> {arduinoData.sd_ok ? '✅ OK' : '❌ Error'} ({arduinoData.sd_fails || 0})</td>
-            </tr>
+             </tr>
           </tbody>
         </table>
       </div>
@@ -175,9 +189,6 @@ export default function Comparativa() {
   const [historicoArduino, setHistoricoArduino] = useState([]);
   const [periodo, setPeriodo] = useState('dia');
 
-  // ==========================================
-  // POLLING DE DATOS
-  // ==========================================
   const fetchHistorico = useCallback(() => arduinoAPI.getHistorico(), []);
   const { data: historico } = usePolling(fetchHistorico, 30000);
 
@@ -187,9 +198,6 @@ export default function Comparativa() {
   const fetchUltimo = useCallback(() => arduinoAPI.getUltimo(), []);
   const { data: ultimo } = usePolling(fetchUltimo, 10000);
 
-  // ==========================================
-  // EFECTOS PARA ACTUALIZAR DATOS
-  // ==========================================
   useEffect(() => {
     if (historico) setHistoricoData(historico);
   }, [historico]);
@@ -198,12 +206,13 @@ export default function Comparativa() {
     if (status) {
       setArduinoData(status);
       const timestamp = status.timestamp || new Date().toISOString();
+      
       // Validar timestamp antes de usar
       let fechaLocal;
-      try {
+      if (esFechaValida(timestamp)) {
         fechaLocal = convertirUtcALocal(timestamp);
-      } catch (error) {
-        console.error('Error convirtiendo timestamp:', timestamp);
+      } else {
+        console.warn('⚠️ Timestamp inválido, usando fecha actual:', timestamp);
         fechaLocal = new Date();
       }
       
@@ -222,9 +231,6 @@ export default function Comparativa() {
     }
   }, [ultimo]);
 
-  // ==========================================
-  // DATOS FILTRADOS CON useMemo
-  // ==========================================
   const historicoFiltrado = useMemo(() => 
     filtrarPorPeriodo(historicoData, periodo), 
     [historicoData, periodo]
@@ -235,21 +241,14 @@ export default function Comparativa() {
     [historicoArduino, periodo]
   );
 
-  // ==========================================
-  // CÁLCULOS
-  // ==========================================
   const diferencia = useMemo(() => {
     if (!arduinoData || !ultimoSQL) return null;
     const difLux = Math.abs(arduinoData.lux - (ultimoSQL.LUZ || 0)).toFixed(1);
     return { difLux, estadoOK: difLux < 50 };
   }, [arduinoData, ultimoSQL]);
 
-  // ==========================================
-  // RENDER
-  // ==========================================
   return (
     <div className={styles.comparativa}>
-      {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Comparativa Arduino vs SQL</h1>
@@ -260,9 +259,7 @@ export default function Comparativa() {
         </Link>
       </div>
 
-      {/* Status Cards */}
       <div className={styles.statusCards}>
-        {/* Arduino Card */}
         <div className={`${styles.statusCard} ${arduinoData ? styles.online : styles.offline}`}>
           <div className={styles.statusIcon}>🔌</div>
           <div className={styles.statusContent}>
@@ -286,7 +283,6 @@ export default function Comparativa() {
           </div>
         </div>
 
-        {/* SQL Card */}
         <div className={`${styles.statusCard} ${ultimoSQL ? styles.online : styles.offline}`}>
           <div className={styles.statusIcon}>🗄️</div>
           <div className={styles.statusContent}>
@@ -313,7 +309,6 @@ export default function Comparativa() {
         </div>
       </div>
 
-      {/* Diferencia */}
       {diferencia && (
         <div className={`${styles.comparacionCard} ${diferencia.estadoOK ? styles.ok : styles.warning}`}>
           <div className={styles.comparacionIcon}>
@@ -336,7 +331,6 @@ export default function Comparativa() {
         </div>
       )}
 
-      {/* Selector de período */}
       <div className={styles.periodSelectorContainer}>
         <span className={styles.selectorLabel}>Período:</span>
         <div className={styles.periodSelector}>
@@ -352,9 +346,7 @@ export default function Comparativa() {
         </div>
       </div>
 
-      {/* Grid principal */}
       <div className={styles.comparativaGrid}>
-        {/* Columna Arduino */}
         <div className={styles.columnaArduino}>
           <div className={styles.chartSection}>
             <h2 className={styles.sectionTitle}>
@@ -371,7 +363,6 @@ export default function Comparativa() {
           <ArduinoStatusTable arduinoData={arduinoData} />
         </div>
 
-        {/* Columna SQL */}
         <div className={styles.columnaSQL}>
           <div className={styles.chartSection}>
             <h2 className={styles.sectionTitle}>
