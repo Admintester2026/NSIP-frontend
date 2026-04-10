@@ -131,6 +131,16 @@ export default function Stats() {
     );
   }
 
+  console.log('📊 Stats - Pasando a HistoricoTable:', historicoData.length, 'registros');
+  console.log('📊 Primeros 5 registros que recibe la tabla:');
+  historicoData.slice(0, 5).forEach((r, i) => {
+    console.log(`  ${i+1}. ${r.FECHA} - ${r.LUZ}`);
+  });
+  console.log('📊 Últimos 5 registros (para ver el orden):');
+  historicoData.slice(-5).forEach((r, i) => {
+    console.log(`  ${i+1}. ${r.FECHA} - ${r.LUZ}`);
+  });
+
   return (
     <div className={styles.stats}>
       <div className={styles.header}>
