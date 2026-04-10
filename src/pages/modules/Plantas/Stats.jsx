@@ -12,23 +12,19 @@ import SearchSection from './components/SearchSection';
 import styles from './styles/index';
 
 // ==========================================
-// CONFIGURACIÓN DE ZONA HORARIA
-// ==========================================
-const ZONA_HORARIA = -6;
-const MS_POR_HORA = 60 * 60 * 1000;
-
-// ==========================================
-// FUNCIONES DE VALIDACIÓN Y CONVERSIÓN
+// FUNCIONES DE VALIDACIÓN (SIN conversión)
 // ==========================================
 
 function esFechaValida(fechaStr) {
   if (!fechaStr) return false;
+  
   const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (match) {
     const mes = parseInt(match[2]);
     const dia = parseInt(match[3]);
     if (mes === 0 || dia === 0) return false;
   }
+  
   try {
     const fecha = new Date(fechaStr);
     return !isNaN(fecha.getTime());
@@ -37,17 +33,12 @@ function esFechaValida(fechaStr) {
   }
 }
 
-// Convertir UTC a Local (GMT-6)
-function convertirUtcALocal(utcDateString) {
-  const fechaUTC = new Date(utcDateString);
-  return new Date(fechaUTC.getTime() + (ZONA_HORARIA * MS_POR_HORA));
-}
-
-function formatDateTime(isoString) {
+function formatDateTimeLocal(isoString) {
   if (!isoString) return '--/--/---- --:--';
   if (!esFechaValida(isoString)) return '--/--/---- --:--';
+  
   try {
-    const fecha = convertirUtcALocal(isoString);
+    const fecha = new Date(isoString);
     const año = fecha.getFullYear();
     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const dia = fecha.getDate().toString().padStart(2, '0');
@@ -61,18 +52,17 @@ function formatDateTime(isoString) {
 }
 
 // ==========================================
-// FUNCIÓN PARA FILTRAR POR PERÍODO (usando hora local)
+// FUNCIÓN PARA FILTRAR POR PERÍODO (SIN conversión)
 // ==========================================
 function filtrarPorPeriodo(data, periodo) {
   if (!data || data.length === 0) return [];
   
-  // Obtener fecha actual en LOCAL
   const ahoraLocal = new Date();
   const añoActual = ahoraLocal.getFullYear();
   const mesActual = ahoraLocal.getMonth();
   const diaActual = ahoraLocal.getDate();
   
-  // Calcular inicio de semana (Lunes) en LOCAL
+  // Inicio de semana (Lunes)
   const diaSemanaActual = ahoraLocal.getDay();
   let inicioSemana = new Date(ahoraLocal);
   if (diaSemanaActual === 0) {
@@ -82,39 +72,33 @@ function filtrarPorPeriodo(data, periodo) {
   }
   inicioSemana.setHours(0, 0, 0, 0);
   
-  // Calcular fin de semana (Domingo) en LOCAL
+  // Fin de semana (Domingo)
   let finSemana = new Date(inicioSemana);
   finSemana.setDate(inicioSemana.getDate() + 6);
   finSemana.setHours(23, 59, 59, 999);
   
-  console.log(`📅 Filtrando - Período: ${periodo}`);
-  console.log(`📅 Fecha actual local: ${ahoraLocal.toLocaleString()}`);
-  console.log(`📅 Semana: ${inicioSemana.toLocaleDateString()} - ${finSemana.toLocaleDateString()}`);
+  console.log(`📅 Filtrando ${periodo} - Hoy: ${ahoraLocal.toLocaleString()}`);
   
-  const resultados = data.filter(item => {
+  return data.filter(item => {
     if (!item?.FECHA) return false;
     if (!esFechaValida(item.FECHA)) return false;
     
-    // Convertir la fecha del registro a LOCAL
-    const fechaLocal = convertirUtcALocal(item.FECHA);
+    const fechaItem = new Date(item.FECHA);
     
     switch(periodo) {
       case 'dia':
-        return fechaLocal.getFullYear() === añoActual &&
-               fechaLocal.getMonth() === mesActual &&
-               fechaLocal.getDate() === diaActual;
+        return fechaItem.getFullYear() === añoActual &&
+               fechaItem.getMonth() === mesActual &&
+               fechaItem.getDate() === diaActual;
       case 'semana':
-        return fechaLocal >= inicioSemana && fechaLocal <= finSemana;
+        return fechaItem >= inicioSemana && fechaItem <= finSemana;
       case 'mes':
-        return fechaLocal.getFullYear() === añoActual &&
-               fechaLocal.getMonth() === mesActual;
+        return fechaItem.getFullYear() === añoActual &&
+               fechaItem.getMonth() === mesActual;
       default:
         return true;
     }
   });
-  
-  console.log(`📊 Registros encontrados para ${periodo}: ${resultados.length}`);
-  return resultados;
 }
 
 // ==========================================
@@ -143,11 +127,8 @@ export default function Stats() {
 
   useEffect(() => {
     if (historico && Array.isArray(historico)) {
-      const datosValidos = historico.filter(item => {
-        if (!item?.FECHA) return false;
-        return esFechaValida(item.FECHA);
-      });
-      console.log(`📊 Stats: ${historico.length} registros totales, ${datosValidos.length} válidos`);
+      const datosValidos = historico.filter(item => esFechaValida(item?.FECHA));
+      console.log(`📊 Stats: ${historico.length} registros, ${datosValidos.length} válidos`);
       setHistoricoData(datosValidos);
     }
   }, [historico]);
@@ -160,13 +141,13 @@ export default function Stats() {
 
   const historicoFiltrado = useMemo(() => {
     if (historicoData.length === 0) return [];
-    return filtrarPorPeriodo(historicoData, periodo);
+    const filtrados = filtrarPorPeriodo(historicoData, periodo);
+    console.log(`📊 Período ${periodo}: ${filtrados.length} registros filtrados`);
+    return filtrados;
   }, [historicoData, periodo]);
 
   useEffect(() => {
-    if (historico !== undefined && stats !== undefined) {
-      setLoading(false);
-    }
+    if (historico !== undefined && stats !== undefined) setLoading(false);
   }, [historico, stats]);
 
   if (loading) {
@@ -177,9 +158,6 @@ export default function Stats() {
       </div>
     );
   }
-
-  const totalRegistros = historicoData.length;
-  const registrosFiltrados = historicoFiltrado.length;
 
   return (
     <div className={styles.stats}>
@@ -194,25 +172,21 @@ export default function Stats() {
       </div>
 
       <div className={styles.dataInfo}>
-        <span className={styles.dataInfoBadge}>📊 Total registros: {totalRegistros}</span>
+        <span className={styles.dataInfoBadge}>📊 Total: {historicoData.length} registros</span>
         <span className={styles.dataInfoBadge}>
-          📅 Período: {periodo === 'dia' ? 'Hoy' : periodo === 'semana' ? 'Esta semana' : 'Este mes'}
+          📅 {periodo === 'dia' ? 'Hoy' : periodo === 'semana' ? 'Esta semana' : 'Este mes'}: {historicoFiltrado.length}
         </span>
-        <span className={styles.dataInfoBadge}>🔍 Mostrando: {registrosFiltrados} registros</span>
       </div>
 
       <StatsSummary historicoData={historicoFiltrado} statsData={statsData} />
 
       {ultimoRegistro && (
         <div className={styles.lastRecord}>
-          <h3 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}>🕐</span>
-            Último Registro
-          </h3>
+          <h3 className={styles.sectionTitle}>🕐 Último Registro</h3>
           <div className={styles.lastRecordGrid}>
             <div className={styles.lastRecordItem}>
               <span className={styles.lastRecordLabel}>Fecha:</span>
-              <span className={styles.lastRecordValue}>{formatDateTime(ultimoRegistro.FECHA)}</span>
+              <span className={styles.lastRecordValue}>{formatDateTimeLocal(ultimoRegistro.FECHA)}</span>
             </div>
             <div className={styles.lastRecordItem}>
               <span className={styles.lastRecordLabel}>Luz:</span>
@@ -226,11 +200,7 @@ export default function Stats() {
         <span className={styles.selectorLabel}>Período:</span>
         <div className={styles.periodSelector}>
           {['dia', 'semana', 'mes'].map(p => (
-            <button
-              key={p}
-              className={`${styles.periodButton} ${periodo === p ? styles.active : ''}`}
-              onClick={() => setPeriodo(p)}
-            >
+            <button key={p} className={`${styles.periodButton} ${periodo === p ? styles.active : ''}`} onClick={() => setPeriodo(p)}>
               {p === 'dia' ? 'Día' : p === 'semana' ? 'Semana' : 'Mes'}
             </button>
           ))}
@@ -239,18 +209,11 @@ export default function Stats() {
 
       <div className={styles.chartsGrid}>
         <div className={styles.chartCard}>
-          <h3 className={styles.chartTitle}>
-            <span className={styles.chartIcon}>📈</span>
-            Evolución de Luz 
-            {periodo === 'dia' ? ' (Hoy)' : periodo === 'semana' ? ' (Esta semana)' : ' (Este mes)'}
-          </h3>
+          <h3 className={styles.chartTitle}>📈 Evolución de Luz {periodo === 'dia' ? '(Hoy)' : periodo === 'semana' ? '(Esta semana)' : '(Este mes)'}</h3>
           <LightChart data={historicoFiltrado} periodo={periodo} />
         </div>
         <div className={styles.chartCard}>
-          <h3 className={styles.chartTitle}>
-            <span className={styles.chartIcon}>📊</span>
-            Uso de Relés
-          </h3>
+          <h3 className={styles.chartTitle}>📊 Uso de Relés</h3>
           <RelayUsageChart stats={statsData} />
         </div>
       </div>
@@ -259,11 +222,7 @@ export default function Stats() {
         <span className={styles.selectorLabel}>Mostrar:</span>
         <div className={styles.limitSelector}>
           {[20, 50, 100].map(lim => (
-            <button
-              key={lim}
-              className={`${styles.limitButton} ${limite === lim ? styles.active : ''}`}
-              onClick={() => setLimite(lim)}
-            >
+            <button key={lim} className={`${styles.limitButton} ${limite === lim ? styles.active : ''}`} onClick={() => setLimite(lim)}>
               {lim}
             </button>
           ))}
@@ -275,10 +234,7 @@ export default function Stats() {
           <RelayStatsTable stats={statsData} />
         </div>
         <div className={styles.tableColumn}>
-          <HistoricoTable 
-            historico={historicoFiltrado.length > 0 ? historicoFiltrado : historicoData} 
-            limit={limite} 
-          />
+          <HistoricoTable historico={historicoFiltrado.length > 0 ? historicoFiltrado : historicoData} limit={limite} />
         </div>
       </div>
 
