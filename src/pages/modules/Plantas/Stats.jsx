@@ -131,16 +131,6 @@ export default function Stats() {
     );
   }
 
-  console.log('📊 Stats - Pasando a HistoricoTable:', historicoData.length, 'registros');
-  console.log('📊 Primeros 5 registros que recibe la tabla:');
-  historicoData.slice(0, 5).forEach((r, i) => {
-    console.log(`  ${i+1}. ${r.FECHA} - ${r.LUZ}`);
-  });
-  console.log('📊 Últimos 5 registros (para ver el orden):');
-  historicoData.slice(-5).forEach((r, i) => {
-    console.log(`  ${i+1}. ${r.FECHA} - ${r.LUZ}`);
-  });
-
   return (
     <div className={styles.stats}>
       <div className={styles.header}>
@@ -216,8 +206,15 @@ export default function Stats() {
           <RelayStatsTable stats={statsData} />
         </div>
         <div className={styles.tableColumn}>
-          {/* IMPORTANTE: Usar historicoData (todos los registros) no historicoFiltrado */}
-          <HistoricoTable historico={historicoData} limit={limite} />
+          {/* Solo mostrar la tabla cuando hay datos */}
+          {historicoData.length > 0 ? (
+            <HistoricoTable historico={historicoData} limit={limite} />
+          ) : (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>📭</span>
+              <p>Cargando datos históricos...</p>
+            </div>
+          )}
         </div>
       </div>
 
