@@ -2,51 +2,49 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // ==========================================
-// FUNCIONES DE FILTRADO POR FECHA LOCAL
+// FUNCIÓN PARA CONVERTIR UTC A LOCAL (GMT-6)
 // ==========================================
-
-function esMismoDia(fecha1, fecha2) {
-  return fecha1.getFullYear() === fecha2.getFullYear() &&
-         fecha1.getMonth() === fecha2.getMonth() &&
-         fecha1.getDate() === fecha2.getDate();
-}
-
-function estaEnSemana(fecha, inicioSemana, finSemana) {
-  return fecha >= inicioSemana && fecha <= finSemana;
-}
-
-function esMismoMes(fecha1, fecha2) {
-  return fecha1.getFullYear() === fecha2.getFullYear() &&
-         fecha1.getMonth() === fecha2.getMonth();
+function convertirUtcALocal(utcDateString) {
+  const fechaUTC = new Date(utcDateString);
+  return new Date(fechaUTC.getTime() - (6 * 60 * 60 * 1000));
 }
 
 // ==========================================
-// GRÁFICA DE DÍA
+// GRÁFICA DE DÍA - Datos del día actual en HORA LOCAL
 // ==========================================
 function generarDatosDia(data) {
   if (!data || data.length === 0) return [];
   
-  const ahora = new Date();
-  const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+  // Obtener fecha actual en LOCAL
+  const ahoraLocal = new Date();
+  const añoActual = ahoraLocal.getFullYear();
+  const mesActual = ahoraLocal.getMonth();
+  const diaActual = ahoraLocal.getDate();
   
-  // Filtrar datos del día actual
+  console.log(`📅 Día actual (local): ${añoActual}/${mesActual + 1}/${diaActual}`);
+  
+  // Filtrar datos del día actual (convirtiendo cada fecha a local)
   const datosDelDia = data.filter(item => {
     if (!item?.FECHA) return false;
-    const fecha = new Date(item.FECHA);
-    return esMismoDia(fecha, hoy);
+    const fechaLocal = convertirUtcALocal(item.FECHA);
+    return fechaLocal.getFullYear() === añoActual &&
+           fechaLocal.getMonth() === mesActual &&
+           fechaLocal.getDate() === diaActual;
   });
+  
+  console.log(`📊 Datos del día (local): ${datosDelDia.length} registros`);
   
   if (datosDelDia.length === 0) return [];
   
-  // Agrupar por hora
+  // Agrupar por hora local
   const dataPorHora = new Map();
   for (let i = 0; i < 24; i++) {
     dataPorHora.set(i, { suma: 0, count: 0 });
   }
   
   datosDelDia.forEach(item => {
-    const fecha = new Date(item.FECHA);
-    const hora = fecha.getHours();
+    const fechaLocal = convertirUtcALocal(item.FECHA);
+    const hora = fechaLocal.getHours();
     const valor = typeof item.LUZ === 'number' ? item.LUZ : parseFloat(item.LUZ) || 0;
     const grupo = dataPorHora.get(hora);
     grupo.suma += valor;
@@ -66,57 +64,53 @@ function generarDatosDia(data) {
 }
 
 // ==========================================
-// GRÁFICA DE SEMANA
+// GRÁFICA DE SEMANA - Datos de la semana actual en HORA LOCAL
 // ==========================================
 function generarDatosSemana(data) {
   if (!data || data.length === 0) return [];
   
-  const ahora = new Date();
-  const diaSemana = ahora.getDay(); // 0 = Domingo, 1 = Lunes
+  const ahoraLocal = new Date();
+  const diaSemana = ahoraLocal.getDay(); // 0 = Domingo
   
-  // Calcular inicio de semana (Lunes)
-  let inicioSemana = new Date(ahora);
+  let inicioSemana = new Date(ahoraLocal);
   if (diaSemana === 0) {
-    inicioSemana.setDate(ahora.getDate() - 6);
+    inicioSemana.setDate(ahoraLocal.getDate() - 6);
   } else {
-    inicioSemana.setDate(ahora.getDate() - (diaSemana - 1));
+    inicioSemana.setDate(ahoraLocal.getDate() - (diaSemana - 1));
   }
   inicioSemana.setHours(0, 0, 0, 0);
   
-  // Calcular fin de semana (Domingo)
   let finSemana = new Date(inicioSemana);
   finSemana.setDate(inicioSemana.getDate() + 6);
   finSemana.setHours(23, 59, 59, 999);
   
-  console.log(`📅 Semana: ${inicioSemana.toLocaleDateString()} - ${finSemana.toLocaleDateString()}`);
+  console.log(`📅 Semana (local): ${inicioSemana.toLocaleDateString()} - ${finSemana.toLocaleDateString()}`);
   
-  // Filtrar datos de la semana
   const datosSemana = data.filter(item => {
     if (!item?.FECHA) return false;
-    const fecha = new Date(item.FECHA);
-    return estaEnSemana(fecha, inicioSemana, finSemana);
+    const fechaLocal = convertirUtcALocal(item.FECHA);
+    return fechaLocal >= inicioSemana && fechaLocal <= finSemana;
   });
+  
+  console.log(`📊 Datos semana: ${datosSemana.length} registros`);
   
   if (datosSemana.length === 0) return [];
   
-  // Mapeo de días
-  const diasMap = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const diasMap = { 0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado' };
   const datosPorDia = new Map();
-  for (let i = 0; i < 7; i++) {
-    datosPorDia.set(diasMap[i], { suma: 0, count: 0 });
-  }
+  const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  ordenDias.forEach(dia => datosPorDia.set(dia, { suma: 0, count: 0 }));
   
   datosSemana.forEach(item => {
-    const fecha = new Date(item.FECHA);
-    const diaNombre = diasMap[fecha.getDay()];
+    const fechaLocal = convertirUtcALocal(item.FECHA);
+    const diaNombre = diasMap[fechaLocal.getDay()];
     const valor = typeof item.LUZ === 'number' ? item.LUZ : parseFloat(item.LUZ) || 0;
-    const grupo = datosPorDia.get(diaNombre);
-    grupo.suma += valor;
-    grupo.count++;
+    if (datosPorDia.has(diaNombre)) {
+      const grupo = datosPorDia.get(diaNombre);
+      grupo.suma += valor;
+      grupo.count++;
+    }
   });
-  
-  // Orden correcto: Lunes a Domingo
-  const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
   
   return ordenDias.map(dia => {
     const grupo = datosPorDia.get(dia);
@@ -130,33 +124,35 @@ function generarDatosSemana(data) {
 }
 
 // ==========================================
-// GRÁFICA DE MES
+// GRÁFICA DE MES - Datos del mes actual en HORA LOCAL
 // ==========================================
 function generarDatosMes(data) {
   if (!data || data.length === 0) return [];
   
-  const ahora = new Date();
-  const añoActual = ahora.getFullYear();
-  const mesActual = ahora.getMonth();
+  const ahoraLocal = new Date();
+  const añoActual = ahoraLocal.getFullYear();
+  const mesActual = ahoraLocal.getMonth();
   
-  // Filtrar datos del mes actual
+  console.log(`📅 Mes actual (local): ${añoActual}/${mesActual + 1}`);
+  
   const datosMes = data.filter(item => {
     if (!item?.FECHA) return false;
-    const fecha = new Date(item.FECHA);
-    return fecha.getFullYear() === añoActual && fecha.getMonth() === mesActual;
+    const fechaLocal = convertirUtcALocal(item.FECHA);
+    return fechaLocal.getFullYear() === añoActual && fechaLocal.getMonth() === mesActual;
   });
+  
+  console.log(`📊 Datos mes: ${datosMes.length} registros`);
   
   if (datosMes.length === 0) return [];
   
-  // Agrupar por semana del mes
   const datosPorSemana = new Map();
   for (let i = 1; i <= 5; i++) {
     datosPorSemana.set(i, { suma: 0, count: 0 });
   }
   
   datosMes.forEach(item => {
-    const fecha = new Date(item.FECHA);
-    const dia = fecha.getDate();
+    const fechaLocal = convertirUtcALocal(item.FECHA);
+    const dia = fechaLocal.getDate();
     const valor = typeof item.LUZ === 'number' ? item.LUZ : parseFloat(item.LUZ) || 0;
     
     let numSemana;
