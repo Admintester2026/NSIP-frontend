@@ -11,10 +11,18 @@ import HistoricoTable from './components/HistoricoTable';
 import SearchSection from './components/SearchSection';
 import styles from './styles/index';
 
+// ==========================================
+// FUNCIÓN PARA CONVERTIR UTC A LOCAL (GMT-6)
+// ==========================================
+function convertirUtcALocal(utcDateString) {
+  const fechaUTC = new Date(utcDateString);
+  return new Date(fechaUTC.getTime() - (6 * 60 * 60 * 1000));
+}
+
 function formatDateTimeLocal(isoString) {
   if (!isoString) return '--/--/---- --:--';
   try {
-    const fecha = new Date(isoString);
+    const fecha = convertirUtcALocal(isoString);
     const año = fecha.getFullYear();
     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const dia = fecha.getDate().toString().padStart(2, '0');
@@ -45,15 +53,17 @@ function esMismoMes(fecha1, fecha2) {
 function filtrarPorPeriodo(data, periodo) {
   if (!data || data.length === 0) return [];
   
-  const ahora = new Date();
-  const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+  // Obtener fecha actual en LOCAL
+  const ahoraLocal = new Date();
+  const hoyLocal = new Date(ahoraLocal.getFullYear(), ahoraLocal.getMonth(), ahoraLocal.getDate());
   
-  const diaSemana = ahora.getDay();
-  let inicioSemana = new Date(ahora);
+  // Calcular inicio de semana en LOCAL
+  const diaSemana = ahoraLocal.getDay();
+  let inicioSemana = new Date(ahoraLocal);
   if (diaSemana === 0) {
-    inicioSemana.setDate(ahora.getDate() - 6);
+    inicioSemana.setDate(ahoraLocal.getDate() - 6);
   } else {
-    inicioSemana.setDate(ahora.getDate() - (diaSemana - 1));
+    inicioSemana.setDate(ahoraLocal.getDate() - (diaSemana - 1));
   }
   inicioSemana.setHours(0, 0, 0, 0);
   
@@ -61,22 +71,37 @@ function filtrarPorPeriodo(data, periodo) {
   finSemana.setDate(inicioSemana.getDate() + 6);
   finSemana.setHours(23, 59, 59, 999);
   
+  console.log(`📅 Filtrando ${periodo} - Hoy local: ${hoyLocal.toLocaleDateString()}`);
+  console.log(`📅 Semana local: ${inicioSemana.toLocaleDateString()} - ${finSemana.toLocaleDateString()}`);
+  
   const resultados = data.filter(item => {
     if (!item?.FECHA) return false;
-    const fecha = new Date(item.FECHA);
-    if (isNaN(fecha.getTime())) return false;
+    // CONVERTIR LA FECHA DEL REGISTRO A LOCAL ANTES DE COMPARAR
+    const fechaLocal = convertirUtcALocal(item.FECHA);
+    if (isNaN(fechaLocal.getTime())) return false;
     
     switch(periodo) {
       case 'dia':
-        return esMismoDia(fecha, hoy);
+        return esMismoDia(fechaLocal, hoyLocal);
       case 'semana':
-        return estaEnSemana(fecha, inicioSemana, finSemana);
+        return estaEnSemana(fechaLocal, inicioSemana, finSemana);
       case 'mes':
-        return esMismoMes(fecha, hoy);
+        return esMismoMes(fechaLocal, hoyLocal);
       default:
         return true;
     }
   });
+  
+  console.log(`📊 Resultados ${periodo}: ${resultados.length} registros`);
+  
+  // Mostrar primeros 5 resultados para depuración
+  if (resultados.length > 0) {
+    console.log(`📋 Primeros 5 resultados del filtro:`);
+    resultados.slice(0, 5).forEach((r, i) => {
+      const fechaLocal = convertirUtcALocal(r.FECHA);
+      console.log(`  ${i+1}. ${fechaLocal.toLocaleString()} - ${r.LUZ}`);
+    });
+  }
   
   return resultados;
 }
@@ -206,7 +231,6 @@ export default function Stats() {
           <RelayStatsTable stats={statsData} />
         </div>
         <div className={styles.tableColumn}>
-          {/* Solo mostrar la tabla cuando hay datos */}
           {historicoData.length > 0 ? (
             <HistoricoTable historico={historicoData} limit={limite} />
           ) : (
