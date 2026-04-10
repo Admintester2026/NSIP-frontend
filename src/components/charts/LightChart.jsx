@@ -13,6 +13,7 @@ function esFechaValida(fechaStr) {
     const mes = parseInt(match[2]);
     const dia = parseInt(match[3]);
     if (mes === 0 || dia === 0) return false;
+    if (mes > 12 || dia > 31) return false;
   }
   
   try {
@@ -27,31 +28,30 @@ function esFechaValida(fechaStr) {
 // FUNCIONES DE GENERACIÓN DE DATOS
 // ==========================================
 
-// Función para generar todos los puntos de un día (00:00 a 23:59)
-function generarDiaCompleto(data) {
+// Para DÍA: mostrar valores por hora (datos reales, no promedios)
+function generarDatosDia(data) {
   if (!data || data.length === 0) return [];
   
-  // Filtrar solo datos con fechas válidas
+  // Filtrar datos válidos
   const datosValidos = data.filter(item => {
     if (!item?.FECHA) return false;
-    return esFechaValida(item.FECHA);
+    if (!esFechaValida(item.FECHA)) return false;
+    return true;
   });
   
   if (datosValidos.length === 0) return [];
   
-  // Obtener la fecha más reciente
-  const fechas = datosValidos.map(item => new Date(item.FECHA)).filter(d => !isNaN(d.getTime()));
-  if (fechas.length === 0) return [];
+  // Ordenar por fecha
+  datosValidos.sort((a, b) => new Date(a.FECHA) - new Date(b.FECHA));
   
-  const fechaBase = new Date(Math.max(...fechas));
-  const horas = Array.from({ length: 24 }, (_, i) => i);
+  // Crear mapa de hora -> valor (tomar el último valor de cada hora)
   const dataMap = new Map();
   
   datosValidos.forEach(item => {
     try {
-      const fechaItem = new Date(item.FECHA);
-      if (!isNaN(fechaItem.getTime())) {
-        const hora = fechaItem.getUTCHours();
+      const fecha = new Date(item.FECHA);
+      if (!isNaN(fecha.getTime())) {
+        const hora = fecha.getUTCHours();
         const valor = typeof item.LUZ === 'number' ? item.LUZ : parseFloat(item.LUZ) || 0;
         dataMap.set(hora, valor);
       }
@@ -60,8 +60,11 @@ function generarDiaCompleto(data) {
     }
   });
   
+  // Generar todas las horas del día (0-23)
+  const horas = Array.from({ length: 24 }, (_, i) => i);
+  
   return horas.map(hora => {
-    const valor = dataMap.has(hora) ? dataMap.get(hora) : 0;
+    const valor = dataMap.has(hora) ? dataMap.get(hora) : null;
     return {
       hora: `${hora.toString().padStart(2, '0')}:00`,
       LUZ: valor,
@@ -71,11 +74,10 @@ function generarDiaCompleto(data) {
   });
 }
 
-// Función para generar días de la semana (PROMEDIO)
-function generarSemanaCompleta(data) {
+// Para SEMANA: agrupar por día de la semana (usando SOLO los datos recibidos)
+function generarDatosSemana(data) {
   if (!data || data.length === 0) return [];
   
-  // Filtrar solo datos con fechas válidas
   const datosValidos = data.filter(item => {
     if (!item?.FECHA) return false;
     return esFechaValida(item.FECHA);
@@ -111,23 +113,20 @@ function generarSemanaCompleta(data) {
     const promedio = valores.length > 0 
       ? valores.reduce((a, b) => a + b, 0) / valores.length 
       : 0;
-    const redondeado = Math.round(promedio * 10) / 10;
     
     return {
       dia: dia.substring(0, 3),
-      LUZ: redondeado,
+      LUZ: Math.round(promedio * 10) / 10,
       registros: valores.length,
-      esPromedio: true,
-      valorOriginal: promedio
+      esPromedio: true
     };
   });
 }
 
-// Función para generar semanas del mes (PROMEDIO)
-function generarMesCompleto(data) {
+// Para MES: agrupar por semana del mes (usando SOLO los datos recibidos)
+function generarDatosMes(data) {
   if (!data || data.length === 0) return [];
   
-  // Filtrar solo datos con fechas válidas
   const datosValidos = data.filter(item => {
     if (!item?.FECHA) return false;
     return esFechaValida(item.FECHA);
@@ -169,14 +168,12 @@ function generarMesCompleto(data) {
     const promedio = valores.length > 0 
       ? valores.reduce((a, b) => a + b, 0) / valores.length 
       : 0;
-    const redondeado = Math.round(promedio * 10) / 10;
     
     return {
       semana: `S${idx + 1}`,
-      LUZ: redondeado,
+      LUZ: Math.round(promedio * 10) / 10,
       registros: valores.length,
-      esPromedio: true,
-      valorOriginal: promedio
+      esPromedio: true
     };
   });
 }
@@ -189,11 +186,11 @@ const CustomDot = (props) => {
   const { cx, cy, payload, index } = props;
   const key = `dot-${index}-${payload.hora || payload.dia || payload.semana}`;
   
-  if (payload.tieneDato === false) {
-    return <circle key={key} cx={cx} cy={cy} r={3} fill="var(--amber)" stroke="none" />;
+  if (payload.LUZ === null || payload.LUZ === undefined) {
+    return null;
   }
   if (payload.registros === 0) {
-    return <circle key={key} cx={cx} cy={cy} r={2} fill="var(--text-muted)" stroke="none" />;
+    return <circle key={key} cx={cx} cy={cy} r={3} fill="var(--amber)" stroke="none" />;
   }
   if (payload.esPromedio) {
     return <circle key={key} cx={cx} cy={cy} r={5} fill="var(--amber)" stroke="var(--green)" strokeWidth={2} />;
@@ -204,6 +201,10 @@ const CustomDot = (props) => {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const dataPoint = payload[0].payload;
+    const valorLuz = dataPoint.LUZ !== null && dataPoint.LUZ !== undefined 
+      ? (typeof dataPoint.LUZ === 'number' ? dataPoint.LUZ.toFixed(1) : dataPoint.LUZ)
+      : 'Sin datos';
+    
     return (
       <div style={{
         backgroundColor: 'var(--bg-surface)',
@@ -217,23 +218,23 @@ const CustomTooltip = ({ active, payload, label }) => {
         
         {dataPoint.esPromedio && (
           <p style={{ margin: 0, color: 'var(--amber)', fontSize: '0.8rem', fontStyle: 'italic' }}>
-            ⚡ Valor promedio
+            📊 Valor promedio
           </p>
         )}
         
         <p style={{ margin: 0, color: 'var(--green)', fontSize: '1rem', marginTop: '0.25rem' }}>
-          Luz: {typeof dataPoint.LUZ === 'number' ? dataPoint.LUZ.toFixed(1) : dataPoint.LUZ} lux
+          Luz: {valorLuz} lux
         </p>
         
         {dataPoint.registros !== undefined && dataPoint.registros > 0 && (
-          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.75rem' }}>
             Basado en {dataPoint.registros} {dataPoint.registros === 1 ? 'registro' : 'registros'}
           </p>
         )}
         
-        {dataPoint.tieneDato !== undefined && !dataPoint.tieneDato && (
-          <p style={{ margin: 0, color: 'var(--amber)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-            ⚠️ Sin datos en este horario
+        {dataPoint.LUZ === null && (
+          <p style={{ margin: 0, color: 'var(--amber)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+            ⚠️ Sin datos en este período
           </p>
         )}
       </div>
@@ -251,21 +252,21 @@ export default function LightChart({ data, periodo = 'dia' }) {
   if (!data || !Array.isArray(data) || data.length === 0) {
     return (
       <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-        No hay datos disponibles para mostrar
+        📭 No hay datos disponibles para mostrar
       </div>
     );
   }
 
-  // Verificar si hay datos válidos (con fechas válidas)
-  const datosValidos = data.filter(item => {
+  // Verificar si hay datos con fechas válidas
+  const datosConFechaValida = data.filter(item => {
     if (!item?.FECHA) return false;
     return esFechaValida(item.FECHA);
   });
 
-  if (datosValidos.length === 0) {
+  if (datosConFechaValida.length === 0) {
     return (
       <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-        No hay datos con fechas válidas para mostrar
+        ⚠️ No hay datos con fechas válidas para mostrar
       </div>
     );
   }
@@ -274,36 +275,35 @@ export default function LightChart({ data, periodo = 'dia' }) {
   let chartData = [];
   let dataKey = '';
   let xAxisLabel = '';
-  let showAverageNote = false;
   
   if (periodo === 'dia') {
-    chartData = generarDiaCompleto(datosValidos);
+    chartData = generarDatosDia(datosConFechaValida);
     dataKey = 'hora';
     xAxisLabel = 'Hora del día';
-    showAverageNote = false;
   } else if (periodo === 'semana') {
-    chartData = generarSemanaCompleta(datosValidos);
+    chartData = generarDatosSemana(datosConFechaValida);
     dataKey = 'dia';
     xAxisLabel = 'Día de la semana';
-    showAverageNote = true;
   } else {
-    chartData = generarMesCompleto(datosValidos);
+    chartData = generarDatosMes(datosConFechaValida);
     dataKey = 'semana';
     xAxisLabel = 'Semana del mes';
-    showAverageNote = true;
   }
 
-  if (chartData.length === 0) {
+  // Verificar si hay datos para graficar
+  const hasValidData = chartData.some(item => item.LUZ !== null && item.LUZ !== undefined && item.LUZ > 0);
+  
+  if (!hasValidData) {
     return (
       <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-        No se pudieron generar datos para la gráfica
+        📊 No hay datos suficientes para generar la gráfica en este período
       </div>
     );
   }
 
   return (
     <div>
-      {showAverageNote && (
+      {periodo !== 'dia' && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
