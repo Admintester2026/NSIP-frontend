@@ -1,6 +1,14 @@
 // src/pages/modules/Plantas/components/HistoricoTable.jsx
 import styles from "../styles/index";
 
+const ZONA_HORARIA = -6;
+const MS_POR_HORA = 60 * 60 * 1000;
+
+function convertirUtcALocal(utcDateString) {
+  const fechaUTC = new Date(utcDateString);
+  return new Date(fechaUTC.getTime() + (ZONA_HORARIA * MS_POR_HORA));
+}
+
 function esFechaValida(fechaStr) {
   if (!fechaStr) return false;
   
@@ -19,18 +27,18 @@ function esFechaValida(fechaStr) {
   }
 }
 
-function formatDateTime(isoString) {
+function formatDateTimeLocal(isoString) {
   if (!isoString) return '--/--/---- --:--';
   if (!esFechaValida(isoString)) return '--/--/---- --:--';
   
   try {
-    const fecha = new Date(isoString);
-    const año = fecha.getUTCFullYear();
-    const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
-    const dia = fecha.getUTCDate().toString().padStart(2, '0');
-    const horas = fecha.getUTCHours().toString().padStart(2, '0');
-    const minutos = fecha.getUTCMinutes().toString().padStart(2, '0');
-    const segundos = fecha.getUTCSeconds().toString().padStart(2, '0');
+    const fecha = convertirUtcALocal(isoString);
+    const año = fecha.getFullYear();
+    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const dia = fecha.getDate().toString().padStart(2, '0');
+    const horas = fecha.getHours().toString().padStart(2, '0');
+    const minutos = fecha.getMinutes().toString().padStart(2, '0');
+    const segundos = fecha.getSeconds().toString().padStart(2, '0');
     return `${año}/${mes}/${dia} ${horas}:${minutos}:${segundos}`;
   } catch {
     return '--/--/---- --:--';
@@ -38,35 +46,16 @@ function formatDateTime(isoString) {
 }
 
 export default function HistoricoTable({ historico, limit = 20 }) {
-  // Validar que historico existe y es un array
   if (!historico || !Array.isArray(historico) || historico.length === 0) {
     return (
       <div className={styles.emptyState}>
         <span className={styles.emptyIcon}>📭</span>
         <p>No hay datos históricos disponibles</p>
-        <p className={styles.emptyHint}>Esperando la primera sincronización de datos...</p>
       </div>
     );
   }
 
-  // Filtrar registros con fechas válidas
-  const registrosValidos = historico.filter(row => {
-    if (!row?.FECHA) return false;
-    return esFechaValida(row.FECHA);
-  });
-
-  if (registrosValidos.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <span className={styles.emptyIcon}>⚠️</span>
-        <p>No hay registros con fechas válidas</p>
-        <p className={styles.emptyHint}>Los datos pueden tener fechas corruptas</p>
-      </div>
-    );
-  }
-
-  // Tomar los últimos 'limit' registros
-  const mostrarRegistros = registrosValidos.slice(0, limit);
+  const mostrarRegistros = historico.slice(0, limit);
 
   return (
     <div className={styles.tableContainer}>
@@ -75,7 +64,7 @@ export default function HistoricoTable({ historico, limit = 20 }) {
         <table className={styles.dataTable}>
           <thead>
             <tr>
-              <th>Fecha/Hora</th>
+              <th>Fecha/Hora (Local)</th>
               <th>R1</th>
               <th>R2</th>
               <th>R3</th>
@@ -90,7 +79,7 @@ export default function HistoricoTable({ historico, limit = 20 }) {
           <tbody>
             {mostrarRegistros.map((row, idx) => (
               <tr key={idx}>
-                <td className={styles.fechaCell}>{formatDateTime(row.FECHA)}</td>
+                <td className={styles.fechaCell}>{formatDateTimeLocal(row.FECHA)}</td>
                 <td className={row.RELE0 === 'ON' ? styles.relayOn : styles.relayOff}>
                   {row.RELE0 || 'OFF'}
                 </td>
@@ -123,11 +112,6 @@ export default function HistoricoTable({ historico, limit = 20 }) {
           </tbody>
         </table>
       </div>
-      {registrosValidos.length > limit && (
-        <div className={styles.tableFooter}>
-          Mostrando {limit} de {registrosValidos.length} registros
-        </div>
-      )}
     </div>
   );
 }
