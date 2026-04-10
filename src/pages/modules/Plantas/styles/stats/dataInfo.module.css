@@ -12,9 +12,22 @@
   padding: 0.35rem 1rem;
   font-size: 0.8rem;
   color: var(--text-secondary);
+  transition: all 0.2s ease;
 }
 
 .dataInfoBadge:hover {
   border-color: var(--green);
   color: var(--green);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dataInfo {
+    justify-content: center;
+  }
+  
+  .dataInfoBadge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.75rem;
+  }
 }

@@ -1,3 +1,24 @@
+.emptyHint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.fechaCell {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.tableFooter {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-dim);
+}
+
 .historicoTable {
   overflow-x: auto;
   max-height: 400px;

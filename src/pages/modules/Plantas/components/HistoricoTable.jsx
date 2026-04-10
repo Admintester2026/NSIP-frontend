@@ -1,11 +1,9 @@
 // src/pages/modules/Plantas/components/HistoricoTable.jsx
 import styles from "../styles/index";
 
-// Función para validar fecha
 function esFechaValida(fechaStr) {
   if (!fechaStr) return false;
   
-  // Detectar fechas inválidas como 2000-00-00
   const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (match) {
     const mes = parseInt(match[2]);
@@ -27,8 +25,6 @@ function formatDateTime(isoString) {
   
   try {
     const fecha = new Date(isoString);
-    if (isNaN(fecha.getTime())) return '--/--/---- --:--';
-    
     const año = fecha.getUTCFullYear();
     const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
     const dia = fecha.getUTCDate().toString().padStart(2, '0');
@@ -41,15 +37,9 @@ function formatDateTime(isoString) {
   }
 }
 
-function isValidLuz(value) {
-  return value !== undefined && value !== null && !isNaN(value) && isFinite(value);
-}
-
 export default function HistoricoTable({ historico, limit = 20 }) {
   // Validar que historico existe y es un array
-  const datosValidos = Array.isArray(historico) ? historico : [];
-  
-  if (datosValidos.length === 0) {
+  if (!historico || !Array.isArray(historico) || historico.length === 0) {
     return (
       <div className={styles.emptyState}>
         <span className={styles.emptyIcon}>📭</span>
@@ -60,7 +50,7 @@ export default function HistoricoTable({ historico, limit = 20 }) {
   }
 
   // Filtrar registros con fechas válidas
-  const registrosValidos = datosValidos.filter(row => {
+  const registrosValidos = historico.filter(row => {
     if (!row?.FECHA) return false;
     return esFechaValida(row.FECHA);
   });
@@ -70,7 +60,7 @@ export default function HistoricoTable({ historico, limit = 20 }) {
       <div className={styles.emptyState}>
         <span className={styles.emptyIcon}>⚠️</span>
         <p>No hay registros con fechas válidas</p>
-        <p className={styles.emptyHint}>Los datos pueden tener fechas corruptas. Esperando sincronización...</p>
+        <p className={styles.emptyHint}>Los datos pueden tener fechas corruptas</p>
       </div>
     );
   }
@@ -126,7 +116,7 @@ export default function HistoricoTable({ historico, limit = 20 }) {
                   {row.RELE7 || 'OFF'}
                 </td>
                 <td className={styles.luxValue}>
-                  {isValidLuz(row.LUZ) ? row.LUZ.toFixed(1) : '--'}
+                  {row.LUZ ? row.LUZ.toFixed(1) : '--'}
                 </td>
               </tr>
             ))}

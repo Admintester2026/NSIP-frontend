@@ -9,6 +9,7 @@ import historico from './stats/historico.module.css';
 import search from './stats/search.module.css';
 import loading from './stats/loading.module.css';
 import responsive from './stats/responsive.module.css';
+import dataInfo from './stats/dataInfo.module.css'; // NUEVA IMPORTACIÓN
 
 // Combinar todos los estilos en un solo objeto
 const styles = {
@@ -80,6 +81,9 @@ const styles = {
   luxValue: historico.luxValue,
   emptyState: historico.emptyState,
   emptyIcon: historico.emptyIcon,
+  emptyHint: historico.emptyHint,  // Agregar si existe
+  fechaCell: historico.fechaCell,  // Agregar si existe
+  tableFooter: historico.tableFooter, // Agregar si existe
   
   // Search
   searchSection: search.searchSection,
@@ -97,6 +101,10 @@ const styles = {
   loading: loading.loading,
   spinner: loading.spinner,
   error: loading.error,
+  
+  // Data Info (NUEVO)
+  dataInfo: dataInfo.dataInfo,
+  dataInfoBadge: dataInfo.dataInfoBadge,
   
   // Responsive (los media queries se aplican automáticamente)
 };
