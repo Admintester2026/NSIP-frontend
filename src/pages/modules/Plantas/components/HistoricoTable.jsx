@@ -1,9 +1,13 @@
 // src/pages/modules/Plantas/components/HistoricoTable.jsx
 import styles from "../styles/index";
 
+// ==========================================
+// FUNCIÓN CORREGIDA - SIN CONVERSIÓN DE ZONA HORARIA
+// ==========================================
 function formatDateTimeLocal(isoString) {
   if (!isoString) return '--/--/---- --:--';
   try {
+    // NO CONVERTIR - la fecha ya está en hora local en la BD
     const fecha = new Date(isoString);
     const año = fecha.getFullYear();
     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
@@ -18,8 +22,6 @@ function formatDateTimeLocal(isoString) {
 }
 
 export default function HistoricoTable({ historico, limit = 20 }) {
-  console.log('📊 HistoricoTable - Registros recibidos:', historico?.length);
-  
   if (!historico || !Array.isArray(historico) || historico.length === 0) {
     return (
       <div className={styles.emptyState}>
@@ -29,13 +31,6 @@ export default function HistoricoTable({ historico, limit = 20 }) {
     );
   }
 
-  // Mostrar los primeros 5 registros para depuración
-  console.log('📊 Primeros 5 registros (RAW):');
-  historico.slice(0, 5).forEach((r, i) => {
-    console.log(`  ${i+1}. ${r.FECHA} - ${r.LUZ}`);
-  });
-
-  // Mostrar los últimos 'limit' registros (los más recientes primero)
   const mostrarRegistros = historico.slice(0, limit);
 
   return (
