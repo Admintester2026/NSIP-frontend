@@ -2,16 +2,19 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // ==========================================
-// GRÁFICA DE DÍA - TODAS las horas (0-23)
+// GRÁFICA DE DÍA - Comportamiento igual a semana/mes
 // ==========================================
 function generarDatosDia(data) {
+  // Inicializar array de 24 horas con valor 0
+  const horasCompletas = Array.from({ length: 24 }, (_, i) => ({
+    hora: `${i.toString().padStart(2, '0')}:00`,
+    LUZ: 0,
+    registros: 0,
+    tieneDato: false
+  }));
+  
   if (!data || data.length === 0) {
-    // Si no hay datos, devolver array de 24 horas con valores null
-    return Array.from({ length: 24 }, (_, i) => ({
-      hora: `${i.toString().padStart(2, '0')}:00`,
-      LUZ: null,
-      registros: 0
-    }));
+    return horasCompletas;
   }
   
   const ahora = new Date();
@@ -28,13 +31,16 @@ function generarDatosDia(data) {
            fecha.getDate() === diaActual;
   });
   
-  // Inicializar mapa de horas (0-23) con valores null
-  const dataPorHora = new Map();
-  for (let i = 0; i < 24; i++) {
-    dataPorHora.set(i, { suma: 0, count: 0, valor: null });
+  if (datosDelDia.length === 0) {
+    return horasCompletas;
   }
   
-  // Agrupar datos reales por hora
+  // Crear mapa de hora -> valor promedio
+  const dataPorHora = new Map();
+  for (let i = 0; i < 24; i++) {
+    dataPorHora.set(i, { suma: 0, count: 0 });
+  }
+  
   datosDelDia.forEach(item => {
     const fecha = new Date(item.FECHA);
     const hora = fecha.getHours();
@@ -44,19 +50,17 @@ function generarDatosDia(data) {
     grupo.count++;
   });
   
-  // Calcular promedio por hora (si hay datos) o null
-  const horas = Array.from({ length: 24 }, (_, i) => i);
-  return horas.map(hora => {
+  // Calcular promedios (mismo método que semana y mes)
+  return horasCompletas.map((horaData, hora) => {
     const grupo = dataPorHora.get(hora);
-    let valor = null;
-    if (grupo.count > 0) {
-      valor = grupo.suma / grupo.count;
-    }
+    const tieneDato = grupo.count > 0;
+    const promedio = tieneDato ? grupo.suma / grupo.count : 0;
+    
     return {
-      hora: `${hora.toString().padStart(2, '0')}:00`,
-      LUZ: valor,
+      hora: horaData.hora,
+      LUZ: Math.round(promedio * 10) / 10,
       registros: grupo.count,
-      tieneDato: grupo.count > 0
+      tieneDato: tieneDato
     };
   });
 }
@@ -65,13 +69,15 @@ function generarDatosDia(data) {
 // GRÁFICA DE SEMANA
 // ==========================================
 function generarDatosSemana(data) {
+  const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  const resultadoInicial = ordenDias.map(dia => ({
+    dia: dia.substring(0, 3),
+    LUZ: 0,
+    registros: 0
+  }));
+  
   if (!data || data.length === 0) {
-    const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    return ordenDias.map(dia => ({
-      dia: dia.substring(0, 3),
-      LUZ: 0,
-      registros: 0
-    }));
+    return resultadoInicial;
   }
   
   const ahora = new Date();
@@ -95,9 +101,12 @@ function generarDatosSemana(data) {
     return fecha >= inicioSemana && fecha <= finSemana;
   });
   
+  if (datosSemana.length === 0) {
+    return resultadoInicial;
+  }
+  
   const diasMap = { 0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado' };
   const datosPorDia = new Map();
-  const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
   ordenDias.forEach(dia => datosPorDia.set(dia, { suma: 0, count: 0 }));
   
   datosSemana.forEach(item => {
@@ -126,12 +135,14 @@ function generarDatosSemana(data) {
 // GRÁFICA DE MES
 // ==========================================
 function generarDatosMes(data) {
+  const resultadoInicial = [1, 2, 3, 4, 5].map(num => ({
+    semana: `S${num}`,
+    LUZ: 0,
+    registros: 0
+  }));
+  
   if (!data || data.length === 0) {
-    return [1, 2, 3, 4, 5].map(num => ({
-      semana: `S${num}`,
-      LUZ: 0,
-      registros: 0
-    }));
+    return resultadoInicial;
   }
   
   const ahora = new Date();
@@ -143,6 +154,10 @@ function generarDatosMes(data) {
     const fecha = new Date(item.FECHA);
     return fecha.getFullYear() === añoActual && fecha.getMonth() === mesActual;
   });
+  
+  if (datosMes.length === 0) {
+    return resultadoInicial;
+  }
   
   const datosPorSemana = new Map();
   for (let i = 1; i <= 5; i++) {
@@ -183,20 +198,17 @@ function generarDatosMes(data) {
 
 const CustomDot = (props) => {
   const { cx, cy, payload, index } = props;
-  // Solo mostrar puntos donde hay datos reales
-  if (!payload.tieneDato && payload.LUZ === null) return null;
-  if (payload.LUZ === null || payload.LUZ === undefined) return null;
-  if (payload.registros === 0 && payload.LUZ === 0) return null;
-  
+  // Solo mostrar puntos donde hay datos reales (registros > 0)
+  if (payload.registros === 0) return null;
   return <circle key={`dot-${index}`} cx={cx} cy={cy} r={4} fill="#FFB300" stroke="none" />;
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const dataPoint = payload[0].payload;
-    const valorLuz = dataPoint.LUZ !== null && dataPoint.LUZ !== undefined 
+    const valorLuz = dataPoint.LUZ !== undefined && dataPoint.LUZ !== null 
       ? (typeof dataPoint.LUZ === 'number' ? dataPoint.LUZ.toFixed(1) : dataPoint.LUZ)
-      : 'Sin datos';
+      : '0.0';
     
     return (
       <div style={{
@@ -215,7 +227,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             📊 {dataPoint.registros} {dataPoint.registros === 1 ? 'registro' : 'registros'}
           </p>
         )}
-        {!dataPoint.tieneDato && dataPoint.LUZ === null && (
+        {dataPoint.registros === 0 && (
           <p style={{ margin: 0, color: '#888', fontSize: '0.7rem', marginTop: '0.25rem' }}>
             ⚠️ Sin datos en este horario
           </p>
@@ -271,7 +283,6 @@ export default function LightChart({ data, periodo = 'dia' }) {
           stroke="#888" 
           tick={{ fill: '#888' }} 
           domain={[0, 'auto']}
-          allowDataOverflow={false}
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend wrapperStyle={{ color: '#888' }} />
@@ -283,7 +294,7 @@ export default function LightChart({ data, periodo = 'dia' }) {
           dot={<CustomDot />}
           activeDot={{ r: 6, stroke: '#00ff9d', strokeWidth: 2 }}
           name={chartName}
-          connectNulls={true}
+          connectNulls={false}
           isAnimationActive={false}
         />
       </LineChart>
