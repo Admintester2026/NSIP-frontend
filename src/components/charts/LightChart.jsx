@@ -1,57 +1,38 @@
 // src/components/charts/LightChart.jsx
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// ==========================================
-// FUNCIÓN PARA CONVERTIR UTC A LOCAL (GMT-6)
-// ==========================================
-function convertirUtcALocal(utcDateString) {
-  const fechaUTC = new Date(utcDateString);
-  return new Date(fechaUTC.getTime() - (6 * 60 * 60 * 1000));
-}
-
-// ==========================================
-// GRÁFICA DE DÍA - Datos del día actual en HORA LOCAL
-// ==========================================
 function generarDatosDia(data) {
   if (!data || data.length === 0) return [];
   
-  // Obtener fecha actual en LOCAL
-  const ahoraLocal = new Date();
-  const añoActual = ahoraLocal.getFullYear();
-  const mesActual = ahoraLocal.getMonth();
-  const diaActual = ahoraLocal.getDate();
+  const ahora = new Date();
+  const añoActual = ahora.getFullYear();
+  const mesActual = ahora.getMonth();
+  const diaActual = ahora.getDate();
   
-  console.log(`📅 Día actual (local): ${añoActual}/${mesActual + 1}/${diaActual}`);
-  
-  // Filtrar datos del día actual (convirtiendo cada fecha a local)
   const datosDelDia = data.filter(item => {
     if (!item?.FECHA) return false;
-    const fechaLocal = convertirUtcALocal(item.FECHA);
-    return fechaLocal.getFullYear() === añoActual &&
-           fechaLocal.getMonth() === mesActual &&
-           fechaLocal.getDate() === diaActual;
+    const fecha = new Date(item.FECHA);
+    return fecha.getFullYear() === añoActual &&
+           fecha.getMonth() === mesActual &&
+           fecha.getDate() === diaActual;
   });
-  
-  console.log(`📊 Datos del día (local): ${datosDelDia.length} registros`);
   
   if (datosDelDia.length === 0) return [];
   
-  // Agrupar por hora local
   const dataPorHora = new Map();
   for (let i = 0; i < 24; i++) {
     dataPorHora.set(i, { suma: 0, count: 0 });
   }
   
   datosDelDia.forEach(item => {
-    const fechaLocal = convertirUtcALocal(item.FECHA);
-    const hora = fechaLocal.getHours();
+    const fecha = new Date(item.FECHA);
+    const hora = fecha.getHours();
     const valor = typeof item.LUZ === 'number' ? item.LUZ : parseFloat(item.LUZ) || 0;
     const grupo = dataPorHora.get(hora);
     grupo.suma += valor;
     grupo.count++;
   });
   
-  // Generar array de 24 horas
   return Array.from({ length: 24 }, (_, i) => {
     const grupo = dataPorHora.get(i);
     const promedio = grupo.count > 0 ? grupo.suma / grupo.count : null;
@@ -63,20 +44,17 @@ function generarDatosDia(data) {
   });
 }
 
-// ==========================================
-// GRÁFICA DE SEMANA - Datos de la semana actual en HORA LOCAL
-// ==========================================
 function generarDatosSemana(data) {
   if (!data || data.length === 0) return [];
   
-  const ahoraLocal = new Date();
-  const diaSemana = ahoraLocal.getDay(); // 0 = Domingo
+  const ahora = new Date();
+  const diaSemana = ahora.getDay();
   
-  let inicioSemana = new Date(ahoraLocal);
+  let inicioSemana = new Date(ahora);
   if (diaSemana === 0) {
-    inicioSemana.setDate(ahoraLocal.getDate() - 6);
+    inicioSemana.setDate(ahora.getDate() - 6);
   } else {
-    inicioSemana.setDate(ahoraLocal.getDate() - (diaSemana - 1));
+    inicioSemana.setDate(ahora.getDate() - (diaSemana - 1));
   }
   inicioSemana.setHours(0, 0, 0, 0);
   
@@ -84,15 +62,11 @@ function generarDatosSemana(data) {
   finSemana.setDate(inicioSemana.getDate() + 6);
   finSemana.setHours(23, 59, 59, 999);
   
-  console.log(`📅 Semana (local): ${inicioSemana.toLocaleDateString()} - ${finSemana.toLocaleDateString()}`);
-  
   const datosSemana = data.filter(item => {
     if (!item?.FECHA) return false;
-    const fechaLocal = convertirUtcALocal(item.FECHA);
-    return fechaLocal >= inicioSemana && fechaLocal <= finSemana;
+    const fecha = new Date(item.FECHA);
+    return fecha >= inicioSemana && fecha <= finSemana;
   });
-  
-  console.log(`📊 Datos semana: ${datosSemana.length} registros`);
   
   if (datosSemana.length === 0) return [];
   
@@ -102,8 +76,8 @@ function generarDatosSemana(data) {
   ordenDias.forEach(dia => datosPorDia.set(dia, { suma: 0, count: 0 }));
   
   datosSemana.forEach(item => {
-    const fechaLocal = convertirUtcALocal(item.FECHA);
-    const diaNombre = diasMap[fechaLocal.getDay()];
+    const fecha = new Date(item.FECHA);
+    const diaNombre = diasMap[fecha.getDay()];
     const valor = typeof item.LUZ === 'number' ? item.LUZ : parseFloat(item.LUZ) || 0;
     if (datosPorDia.has(diaNombre)) {
       const grupo = datosPorDia.get(diaNombre);
@@ -123,25 +97,18 @@ function generarDatosSemana(data) {
   });
 }
 
-// ==========================================
-// GRÁFICA DE MES - Datos del mes actual en HORA LOCAL
-// ==========================================
 function generarDatosMes(data) {
   if (!data || data.length === 0) return [];
   
-  const ahoraLocal = new Date();
-  const añoActual = ahoraLocal.getFullYear();
-  const mesActual = ahoraLocal.getMonth();
-  
-  console.log(`📅 Mes actual (local): ${añoActual}/${mesActual + 1}`);
+  const ahora = new Date();
+  const añoActual = ahora.getFullYear();
+  const mesActual = ahora.getMonth();
   
   const datosMes = data.filter(item => {
     if (!item?.FECHA) return false;
-    const fechaLocal = convertirUtcALocal(item.FECHA);
-    return fechaLocal.getFullYear() === añoActual && fechaLocal.getMonth() === mesActual;
+    const fecha = new Date(item.FECHA);
+    return fecha.getFullYear() === añoActual && fecha.getMonth() === mesActual;
   });
-  
-  console.log(`📊 Datos mes: ${datosMes.length} registros`);
   
   if (datosMes.length === 0) return [];
   
@@ -151,8 +118,8 @@ function generarDatosMes(data) {
   }
   
   datosMes.forEach(item => {
-    const fechaLocal = convertirUtcALocal(item.FECHA);
-    const dia = fechaLocal.getDate();
+    const fecha = new Date(item.FECHA);
+    const dia = fecha.getDate();
     const valor = typeof item.LUZ === 'number' ? item.LUZ : parseFloat(item.LUZ) || 0;
     
     let numSemana;
@@ -177,10 +144,6 @@ function generarDatosMes(data) {
     };
   });
 }
-
-// ==========================================
-// COMPONENTES GRÁFICOS
-// ==========================================
 
 const CustomDot = (props) => {
   const { cx, cy, payload, index } = props;
@@ -215,16 +178,10 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-// ==========================================
-// COMPONENTE PRINCIPAL
-// ==========================================
-
 export default function LightChart({ data, periodo = 'dia' }) {
   if (!data || !Array.isArray(data) || data.length === 0) {
     return <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>📭 No hay datos disponibles</div>;
   }
-
-  console.log(`📊 LightChart - Período: ${periodo}, Datos recibidos: ${data.length}`);
 
   let chartData = [];
   let dataKey = '';
