@@ -12,31 +12,11 @@ import SearchSection from './components/SearchSection';
 import styles from './styles/index';
 
 // ==========================================
-// FUNCIONES DE VALIDACIÓN (SIN conversión)
+// FUNCIONES - SIN CONVERSIÓN DE ZONA HORARIA
 // ==========================================
-
-function esFechaValida(fechaStr) {
-  if (!fechaStr) return false;
-  
-  const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (match) {
-    const mes = parseInt(match[2]);
-    const dia = parseInt(match[3]);
-    if (mes === 0 || dia === 0) return false;
-  }
-  
-  try {
-    const fecha = new Date(fechaStr);
-    return !isNaN(fecha.getTime());
-  } catch {
-    return false;
-  }
-}
 
 function formatDateTimeLocal(isoString) {
   if (!isoString) return '--/--/---- --:--';
-  if (!esFechaValida(isoString)) return '--/--/---- --:--';
-  
   try {
     const fecha = new Date(isoString);
     const año = fecha.getFullYear();
@@ -51,59 +31,46 @@ function formatDateTimeLocal(isoString) {
   }
 }
 
-// ==========================================
-// FUNCIÓN PARA FILTRAR POR PERÍODO (SIN conversión)
-// ==========================================
 function filtrarPorPeriodo(data, periodo) {
   if (!data || data.length === 0) return [];
   
-  const ahoraLocal = new Date();
-  const añoActual = ahoraLocal.getFullYear();
-  const mesActual = ahoraLocal.getMonth();
-  const diaActual = ahoraLocal.getDate();
+  const ahora = new Date();
+  const añoActual = ahora.getFullYear();
+  const mesActual = ahora.getMonth();
+  const diaActual = ahora.getDate();
   
   // Inicio de semana (Lunes)
-  const diaSemanaActual = ahoraLocal.getDay();
-  let inicioSemana = new Date(ahoraLocal);
-  if (diaSemanaActual === 0) {
-    inicioSemana.setDate(ahoraLocal.getDate() - 6);
-  } else {
-    inicioSemana.setDate(ahoraLocal.getDate() - (diaSemanaActual - 1));
-  }
+  const diaSemana = ahora.getDay();
+  let inicioSemana = new Date(ahora);
+  if (diaSemana === 0) inicioSemana.setDate(ahora.getDate() - 6);
+  else inicioSemana.setDate(ahora.getDate() - (diaSemana - 1));
   inicioSemana.setHours(0, 0, 0, 0);
   
-  // Fin de semana (Domingo)
   let finSemana = new Date(inicioSemana);
   finSemana.setDate(inicioSemana.getDate() + 6);
   finSemana.setHours(23, 59, 59, 999);
   
-  console.log(`📅 Filtrando ${periodo} - Hoy: ${ahoraLocal.toLocaleString()}`);
-  
   return data.filter(item => {
     if (!item?.FECHA) return false;
-    if (!esFechaValida(item.FECHA)) return false;
-    
-    const fechaItem = new Date(item.FECHA);
+    const fecha = new Date(item.FECHA);
+    if (isNaN(fecha.getTime())) return false;
     
     switch(periodo) {
       case 'dia':
-        return fechaItem.getFullYear() === añoActual &&
-               fechaItem.getMonth() === mesActual &&
-               fechaItem.getDate() === diaActual;
+        return fecha.getFullYear() === añoActual &&
+               fecha.getMonth() === mesActual &&
+               fecha.getDate() === diaActual;
       case 'semana':
-        return fechaItem >= inicioSemana && fechaItem <= finSemana;
+        return fecha >= inicioSemana && fecha <= finSemana;
       case 'mes':
-        return fechaItem.getFullYear() === añoActual &&
-               fechaItem.getMonth() === mesActual;
+        return fecha.getFullYear() === añoActual &&
+               fecha.getMonth() === mesActual;
       default:
         return true;
     }
   });
 }
 
-// ==========================================
-// COMPONENTE PRINCIPAL
-// ==========================================
 export default function Stats() {
   const [statsData, setStatsData] = useState(null);
   const [historicoData, setHistoricoData] = useState([]);
@@ -127,22 +94,19 @@ export default function Stats() {
 
   useEffect(() => {
     if (historico && Array.isArray(historico)) {
-      const datosValidos = historico.filter(item => esFechaValida(item?.FECHA));
-      console.log(`📊 Stats: ${historico.length} registros, ${datosValidos.length} válidos`);
-      setHistoricoData(datosValidos);
+      console.log(`📊 Stats: ${historico.length} registros totales`);
+      setHistoricoData(historico);
     }
   }, [historico]);
 
   useEffect(() => {
-    if (ultimo?.datos && esFechaValida(ultimo.datos.FECHA)) {
-      setUltimoRegistro(ultimo.datos);
-    }
+    if (ultimo?.datos) setUltimoRegistro(ultimo.datos);
   }, [ultimo]);
 
   const historicoFiltrado = useMemo(() => {
     if (historicoData.length === 0) return [];
     const filtrados = filtrarPorPeriodo(historicoData, periodo);
-    console.log(`📊 Período ${periodo}: ${filtrados.length} registros filtrados`);
+    console.log(`📊 Período ${periodo}: ${filtrados.length} registros`);
     return filtrados;
   }, [historicoData, periodo]);
 
@@ -164,7 +128,7 @@ export default function Stats() {
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Estadísticas y Análisis</h1>
-          <p className={styles.subtitle}>Datos en tiempo real desde SQL Server</p>
+          <p className={styles.subtitle}>Datos desde SQL Server</p>
         </div>
         <Link to="/modulos/luminarias" className={styles.backButton}>
           <span>←</span> Volver al Dashboard
@@ -185,12 +149,12 @@ export default function Stats() {
           <h3 className={styles.sectionTitle}>🕐 Último Registro</h3>
           <div className={styles.lastRecordGrid}>
             <div className={styles.lastRecordItem}>
-              <span className={styles.lastRecordLabel}>Fecha:</span>
-              <span className={styles.lastRecordValue}>{formatDateTimeLocal(ultimoRegistro.FECHA)}</span>
+              <span>Fecha:</span>
+              <strong>{formatDateTimeLocal(ultimoRegistro.FECHA)}</strong>
             </div>
             <div className={styles.lastRecordItem}>
-              <span className={styles.lastRecordLabel}>Luz:</span>
-              <span className={styles.lastRecordValue}>{ultimoRegistro.LUZ?.toFixed(1)} lux</span>
+              <span>Luz:</span>
+              <strong>{ultimoRegistro.LUZ?.toFixed(1)} lux</strong>
             </div>
           </div>
         </div>
@@ -209,7 +173,7 @@ export default function Stats() {
 
       <div className={styles.chartsGrid}>
         <div className={styles.chartCard}>
-          <h3 className={styles.chartTitle}>📈 Evolución de Luz {periodo === 'dia' ? '(Hoy)' : periodo === 'semana' ? '(Esta semana)' : '(Este mes)'}</h3>
+          <h3 className={styles.chartTitle}>📈 Evolución de Luz</h3>
           <LightChart data={historicoFiltrado} periodo={periodo} />
         </div>
         <div className={styles.chartCard}>
@@ -234,7 +198,7 @@ export default function Stats() {
           <RelayStatsTable stats={statsData} />
         </div>
         <div className={styles.tableColumn}>
-          <HistoricoTable historico={historicoFiltrado.length > 0 ? historicoFiltrado : historicoData} limit={limite} />
+          <HistoricoTable historico={historicoFiltrado} limit={limite} />
         </div>
       </div>
 
