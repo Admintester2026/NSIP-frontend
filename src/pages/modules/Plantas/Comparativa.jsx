@@ -7,10 +7,8 @@ import HistoricoTable from './components/HistoricoTable';
 import styles from './Comparativa.module.css';
 
 // ==========================================
-// CONSTANTES Y UTILIDADES
+// FUNCIONES CORREGIDAS - USAR HORA LOCAL
 // ==========================================
-const ZONA_HORARIA = -6;
-const MS_POR_HORA = 60 * 60 * 1000;
 
 // Función para validar si una fecha es válida
 const esFechaValida = (fecha) => {
@@ -23,7 +21,6 @@ const esFechaValida = (fecha) => {
       const año = parseInt(match[1]);
       const mes = parseInt(match[2]);
       const dia = parseInt(match[3]);
-      // Mes 0 es inválido, día 0 es inválido
       if (mes === 0 || dia === 0) return false;
     }
   }
@@ -36,8 +33,8 @@ const esFechaValida = (fecha) => {
   }
 };
 
-// Función de formato segura
-const formatDateTime = (isoString) => {
+// Función de formato con HORA LOCAL
+const formatDateTimeLocal = (isoString) => {
   if (!isoString) return '--/--/---- --:--';
   if (!esFechaValida(isoString)) return '--/--/---- --:--';
   
@@ -49,38 +46,24 @@ const formatDateTime = (isoString) => {
     return '--/--/---- --:--';
   }
   
-  const año = fecha.getUTCFullYear();
-  const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
-  const dia = fecha.getUTCDate().toString().padStart(2, '0');
-  const horas = fecha.getUTCHours().toString().padStart(2, '0');
-  const minutos = fecha.getUTCMinutes().toString().padStart(2, '0');
-  const segundos = fecha.getUTCSeconds().toString().padStart(2, '0');
+  // Usar métodos LOCALES (no UTC)
+  const año = fecha.getFullYear();
+  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+  const dia = fecha.getDate().toString().padStart(2, '0');
+  const horas = fecha.getHours().toString().padStart(2, '0');
+  const minutos = fecha.getMinutes().toString().padStart(2, '0');
+  const segundos = fecha.getSeconds().toString().padStart(2, '0');
   return `${año}/${mes}/${dia} ${horas}:${minutos}:${segundos}`;
 };
 
-// Función para convertir UTC a hora local (segura)
-const convertirUtcALocal = (timestamp) => {
-  if (!timestamp) return new Date();
-  if (!esFechaValida(timestamp)) return new Date();
-  
-  try {
-    const fechaUTC = new Date(timestamp);
-    if (isNaN(fechaUTC.getTime())) return new Date();
-    return new Date(fechaUTC.getTime() + (ZONA_HORARIA * MS_POR_HORA));
-  } catch (error) {
-    console.error('Error en convertirUtcALocal:', error);
-    return new Date();
-  }
-};
-
 // ==========================================
-// FILTROS CORREGIDOS
+// FILTROS CORREGIDOS - USAR HORA LOCAL
 // ==========================================
 const filtrarPorPeriodo = (data, periodo) => {
   if (!data?.length) return [];
   
   const ahora = new Date();
-  const hoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate()));
+  const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   
   return data.filter(item => {
     if (!item?.FECHA) return false;
@@ -96,29 +79,31 @@ const filtrarPorPeriodo = (data, periodo) => {
     
     switch(periodo) {
       case 'dia':
-        return fechaItem.getUTCFullYear() === hoy.getUTCFullYear() &&
-               fechaItem.getUTCMonth() === hoy.getUTCMonth() &&
-               fechaItem.getUTCDate() === hoy.getUTCDate();
+        return fechaItem.getFullYear() === hoy.getFullYear() &&
+               fechaItem.getMonth() === hoy.getMonth() &&
+               fechaItem.getDate() === hoy.getDate();
       
       case 'semana': {
-        const inicioSemana = new Date(hoy);
-        if (hoy.getUTCDay() === 0) {
-          inicioSemana.setUTCDate(hoy.getUTCDate() - 6);
+        // Calcular inicio de semana (Lunes) en LOCAL
+        const diaSemana = ahora.getDay();
+        let inicioSemana = new Date(ahora);
+        if (diaSemana === 0) {
+          inicioSemana.setDate(ahora.getDate() - 6);
         } else {
-          inicioSemana.setUTCDate(hoy.getUTCDate() - (hoy.getUTCDay() - 1));
+          inicioSemana.setDate(ahora.getDate() - (diaSemana - 1));
         }
-        inicioSemana.setUTCHours(0, 0, 0, 0);
+        inicioSemana.setHours(0, 0, 0, 0);
         
         const finSemana = new Date(inicioSemana);
-        finSemana.setUTCDate(inicioSemana.getUTCDate() + 6);
-        finSemana.setUTCHours(23, 59, 59, 999);
+        finSemana.setDate(inicioSemana.getDate() + 6);
+        finSemana.setHours(23, 59, 59, 999);
         
         return fechaItem >= inicioSemana && fechaItem <= finSemana;
       }
       
       case 'mes':
-        return fechaItem.getUTCFullYear() === hoy.getUTCFullYear() &&
-               fechaItem.getUTCMonth() === hoy.getUTCMonth();
+        return fechaItem.getFullYear() === hoy.getFullYear() &&
+               fechaItem.getMonth() === hoy.getMonth();
       
       default:
         return true;
@@ -199,25 +184,20 @@ export default function Comparativa() {
   const { data: ultimo } = usePolling(fetchUltimo, 10000);
 
   useEffect(() => {
-    if (historico) setHistoricoData(historico);
+    if (historico && Array.isArray(historico)) {
+      setHistoricoData(historico);
+    }
   }, [historico]);
 
   useEffect(() => {
     if (status) {
       setArduinoData(status);
-      const timestamp = status.timestamp || new Date().toISOString();
-      
-      // Validar timestamp antes de usar
-      let fechaLocal;
-      if (esFechaValida(timestamp)) {
-        fechaLocal = convertirUtcALocal(timestamp);
-      } else {
-        console.warn('⚠️ Timestamp inválido, usando fecha actual:', timestamp);
-        fechaLocal = new Date();
-      }
+      // Para el histórico del Arduino, usamos la fecha local actual
+      const ahora = new Date();
+      const fechaLocal = `${ahora.getFullYear()}-${(ahora.getMonth()+1).toString().padStart(2,'0')}-${ahora.getDate().toString().padStart(2,'0')} ${ahora.getHours().toString().padStart(2,'0')}:${ahora.getMinutes().toString().padStart(2,'0')}:${ahora.getSeconds().toString().padStart(2,'0')}`;
       
       setHistoricoArduino(prev => {
-        const newItem = { FECHA: fechaLocal.toISOString(), LUZ: status.lux };
+        const newItem = { FECHA: fechaLocal, LUZ: status.lux };
         return [newItem, ...prev].slice(0, 20);
       });
     }
@@ -243,7 +223,9 @@ export default function Comparativa() {
 
   const diferencia = useMemo(() => {
     if (!arduinoData || !ultimoSQL) return null;
-    const difLux = Math.abs(arduinoData.lux - (ultimoSQL.LUZ || 0)).toFixed(1);
+    const luzArduino = arduinoData.lux || 0;
+    const luzSQL = ultimoSQL.LUZ || 0;
+    const difLux = Math.abs(luzArduino - luzSQL).toFixed(1);
     return { difLux, estadoOK: difLux < 50 };
   }, [arduinoData, ultimoSQL]);
 
@@ -296,7 +278,7 @@ export default function Comparativa() {
                   Luz: <strong>{ultimoSQL.LUZ?.toFixed(1)} lux</strong>
                 </span>
                 <span className={styles.statusDetail}>
-                  Fecha: {formatDateTime(ultimoSQL.FECHA)}
+                  Fecha: {formatDateTimeLocal(ultimoSQL.FECHA)}
                 </span>
                 <span className={styles.statusDetail}>
                   Relés: {ultimoSQL.RELE0} {ultimoSQL.RELE1} {ultimoSQL.RELE2} {ultimoSQL.RELE3} ...
