@@ -32,8 +32,7 @@ export const mantenimientoAPI = {
   getEquipoById: async (id) => {
     const url = `${API_BASE}/mantenimiento/equipos/${id}`;
     console.log('URL getEquipoById:', url);
-    const response = await fetch(url);
-    const data = await handleResponse(response);
+    const response = await fetch(url);    const data = await handleResponse(response);
     return data.datos;
   },
 

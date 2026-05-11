@@ -10,21 +10,27 @@ const RELAY_LABELS = [
   'Anaquel 5', 'Anaquel 6', 'Anaquel 7', 'Anaquel 8',
 ];
 
+// ==========================================
+// FUNCIONES CORREGIDAS - USAR HORA LOCAL
+// ==========================================
+
 function formatTime(isoString) {
   if (!isoString) return '--:--:--';
   const fecha = new Date(isoString);
-  const horas = fecha.getUTCHours().toString().padStart(2, '0');
-  const minutos = fecha.getUTCMinutes().toString().padStart(2, '0');
-  const segundos = fecha.getUTCSeconds().toString().padStart(2, '0');
+  // Usar hora LOCAL (no UTC)
+  const horas = fecha.getHours().toString().padStart(2, '0');
+  const minutos = fecha.getMinutes().toString().padStart(2, '0');
+  const segundos = fecha.getSeconds().toString().padStart(2, '0');
   return `${horas}:${minutos}:${segundos}`;
 }
 
 function formatDate(isoString) {
   if (!isoString) return '----/--/--';
   const fecha = new Date(isoString);
-  const año = fecha.getUTCFullYear();
-  const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
-  const dia = fecha.getUTCDate().toString().padStart(2, '0');
+  // Usar fecha LOCAL (no UTC)
+  const año = fecha.getFullYear();
+  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+  const dia = fecha.getDate().toString().padStart(2, '0');
   return `${año}/${mes}/${dia}`;
 }
 
@@ -71,9 +77,6 @@ function LightMeter({ lux }) {
   );
 }
 
-// ==========================================
-// BARRA DE CONFIRMACIÓN MEJORADA - VERSIÓN 2.0
-// ==========================================
 function ConfirmationBar({ lastAction }) {
   const defaultMessage = '⚪ Sistema listo - Esperando acciones...';
   
@@ -97,7 +100,6 @@ function ConfirmationBar({ lastAction }) {
     }
   };
 
-  // Calcular tiempo transcurrido para acciones pendientes
   const getElapsedTime = () => {
     if (!lastAction || lastAction.status !== 'pending' || !lastAction.timestamp) return '';
     const elapsed = Date.now() - lastAction.timestamp;
@@ -165,7 +167,6 @@ function ModeControl({ mode, onSwitchToAuto, onSwitchToManual, loading }) {
   );
 }
 
-// RelayCard
 function RelayCard({ index, label, isOn, onToggle, disabled }) {
   return (
     <div className={`${styles.relayCard} ${isOn ? styles.relayOn : ''}`}>
@@ -213,14 +214,12 @@ export default function Dashboard() {
     timestamp: Date.now()
   });
   
-  // Polling de datos
   const fetchStatus = useCallback(() => arduinoAPI.getStatus(), []);
   const { data: arduinoData, error: arduinoError, loading: arduinoLoading } = usePolling(fetchStatus, 8000);
 
   const fetchUltimo = useCallback(() => arduinoAPI.getUltimo(), []);
   const { data: sqlData } = usePolling(fetchUltimo, 30000);
 
-  // Efecto para actualizar estados
   useEffect(() => {
     if (arduinoData) {
       if (arduinoData.relays) {
@@ -235,16 +234,10 @@ export default function Dashboard() {
     }
   }, [arduinoData]);
 
-  // Fallback a SQL
   const displayRelays = relayState ?? (sqlData?.datos
     ? [0,1,2,3,4,5,6,7].map(i => sqlData.datos[`RELE${i}`] === 'ON')
     : Array(8).fill(false));
 
-  // ==========================================
-  // MUTACIONES CON RESPUESTA INMEDIATA (MEJORADAS)
-  // ==========================================
-  
-  // Cambiar modo MANUAL
   const handleManualClick = () => {
     switchToManual();
     const actionId = Date.now();
@@ -262,7 +255,6 @@ export default function Dashboard() {
     })
     .then(response => response.json())
     .then(data => {
-      console.log('✅ Modo manual confirmado:', data);
       const responseTime = Date.now() - actionId;
       setLastAction({
         status: 'success',
@@ -273,7 +265,6 @@ export default function Dashboard() {
       setTimeout(() => fetchMode(), 500);
     })
     .catch(error => {
-      console.error('❌ Error cambiando a manual:', error);
       setLastAction({
         status: 'error',
         message: '❌ Error al cambiar a modo manual',
@@ -282,7 +273,6 @@ export default function Dashboard() {
     });
   };
 
-  // Cambiar modo AUTO
   const handleAutoClick = () => {
     switchToAuto();
     const actionId = Date.now();
@@ -300,7 +290,6 @@ export default function Dashboard() {
     })
     .then(response => response.json())
     .then(data => {
-      console.log('✅ Modo auto confirmado:', data);
       const responseTime = Date.now() - actionId;
       setLastAction({
         status: 'success',
@@ -311,7 +300,6 @@ export default function Dashboard() {
       setTimeout(() => fetchMode(), 500);
     })
     .catch(error => {
-      console.error('❌ Error cambiando a auto:', error);
       setLastAction({
         status: 'error',
         message: '❌ Error al cambiar a modo automático',
@@ -320,16 +308,12 @@ export default function Dashboard() {
     });
   };
 
-  // Control de relé - VERSIÓN MEJORADA PARA INTERNET
   const handleToggle = (index, action) => {
     const newState = action === 'on';
     const relayNum = index + 1;
     const relayName = RELAY_LABELS[index];
     const actionId = Date.now();
     
-    console.log(`🔍 [Dashboard] handleToggle: relé ${relayNum} -> ${newState ? 'ON' : 'OFF'}`);
-    
-    // Actualización visual INMEDIATA
     setRelayState(prev => {
       if (!prev) return prev;
       const next = [...prev];
@@ -350,7 +334,6 @@ export default function Dashboard() {
     })
     .then(response => response.json())
     .then(data => {
-      console.log('✅ Relé confirmado:', data);
       const responseTime = Date.now() - actionId;
       setLastAction({
         status: 'success',
@@ -360,14 +343,12 @@ export default function Dashboard() {
       });
     })
     .catch(error => {
-      console.error('❌ Error en relé:', error);
       setLastAction({
         status: 'error',
         message: `❌ ${relayName}: Error de conexión - reintentando...`,
         timestamp: Date.now()
       });
       
-      // Reintentar después de 2 segundos
       setTimeout(() => {
         fetch(`${import.meta.env.VITE_API_URL}/arduino-plantas/relay`, {
           method: 'POST',
@@ -391,7 +372,6 @@ export default function Dashboard() {
             timestamp: Date.now()
           });
           
-          // Revertir el estado visual
           setTimeout(() => {
             setRelayState(prev => {
               if (!prev) return prev;
@@ -411,7 +391,6 @@ export default function Dashboard() {
 
   return (
     <div className={styles.dashboard}>
-      {/* Cabecera */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>Control de Luminarias</h1>
@@ -433,7 +412,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Barra de estado */}
       <div className={styles.statusBar}>
         <ConnectionBadge 
           connected={!arduinoError && !arduinoLoading} 
@@ -459,10 +437,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Barra de confirmación mejorada */}
       <ConfirmationBar lastAction={lastAction} />
 
-      {/* Banner de modo manual */}
       {mode === 'manual' && (
         <div className={styles.manualModeBanner}>
           <div className={styles.manualModeIcon}>⚠️</div>
@@ -480,7 +456,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Panel principal */}
       <div className={styles.mainPanel}>
         <div className={styles.statsPanel}>
           <div className={styles.statCard}>
@@ -506,7 +481,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Grid de relés */}
         <div className={styles.relaySection}>
           <div className={styles.relayHeader}>
             <h2 className={styles.relayTitle}>Control de Relés</h2>
