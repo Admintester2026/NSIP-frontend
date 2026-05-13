@@ -94,14 +94,17 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
       const evidenciasUrls = await uploadFiles();
 
       // Completar mantenimiento
-      await mantenimientoAPI.updateMantenimientoEstado(mantenimiento.id, 'completado', {
+      await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/mantenimientos/${mantenimiento.id}/completar`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
         notas_completado: formData.notas_completado,
         tecnico: formData.tecnico,
-        duracion: formData.duracion ? parseInt(formData.duracion) : null,
+        duracion: formData.duracion,
         materiales_usados: formData.materiales_usados,
-        costo_materiales: formData.costo_materiales ? parseFloat(formData.costo_materiales) : null,
-        evidencias_urls: evidenciasUrls
-      });
+        costo_materiales: formData.costo_materiales
+    })
+});
 
       // Limpiar previews
       previewUrls.forEach(url => URL.revokeObjectURL(url));
