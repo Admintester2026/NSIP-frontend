@@ -5,6 +5,7 @@ import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal'
 import AddMantenimientoModal from '../../components/mantenimiento/AddMantenimientoModal';
 import AddHistorialModal from '../../components/mantenimiento/AddHistorialModal';
 import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModal';
+import CompletarMantenimientoModal from '../../components/mantenimiento/CompletarMantenimientoModal';
 import styles from './styles/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -31,6 +32,8 @@ export default function DetalleEquipo() {
   const [showMantModal, setShowMantModal] = useState(false);
   const [showHistorialModal, setShowHistorialModal] = useState(false);
   const [showIncidenciaModal, setShowIncidenciaModal] = useState(false);
+  const [showCompletarModal, setShowCompletarModal] = useState(false);
+  const [mantenimientoACompletar, setMantenimientoACompletar] = useState(null);
 
   // ==========================================
   // FUNCIÓN CON REINTENTOS (ROBUSTECIDA)
@@ -49,7 +52,6 @@ export default function DetalleEquipo() {
           throw err;
         }
         
-        // Esperar antes de reintentar (backoff exponencial)
         const waitTime = delay * Math.pow(2, i);
         console.log(`⏳ Reintentando en ${waitTime}ms...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -59,7 +61,7 @@ export default function DetalleEquipo() {
   }, []);
 
   // ==========================================
-  // CARGA DE DATOS CON REINTENTOS Y MANEJO DE ERRORES
+  // CARGA DE DATOS CON REINTENTOS
   // ==========================================
   const cargarDatos = useCallback(async (isRetry = false) => {
     if (!mountedRef.current) return;
@@ -73,7 +75,6 @@ export default function DetalleEquipo() {
     console.log(`📡 Cargando datos del equipo ${id}...`);
     
     try {
-      // Usar Promise.allSettled para que una falla no mate las otras
       const results = await Promise.allSettled([
         fetchWithRetry(() => mantenimientoAPI.getEquipoById(id), 'getEquipoById'),
         fetchWithRetry(() => mantenimientoAPI.getMantenimientosByEquipo(id).catch(() => []), 'getMantenimientosByEquipo'),
@@ -81,7 +82,6 @@ export default function DetalleEquipo() {
         fetchWithRetry(() => mantenimientoAPI.getHistorialEquipo?.(id).catch(() => []), 'getHistorialEquipo')
       ]);
       
-      // Procesar resultados individualmente
       const [equipoResult, mantenimientosResult, incidenciasResult, historialResult] = results;
       
       if (equipoResult.status === 'fulfilled' && equipoResult.value) {
@@ -112,13 +112,11 @@ export default function DetalleEquipo() {
         setHistorial([]);
       }
       
-      // Resetear contador de reintentos en éxito
       retryCountRef.current = 0;
       
     } catch (err) {
       console.error('❌ Error crítico cargando datos:', err);
       
-      // Reintentar automáticamente si no es el primer intento
       if (retryCountRef.current < 2 && mountedRef.current) {
         retryCountRef.current++;
         console.log(`🔄 Reintentando carga (${retryCountRef.current}/2) en 3 segundos...`);
@@ -143,12 +141,10 @@ export default function DetalleEquipo() {
   // HEARTBEAT - Mantener conexión activa
   // ==========================================
   useEffect(() => {
-    // Ping cada 45 segundos para mantener la conexión activa
     refreshIntervalRef.current = setInterval(async () => {
       if (!mountedRef.current) return;
       
       try {
-        // HEAD request (más ligero que GET)
         await fetch('/api/mantenimiento/equipos?limit=1', { 
           method: 'HEAD',
           cache: 'no-cache',
@@ -158,7 +154,7 @@ export default function DetalleEquipo() {
       } catch (err) {
         console.log('⚠️ Heartbeat falló, pero continuará');
       }
-    }, 45000); // 45 segundos
+    }, 45000);
     
     return () => {
       if (refreshIntervalRef.current) {
@@ -245,6 +241,17 @@ export default function DetalleEquipo() {
     cargarDatos();
   };
 
+  const handleCompletarClick = (mantenimiento) => {
+    setMantenimientoACompletar(mantenimiento);
+    setShowCompletarModal(true);
+  };
+
+  const handleCompletarSuccess = () => {
+    setShowCompletarModal(false);
+    setMantenimientoACompletar(null);
+    cargarDatos();
+  };
+
   const getEstadoClass = () => {
     switch (equipo?.estado) {
       case 'activo': return styles.estadoActivo;
@@ -301,7 +308,6 @@ export default function DetalleEquipo() {
   const mantenimientosProximos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) > new Date());
   const mantenimientosVencidos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) < new Date());
 
-  // Mostrar banner de refresco
   if (isRefreshing) {
     return (
       <div className={styles.loadingContainer}>
@@ -455,11 +461,12 @@ export default function DetalleEquipo() {
         </button>
       </div>
 
-      {/* Contenido de los tabs (igual que antes) */}
+      {/* Contenido de los tabs */}
       <div className={styles.tabContent}>
         {/* Tab Mantenimientos */}
         {activeTab === 'mantenimientos' && (
           <div className={styles.mantenimientosTab}>
+            {/* Próximos mantenimientos */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>
                 ⏰ Próximos Mantenimientos ({mantenimientosProximos.length})
@@ -480,6 +487,15 @@ export default function DetalleEquipo() {
                         <span className={styles.tipoTag}>{m.tipo || 'Rutina'}</span>
                       </div>
                       {m.descripcion && <p className={styles.mantenimientoDesc}>{m.descripcion}</p>}
+                      {/* Botón Completar para mantenimientos pendientes */}
+                      <div className={styles.mantenimientoActions}>
+                        <button
+                          className={styles.completarButton}
+                          onClick={() => handleCompletarClick(m)}
+                        >
+                          ✅ Completar
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -488,6 +504,7 @@ export default function DetalleEquipo() {
               )}
             </div>
 
+            {/* Mantenimientos vencidos */}
             {mantenimientosVencidos.length > 0 && (
               <div className={`${styles.card} ${styles.vencido}`}>
                 <h3 className={styles.cardTitle}>
@@ -505,12 +522,22 @@ export default function DetalleEquipo() {
                       <div className={styles.mantenimientoInfo}>
                         <span>📅 Debía iniciar: {formatDate(m.fecha_inicio)}</span>
                       </div>
+                      {/* Botón Completar para mantenimientos vencidos también */}
+                      <div className={styles.mantenimientoActions}>
+                        <button
+                          className={styles.completarButton}
+                          onClick={() => handleCompletarClick(m)}
+                        >
+                          ✅ Completar
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Mantenimientos completados */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>
                 ✅ Mantenimientos Completados ({mantenimientosCompletados.length})
@@ -525,8 +552,11 @@ export default function DetalleEquipo() {
                       <div className={styles.mantenimientoInfo}>
                         <span>📅 Completado: {formatDate(m.fecha_completado || m.fecha_fin)}</span>
                         {m.completado_por && <span>👤 Por: {m.completado_por}</span>}
+                        {m.duracion && <span>⏱️ Duración: {m.duracion} min</span>}
+                        {m.costo_materiales && <span>💰 Costo: ${m.costo_materiales}</span>}
                       </div>
                       {m.notas_completado && <p className={styles.mantenimientoDesc}>📝 {m.notas_completado}</p>}
+                      {m.materiales_usados && <p className={styles.materialesUsados}>🔧 Materiales: {m.materiales_usados}</p>}
                     </div>
                   ))}
                 </div>
@@ -659,6 +689,14 @@ export default function DetalleEquipo() {
         onClose={() => setShowIncidenciaModal(false)}
         onSuccess={cargarDatos}
         equipoId={equipo.id}
+      />
+
+      <CompletarMantenimientoModal
+        isOpen={showCompletarModal}
+        onClose={() => setShowCompletarModal(false)}
+        onSuccess={handleCompletarSuccess}
+        mantenimiento={mantenimientoACompletar}
+        equipoNombre={equipo?.nombre}
       />
 
       {/* Modal de confirmación de eliminación */}
