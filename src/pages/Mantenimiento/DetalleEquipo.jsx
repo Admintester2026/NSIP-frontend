@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal';
@@ -18,6 +18,12 @@ export default function DetalleEquipo() {
   const [activeTab, setActiveTab] = useState('mantenimientos');
   const [error, setError] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Refs para controlar montaje y reintentos
+  const mountedRef = useRef(true);
+  const retryCountRef = useRef(0);
+  const refreshIntervalRef = useRef(null);
   
   // Estados para modales
   const [showEditModal, setShowEditModal] = useState(false);
@@ -26,32 +32,192 @@ export default function DetalleEquipo() {
   const [showHistorialModal, setShowHistorialModal] = useState(false);
   const [showIncidenciaModal, setShowIncidenciaModal] = useState(false);
 
-  useEffect(() => {
-    cargarDatos();
-  }, [id]);
+  // ==========================================
+  // FUNCIÓN CON REINTENTOS (ROBUSTECIDA)
+  // ==========================================
+  const fetchWithRetry = useCallback(async (fn, fnName, retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+      if (!mountedRef.current) return null;
+      
+      try {
+        return await fn();
+      } catch (err) {
+        console.log(`⚠️ ${fnName} - Intento ${i + 1}/${retries} falló:`, err.message);
+        
+        if (i === retries - 1) {
+          console.error(`❌ ${fnName} - Falló después de ${retries} intentos`);
+          throw err;
+        }
+        
+        // Esperar antes de reintentar (backoff exponencial)
+        const waitTime = delay * Math.pow(2, i);
+        console.log(`⏳ Reintentando en ${waitTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+    return null;
+  }, []);
 
-  const cargarDatos = async () => {
-    setLoading(true);
+  // ==========================================
+  // CARGA DE DATOS CON REINTENTOS Y MANEJO DE ERRORES
+  // ==========================================
+  const cargarDatos = useCallback(async (isRetry = false) => {
+    if (!mountedRef.current) return;
+    
+    if (!isRetry) {
+      setLoading(true);
+      retryCountRef.current = 0;
+    }
     setError('');
+    
+    console.log(`📡 Cargando datos del equipo ${id}...`);
+    
     try {
-      const [equipoData, mantenimientosData, incidenciasData, historialData] = await Promise.all([
-        mantenimientoAPI.getEquipoById(id),
-        mantenimientoAPI.getMantenimientosByEquipo(id).catch(() => []),
-        mantenimientoAPI.getIncidenciasByEquipo?.(id).catch(() => []),
-        mantenimientoAPI.getHistorialEquipo?.(id).catch(() => [])
+      // Usar Promise.allSettled para que una falla no mate las otras
+      const results = await Promise.allSettled([
+        fetchWithRetry(() => mantenimientoAPI.getEquipoById(id), 'getEquipoById'),
+        fetchWithRetry(() => mantenimientoAPI.getMantenimientosByEquipo(id).catch(() => []), 'getMantenimientosByEquipo'),
+        fetchWithRetry(() => mantenimientoAPI.getIncidenciasByEquipo?.(id).catch(() => []), 'getIncidenciasByEquipo'),
+        fetchWithRetry(() => mantenimientoAPI.getHistorialEquipo?.(id).catch(() => []), 'getHistorialEquipo')
       ]);
       
-      setEquipo(equipoData);
-      setMantenimientos(mantenimientosData);
-      setIncidencias(incidenciasData);
-      setHistorial(historialData);
+      // Procesar resultados individualmente
+      const [equipoResult, mantenimientosResult, incidenciasResult, historialResult] = results;
+      
+      if (equipoResult.status === 'fulfilled' && equipoResult.value) {
+        setEquipo(equipoResult.value);
+      } else {
+        console.error('Error cargando equipo:', equipoResult.reason);
+        throw new Error('No se pudo cargar la información del equipo');
+      }
+      
+      if (mantenimientosResult.status === 'fulfilled') {
+        setMantenimientos(mantenimientosResult.value || []);
+      } else {
+        console.warn('Error cargando mantenimientos:', mantenimientosResult.reason);
+        setMantenimientos([]);
+      }
+      
+      if (incidenciasResult.status === 'fulfilled') {
+        setIncidencias(incidenciasResult.value || []);
+      } else {
+        console.warn('Error cargando incidencias:', incidenciasResult.reason);
+        setIncidencias([]);
+      }
+      
+      if (historialResult.status === 'fulfilled') {
+        setHistorial(historialResult.value || []);
+      } else {
+        console.warn('Error cargando historial:', historialResult.reason);
+        setHistorial([]);
+      }
+      
+      // Resetear contador de reintentos en éxito
+      retryCountRef.current = 0;
+      
     } catch (err) {
-      console.error('Error cargando datos:', err);
-      setError('Error al cargar los datos del equipo');
+      console.error('❌ Error crítico cargando datos:', err);
+      
+      // Reintentar automáticamente si no es el primer intento
+      if (retryCountRef.current < 2 && mountedRef.current) {
+        retryCountRef.current++;
+        console.log(`🔄 Reintentando carga (${retryCountRef.current}/2) en 3 segundos...`);
+        setError(`Reconectando... (intento ${retryCountRef.current}/2)`);
+        
+        setTimeout(() => {
+          if (mountedRef.current) {
+            cargarDatos(true);
+          }
+        }, 3000);
+      } else {
+        setError('Error al cargar los datos del equipo. Por favor, recarga la página.');
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current && !isRetry) {
+        setLoading(false);
+      }
     }
-  };
+  }, [id, fetchWithRetry]);
+
+  // ==========================================
+  // HEARTBEAT - Mantener conexión activa
+  // ==========================================
+  useEffect(() => {
+    // Ping cada 45 segundos para mantener la conexión activa
+    refreshIntervalRef.current = setInterval(async () => {
+      if (!mountedRef.current) return;
+      
+      try {
+        // HEAD request (más ligero que GET)
+        await fetch('/api/mantenimiento/equipos?limit=1', { 
+          method: 'HEAD',
+          cache: 'no-cache',
+          headers: { 'X-Heartbeat': 'true' }
+        });
+        console.log('💓 Heartbeat exitoso');
+      } catch (err) {
+        console.log('⚠️ Heartbeat falló, pero continuará');
+      }
+    }, 45000); // 45 segundos
+    
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // ==========================================
+  // RECARGAR CUANDO LA PÁGINA SE VUELVE VISIBLE
+  // ==========================================
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && mountedRef.current && id && !loading) {
+        console.log('👁️ Página visible nuevamente, actualizando datos...');
+        setIsRefreshing(true);
+        cargarDatos().finally(() => {
+          if (mountedRef.current) setIsRefreshing(false);
+        });
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [id, cargarDatos, loading]);
+
+  // ==========================================
+  // RECARGAR CUANDO CAMBIA EL ID
+  // ==========================================
+  useEffect(() => {
+    mountedRef.current = true;
+    cargarDatos();
+    
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [id, cargarDatos]);
+
+  // ==========================================
+  // MANEJAR ERROR DE RED (offline)
+  // ==========================================
+  useEffect(() => {
+    const handleOffline = () => {
+      setError('⚠️ Sin conexión a internet. Verifica tu red.');
+    };
+    
+    const handleOnline = () => {
+      setError('');
+      cargarDatos();
+    };
+    
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [cargarDatos]);
 
   const handleEditSuccess = () => {
     setShowEditModal(false);
@@ -71,6 +237,12 @@ export default function DetalleEquipo() {
       setError('Error al eliminar el equipo');
       setShowDeleteConfirm(false);
     }
+  };
+
+  const handleRetry = () => {
+    setError('');
+    retryCountRef.current = 0;
+    cargarDatos();
   };
 
   const getEstadoClass = () => {
@@ -129,6 +301,16 @@ export default function DetalleEquipo() {
   const mantenimientosProximos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) > new Date());
   const mantenimientosVencidos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) < new Date());
 
+  // Mostrar banner de refresco
+  if (isRefreshing) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Actualizando información...</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -144,9 +326,14 @@ export default function DetalleEquipo() {
         <span className={styles.errorIcon}>⚠️</span>
         <h2>Error al cargar el equipo</h2>
         <p>{error || 'El equipo no existe o ha sido eliminado'}</p>
-        <Link to="/mantenimiento/equipos" className={styles.backButton}>
-          ← Volver a Equipos
-        </Link>
+        <div className={styles.errorActions}>
+          <button onClick={handleRetry} className={styles.retryButton}>
+            🔄 Reintentar
+          </button>
+          <Link to="/mantenimiento/equipos" className={styles.backButton}>
+            ← Volver a Equipos
+          </Link>
+        </div>
       </div>
     );
   }
@@ -164,6 +351,9 @@ export default function DetalleEquipo() {
           </button>
           <button className={styles.deleteButton} onClick={handleDeleteClick}>
             🗑️ Eliminar
+          </button>
+          <button className={styles.refreshButton} onClick={() => cargarDatos()} title="Actualizar datos">
+            🔄
           </button>
         </div>
       </div>
@@ -265,12 +455,11 @@ export default function DetalleEquipo() {
         </button>
       </div>
 
-      {/* Contenido de los tabs */}
+      {/* Contenido de los tabs (igual que antes) */}
       <div className={styles.tabContent}>
         {/* Tab Mantenimientos */}
         {activeTab === 'mantenimientos' && (
           <div className={styles.mantenimientosTab}>
-            {/* Próximos mantenimientos */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>
                 ⏰ Próximos Mantenimientos ({mantenimientosProximos.length})
@@ -299,7 +488,6 @@ export default function DetalleEquipo() {
               )}
             </div>
 
-            {/* Mantenimientos vencidos */}
             {mantenimientosVencidos.length > 0 && (
               <div className={`${styles.card} ${styles.vencido}`}>
                 <h3 className={styles.cardTitle}>
@@ -323,7 +511,6 @@ export default function DetalleEquipo() {
               </div>
             )}
 
-            {/* Historial de mantenimientos completados */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>
                 ✅ Mantenimientos Completados ({mantenimientosCompletados.length})
@@ -445,8 +632,6 @@ export default function DetalleEquipo() {
       </div>
 
       {/* MODALES */}
-
-      {/* Modal de edición de equipo */}
       <AddEquipmentModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
@@ -455,7 +640,6 @@ export default function DetalleEquipo() {
         equipoData={equipo}
       />
 
-      {/* Modal de programar mantenimiento */}
       <AddMantenimientoModal
         isOpen={showMantModal}
         onClose={() => setShowMantModal(false)}
@@ -463,7 +647,6 @@ export default function DetalleEquipo() {
         equipoId={equipo.id}
       />
 
-      {/* Modal de registrar historial/cambio */}
       <AddHistorialModal
         isOpen={showHistorialModal}
         onClose={() => setShowHistorialModal(false)}
@@ -471,7 +654,6 @@ export default function DetalleEquipo() {
         equipoId={equipo.id}
       />
 
-      {/* Modal de reportar incidencia */}
       <AddIncidenciaModal
         isOpen={showIncidenciaModal}
         onClose={() => setShowIncidenciaModal(false)}
