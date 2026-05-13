@@ -1,0 +1,387 @@
+/* FRONTEND/src/components/mantenimiento/CompletarMantenimientoModal.module.css */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.2s ease;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-raised);
+}
+
+.modalHeader h2 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+}
+
+.modalClose:hover {
+  color: var(--red);
+  background: var(--bg-surface);
+}
+
+.modalBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formGroup label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  padding: 0.75rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--green-dim);
+}
+
+.formGroup textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.fieldHint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+}
+
+.row .formGroup {
+  flex: 1;
+}
+
+.infoBox {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.infoRow {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 90px;
+}
+
+.infoValue {
+  color: var(--text-secondary);
+}
+
+.errorMessage {
+  padding: 0.75rem;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  border-radius: var(--r-md);
+  color: var(--red);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-dim);
+  background: var(--bg-raised);
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 0.6rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.submitButton {
+  flex: 1;
+  padding: 0.6rem;
+  background: var(--green);
+  border: none;
+  border-radius: var(--r-md);
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* File input area */
+.fileInputArea {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fileButton {
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.fileButton:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.fileHint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* Preview grid */
+.previewGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  border: 1px dashed var(--border-dim);
+}
+
+.previewItem {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-surface);
+}
+
+.previewImage, .previewVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removePreview {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  color: white;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.removePreview:hover {
+  background: var(--red);
+  transform: scale(1.1);
+}
+
+/* Progress bar */
+.progressBar {
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  height: 30px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progressFill {
+  background: var(--green);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  color: #000;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar */
+.modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+  border-radius: 3px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 3px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    max-height: 95vh;
+    margin: 1rem;
+  }
+
+  .modalHeader {
+    padding: 1rem;
+  }
+
+  .modalBody {
+    padding: 1rem;
+  }
+
+  .modalFooter {
+    padding: 1rem;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .previewItem {
+    width: 60px;
+    height: 60px;
+  }
+
+  .infoRow {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .infoLabel {
+    min-width: auto;
+  }
+}
