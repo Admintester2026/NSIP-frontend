@@ -2,6 +2,20 @@
 import { useState, useEffect } from 'react';
 import styles from './DetalleMantenimientoModal.module.css';
 
+// Usar una variable global o window si está disponible
+const getApiBase = () => {
+  // Intentar obtener de import.meta (si está disponible en el entorno)
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // Fallback a la variable global si existe
+  if (typeof window !== 'undefined' && window.VITE_API_URL) {
+    return window.VITE_API_URL;
+  }
+  // Fallback final
+  return '';
+};
+
 export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimiento, equipoNombre }) {
   const [evidencias, setEvidencias] = useState([]);
   const [loadingEvidencias, setLoadingEvidencias] = useState(false);
@@ -15,14 +29,16 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const cargarEvidencias = async () => {
     setLoadingEvidencias(true);
     try {
-      // USAR LA VARIABLE DE ENTORNO VITE_API_URL
-      const API_BASE = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/${mantenimiento.id}`);
+      const API_BASE = getApiBase();
+      const url = `${API_BASE}/mantenimiento/evidencias/${mantenimiento.id}`;
+      console.log('Fetching evidencias desde:', url);
+      
+      const response = await fetch(url);
       
       // Verificar si la respuesta es JSON válida
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        console.warn('Respuesta no es JSON');
+        console.warn('Respuesta no es JSON, contentType:', contentType);
         setEvidencias([]);
         return;
       }
