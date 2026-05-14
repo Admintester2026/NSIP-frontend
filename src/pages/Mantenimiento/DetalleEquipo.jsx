@@ -6,6 +6,7 @@ import AddMantenimientoModal from '../../components/mantenimiento/AddMantenimien
 import AddHistorialModal from '../../components/mantenimiento/AddHistorialModal';
 import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModal';
 import CompletarMantenimientoModal from '../../components/mantenimiento/CompletarMantenimientoModal';
+import DetalleMantenimientoModal from '../../components/mantenimiento/DetalleMantenimientoModal';
 import styles from './styles/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -21,7 +22,6 @@ export default function DetalleEquipo() {
   const [imageError, setImageError] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Refs para controlar montaje y reintentos
   const mountedRef = useRef(true);
   const retryCountRef = useRef(0);
   const refreshIntervalRef = useRef(null);
@@ -34,9 +34,13 @@ export default function DetalleEquipo() {
   const [showIncidenciaModal, setShowIncidenciaModal] = useState(false);
   const [showCompletarModal, setShowCompletarModal] = useState(false);
   const [mantenimientoACompletar, setMantenimientoACompletar] = useState(null);
+  
+  // Estados para detalle de mantenimiento
+  const [showDetalleModal, setShowDetalleModal] = useState(false);
+  const [mantenimientoSeleccionado, setMantenimientoSeleccionado] = useState(null);
 
   // ==========================================
-  // FUNCIÓN CON REINTENTOS (ROBUSTECIDA)
+  // FUNCIÓN CON REINTENTOS
   // ==========================================
   const fetchWithRetry = useCallback(async (fn, fnName, retries = 3, delay = 1000) => {
     for (let i = 0; i < retries; i++) {
@@ -61,7 +65,7 @@ export default function DetalleEquipo() {
   }, []);
 
   // ==========================================
-  // CARGA DE DATOS CON REINTENTOS
+  // CARGA DE DATOS
   // ==========================================
   const cargarDatos = useCallback(async (isRetry = false) => {
     if (!mountedRef.current) return;
@@ -138,7 +142,7 @@ export default function DetalleEquipo() {
   }, [id, fetchWithRetry]);
 
   // ==========================================
-  // HEARTBEAT - Mantener conexión activa
+  // HEARTBEAT
   // ==========================================
   useEffect(() => {
     refreshIntervalRef.current = setInterval(async () => {
@@ -194,7 +198,7 @@ export default function DetalleEquipo() {
   }, [id, cargarDatos]);
 
   // ==========================================
-  // MANEJAR ERROR DE RED (offline)
+  // MANEJAR ERROR DE RED
   // ==========================================
   useEffect(() => {
     const handleOffline = () => {
@@ -252,6 +256,11 @@ export default function DetalleEquipo() {
     cargarDatos();
   };
 
+  const handleVerDetalle = (mantenimiento) => {
+    setMantenimientoSeleccionado(mantenimiento);
+    setShowDetalleModal(true);
+  };
+
   const getEstadoClass = () => {
     switch (equipo?.estado) {
       case 'activo': return styles.estadoActivo;
@@ -300,6 +309,19 @@ export default function DetalleEquipo() {
       day: '2-digit', 
       month: 'long', 
       year: 'numeric' 
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'No definida';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha inválida';
+    return date.toLocaleDateString('es-MX', { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -487,7 +509,6 @@ export default function DetalleEquipo() {
                         <span className={styles.tipoTag}>{m.tipo || 'Rutina'}</span>
                       </div>
                       {m.descripcion && <p className={styles.mantenimientoDesc}>{m.descripcion}</p>}
-                      {/* Botón Completar para mantenimientos pendientes */}
                       <div className={styles.mantenimientoActions}>
                         <button
                           className={styles.completarButton}
@@ -522,7 +543,6 @@ export default function DetalleEquipo() {
                       <div className={styles.mantenimientoInfo}>
                         <span>📅 Debía iniciar: {formatDate(m.fecha_inicio)}</span>
                       </div>
-                      {/* Botón Completar para mantenimientos vencidos también */}
                       <div className={styles.mantenimientoActions}>
                         <button
                           className={styles.completarButton}
@@ -537,7 +557,7 @@ export default function DetalleEquipo() {
               </div>
             )}
 
-            {/* Mantenimientos completados */}
+            {/* Mantenimientos completados - AHORA CLICKEABLES */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>
                 ✅ Mantenimientos Completados ({mantenimientosCompletados.length})
@@ -545,18 +565,31 @@ export default function DetalleEquipo() {
               {mantenimientosCompletados.length > 0 ? (
                 <div className={styles.mantenimientosList}>
                   {mantenimientosCompletados.map(m => (
-                    <div key={m.id} className={styles.mantenimientoItem}>
+                    <div 
+                      key={m.id} 
+                      className={`${styles.mantenimientoItem} ${styles.clickable}`}
+                      onClick={() => handleVerDetalle(m)}
+                    >
                       <div className={styles.mantenimientoHeader}>
                         <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
+                        <span className={styles.verDetalleBadge}>🔍 Ver detalles</span>
                       </div>
                       <div className={styles.mantenimientoInfo}>
-                        <span>📅 Completado: {formatDate(m.fecha_completado || m.fecha_fin)}</span>
+                        <span>📅 Completado: {formatDateTime(m.fecha_completado || m.fecha_fin)}</span>
                         {m.completado_por && <span>👤 Por: {m.completado_por}</span>}
                         {m.duracion && <span>⏱️ Duración: {m.duracion} min</span>}
                         {m.costo_materiales && <span>💰 Costo: ${m.costo_materiales}</span>}
                       </div>
-                      {m.notas_completado && <p className={styles.mantenimientoDesc}>📝 {m.notas_completado}</p>}
-                      {m.materiales_usados && <p className={styles.materialesUsados}>🔧 Materiales: {m.materiales_usados}</p>}
+                      {m.notas_completado && (
+                        <p className={styles.mantenimientoDesc}>
+                          📝 {m.notas_completado.length > 100 
+                            ? m.notas_completado.substring(0, 100) + '...' 
+                            : m.notas_completado}
+                        </p>
+                      )}
+                      {m.materiales_usados && (
+                        <p className={styles.materialesUsados}>🔧 Materiales: {m.materiales_usados}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -696,6 +729,13 @@ export default function DetalleEquipo() {
         onClose={() => setShowCompletarModal(false)}
         onSuccess={handleCompletarSuccess}
         mantenimiento={mantenimientoACompletar}
+        equipoNombre={equipo?.nombre}
+      />
+
+      <DetalleMantenimientoModal
+        isOpen={showDetalleModal}
+        onClose={() => setShowDetalleModal(false)}
+        mantenimiento={mantenimientoSeleccionado}
         equipoNombre={equipo?.nombre}
       />
 
