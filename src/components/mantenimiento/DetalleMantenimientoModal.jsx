@@ -15,13 +15,27 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const cargarEvidencias = async () => {
     setLoadingEvidencias(true);
     try {
-      const response = await fetch(`/api/mantenimiento/evidencias/${mantenimiento.id}`);
+      // USAR LA VARIABLE DE ENTORNO VITE_API_URL
+      const API_BASE = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/${mantenimiento.id}`);
+      
+      // Verificar si la respuesta es JSON válida
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('Respuesta no es JSON');
+        setEvidencias([]);
+        return;
+      }
+      
       const data = await response.json();
       if (data.ok) {
         setEvidencias(data.datos || []);
+      } else {
+        setEvidencias([]);
       }
     } catch (err) {
       console.error('Error cargando evidencias:', err);
+      setEvidencias([]);
     } finally {
       setLoadingEvidencias(false);
     }
@@ -149,7 +163,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               <div className={styles.evidenciasGrid}>
                 {evidencias.map((ev, idx) => (
                   <div key={idx} className={styles.evidenciaItem}>
-                    {ev.url.match(/\.(mp4|webm)$/i) ? (
+                    {ev.url?.match(/\.(mp4|webm)$/i) ? (
                       <video src={ev.url} className={styles.evidenciaVideo} controls />
                     ) : (
                       <img src={ev.url} alt={`Evidencia ${idx + 1}`} className={styles.evidenciaImg} />
