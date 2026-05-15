@@ -8,7 +8,7 @@ import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModa
 import CompletarMantenimientoModal from '../../components/mantenimiento/CompletarMantenimientoModal';
 import DetalleMantenimientoModal from '../../components/mantenimiento/DetalleMantenimientoModal';
 import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal';
-import styles from './styles/DetalleEquipo.module.css';
+import styles from './styles/Detallesquiposestilos/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
   const { id } = useParams();
