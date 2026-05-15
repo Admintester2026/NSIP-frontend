@@ -901,3 +901,206 @@
     flex-wrap: wrap;
   }
 }
+/* ==========================================
+   SCROLL PARA LISTAS DE MANTENIMIENTOS
+   ========================================== */
+.mantenimientosListScroll {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-right: 0.5rem;
+}
+
+/* Personalizar scrollbar */
+.mantenimientosListScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mantenimientosListScroll::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+  border-radius: 3px;
+}
+
+.mantenimientosListScroll::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 3px;
+}
+
+.mantenimientosListScroll::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+
+/* ==========================================
+   HEADER CON BUSCADOR PARA COMPLETADOS
+   ========================================== */
+.cardHeaderWithSearch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchInputSmall {
+  padding: 0.4rem 2rem 0.4rem 0.8rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  width: 220px;
+}
+
+.searchInputSmall:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.clearSearchBtn:hover {
+  color: var(--red);
+}
+
+/* ==========================================
+   INDICADORES DE MES
+   ========================================== */
+.indicadorMes {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mesActual {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+}
+
+.mesPasado {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+}
+
+.mesProximo {
+  background: rgba(0, 255, 157, 0.08);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-dim);
+}
+
+/* ==========================================
+   BOTÓN REPROGRAMAR
+   ========================================== */
+.reprogramarButton {
+  padding: 0.4rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reprogramarButton:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  transform: translateY(-1px);
+}
+
+/* ==========================================
+   ALERTA FLOTANTE
+   ========================================== */
+.alert {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1rem;
+  color: var(--green);
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 1100;
+  animation: slideInRight 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ==========================================
+   ACCIONES DE MANTENIMIENTO EN LÍNEA
+   ========================================== */
+.mantenimientoActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+/* ==========================================
+   RESPONSIVE PARA LAS NUEVAS CLASES
+   ========================================== */
+@media (max-width: 768px) {
+  .cardHeaderWithSearch {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .searchInputSmall {
+    width: 100%;
+  }
+  
+  .mantenimientoActions {
+    flex-direction: column;
+  }
+  
+  .reprogramarButton, .completarButton {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .indicadorMes {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.5rem;
+  }
+}
