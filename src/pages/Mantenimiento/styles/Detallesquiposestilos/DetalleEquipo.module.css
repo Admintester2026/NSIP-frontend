@@ -25,8 +25,8 @@
 @import './responsive.css';
 
 /* Extras (funcionalidades adicionales) */
-@import './extras/scroll.css';
-@import './extras/buscador.css';
-@import './extras/indicadores.css';
-@import './extras/alerta.css';
-@import './extras/botones.css';
+@import './Extras/scroll.css';
+@import './Extras/buscador.css';
+@import './Extras/indicadores.css';
+@import './Extras/alerta.css';
+@import './Extras/botones.css';
