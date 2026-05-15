@@ -15,50 +15,66 @@
   transition: all 0.2s ease;
 }
 
-/* Borde COMPLETO (los 4 lados) de color según prioridad */
+/* ==========================================
+   BORDES COMPLETOS SEGÚN PRIORIDAD
+   ========================================== */
+.mantenimientoItem[class*="prioridadUrgente"],
 .mantenimientoItem.prioridadUrgente {
-  border: 1px solid var(--red);
+  border: 1px solid var(--red) !important;
 }
 
+.mantenimientoItem[class*="prioridadAlta"],
 .mantenimientoItem.prioridadAlta {
-  border: 1px solid var(--amber);
+  border: 1px solid var(--amber) !important;
 }
 
+.mantenimientoItem[class*="prioridadMedia"],
 .mantenimientoItem.prioridadMedia {
-  border: 1px solid var(--green);
+  border: 1px solid var(--green) !important;
 }
 
+.mantenimientoItem[class*="prioridadBaja"],
 .mantenimientoItem.prioridadBaja {
-  border: 1px solid var(--text-muted);
+  border: 1px solid var(--text-muted) !important;
 }
 
-/* Mantenimientos vencidos - borde rojo */
+/* Mantenimientos vencidos */
 .mantenimientoItem.vencido {
-  border: 1px solid var(--red);
+  border: 1px solid var(--red) !important;
 }
 
-/* Indicadores de mes - también afectan el borde completo */
-.mantenimientoItem.mesActual {
-  border: 1px solid var(--green);
+/* ==========================================
+   INDICADORES DE MES (SOLO TEXTO, NO AFECTAN BORDE)
+   ========================================== */
+.indicadorMes {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.mantenimientoItem.mesPasado {
-  border: 1px solid var(--amber);
+.mesActual {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 157, 0.3);
 }
 
-.mantenimientoItem.mesProximo {
-  border: 1px dashed var(--text-muted);
+.mesPasado {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(255, 179, 64, 0.3);
 }
 
-/* Combinación: si tiene prioridad Y es vencido, prioridad tiene preferencia */
-.mantenimientoItem.prioridadUrgente.vencido {
-  border: 2px solid var(--red);
+.mesProximo {
+  background: rgba(0, 255, 157, 0.08);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-dim);
 }
 
-.mantenimientoItem.prioridadAlta.vencido {
-  border: 2px solid var(--amber);
-}
-
+/* ==========================================
+   HEADER DE LA TARJETA
+   ========================================== */
 .mantenimientoHeader {
   display: flex;
   align-items: center;
@@ -73,6 +89,9 @@
   color: var(--text-primary);
 }
 
+/* ==========================================
+   BADGES DE PRIORIDAD
+   ========================================== */
 .prioridadBadge {
   padding: 0.2rem 0.6rem;
   border-radius: 20px;
@@ -100,6 +119,9 @@
   color: var(--text-muted);
 }
 
+/* ==========================================
+   INFORMACIÓN DE LA TARJETA
+   ========================================== */
 .mantenimientoInfo {
   display: flex;
   gap: 1rem;
@@ -123,7 +145,9 @@
   border-top: 1px solid var(--border-dim);
 }
 
-/* Botones de acción */
+/* ==========================================
+   BOTONES DE ACCIÓN
+   ========================================== */
 .mantenimientoActions {
   display: flex;
   gap: 0.5rem;
@@ -154,7 +178,49 @@
   transform: translateY(-1px);
 }
 
-/* Items clickeables (mantenimientos completados) */
+.reprogramarButton {
+  padding: 0.4rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reprogramarButton:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  transform: translateY(-1px);
+}
+
+.eliminarButton {
+  padding: 0.4rem 1rem;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  border-radius: var(--r-md);
+  color: var(--red);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.eliminarButton:hover {
+  background: var(--red);
+  color: var(--bg-primary);
+  transform: translateY(-1px);
+}
+
+/* ==========================================
+   MANTENIMIENTOS COMPLETADOS (CLICKEABLES)
+   ========================================== */
 .clickable {
   cursor: pointer;
   transition: all 0.2s ease;
@@ -181,4 +247,20 @@
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border-dim);
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+  .mantenimientoActions {
+    flex-direction: column;
+  }
+  
+  .completarButton,
+  .reprogramarButton,
+  .eliminarButton {
+    width: 100%;
+    justify-content: center;
+  }
 }
