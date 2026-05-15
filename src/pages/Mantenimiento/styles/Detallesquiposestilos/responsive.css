@@ -1,0 +1,66 @@
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+  .detalleEquipo {
+    padding: 1rem;
+  }
+
+  .heroSection {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .fotoContainer {
+    width: 150px;
+    height: 150px;
+  }
+
+  .badgesRow {
+    justify-content: center;
+  }
+
+  .categoriasRow {
+    justify-content: center;
+  }
+
+  .metaInfo {
+    justify-content: center;
+  }
+
+  .tabsContainer {
+    justify-content: center;
+  }
+
+  .tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .confirmModal {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .confirmModalHeader {
+    padding: 1rem;
+  }
+
+  .confirmModalBody {
+    padding: 1rem;
+  }
+
+  .confirmModalFooter {
+    padding: 1rem;
+    flex-direction: column;
+  }
+
+  .headerActions {
+    flex-wrap: wrap;
+  }
+}

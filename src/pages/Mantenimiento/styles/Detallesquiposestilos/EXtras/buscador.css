@@ -1,0 +1,48 @@
+/* ==========================================
+   HEADER CON BUSCADOR PARA COMPLETADOS
+   ========================================== */
+.cardHeaderWithSearch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchInputSmall {
+  padding: 0.4rem 2rem 0.4rem 0.8rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  width: 220px;
+}
+
+.searchInputSmall:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.clearSearchBtn:hover {
+  color: var(--red);
+}

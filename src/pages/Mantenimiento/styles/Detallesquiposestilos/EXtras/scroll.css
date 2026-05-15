@@ -1,0 +1,29 @@
+/* ==========================================
+   SCROLL PARA LISTAS DE MANTENIMIENTOS
+   ========================================== */
+.mantenimientosListScroll {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-right: 0.5rem;
+}
+
+.mantenimientosListScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mantenimientosListScroll::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+  border-radius: 3px;
+}
+
+.mantenimientosListScroll::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 3px;
+}
+
+.mantenimientosListScroll::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}

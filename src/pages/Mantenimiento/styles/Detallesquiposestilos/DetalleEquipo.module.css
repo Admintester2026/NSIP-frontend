@@ -1,0 +1,32 @@
+/* DetalleEquipo.module.css - Archivo principal que importa todos los módulos */
+
+/* Base */
+@import './base.css';
+
+/* Componentes principales */
+@import './header.css';
+@import './hero.css';
+@import './tabs.css';
+
+/* Cards y listas */
+@import './cards.css';
+@import './mantenimientos.css';
+@import './incidencias.css';
+@import './documentos.css';
+@import './historial.css';
+
+/* Modales */
+@import './modales.css';
+
+/* Estados */
+@import './loading-error.css';
+
+/* Responsive */
+@import './responsive.css';
+
+/* Extras (funcionalidades adicionales) */
+@import './extras/scroll.css';
+@import './extras/buscador.css';
+@import './extras/indicadores.css';
+@import './extras/alerta.css';
+@import './extras/botones.css';

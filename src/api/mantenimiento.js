@@ -23,7 +23,6 @@ export const mantenimientoAPI = {
   
   getEquipos: async (estado = 'activo') => {
     const url = `${API_BASE}/mantenimiento/equipos${estado ? `?estado=${estado}` : ''}`;
-    console.log('URL getEquipos:', url);
     const response = await fetch(url);
     const data = await handleResponse(response);
     return data.datos || [];
@@ -31,8 +30,8 @@ export const mantenimientoAPI = {
 
   getEquipoById: async (id) => {
     const url = `${API_BASE}/mantenimiento/equipos/${id}`;
-    console.log('URL getEquipoById:', url);
-    const response = await fetch(url);    const data = await handleResponse(response);
+    const response = await fetch(url);
+    const data = await handleResponse(response);
     return data.datos;
   },
 
@@ -58,9 +57,7 @@ export const mantenimientoAPI = {
 
   deleteEquipo: async (id) => {
     const url = `${API_BASE}/mantenimiento/equipos/${id}`;
-    const response = await fetch(url, {
-      method: 'DELETE'
-    });
+    const response = await fetch(url, { method: 'DELETE' });
     return handleResponse(response);
   },
 
@@ -80,7 +77,6 @@ export const mantenimientoAPI = {
   
   getCategorias: async () => {
     const url = `${API_BASE}/mantenimiento/categorias`;
-    console.log('URL getCategorias:', url);
     const response = await fetch(url);
     const data = await handleResponse(response);
     return data.datos || [];
@@ -100,16 +96,13 @@ export const mantenimientoAPI = {
   // MANTENIMIENTOS
   // ==========================================
   
-  // Obtener todos los mantenimientos de un equipo
   getMantenimientosByEquipo: async (equipoId) => {
     const url = `${API_BASE}/mantenimiento/mantenimientos/equipo/${equipoId}`;
-    console.log('URL getMantenimientosByEquipo:', url);
     const response = await fetch(url);
     const data = await handleResponse(response);
     return data.datos || [];
   },
 
-  // Crear un nuevo mantenimiento
   createMantenimiento: async (mantenimientoData) => {
     const url = `${API_BASE}/mantenimiento/mantenimientos`;
     const response = await fetch(url, {
@@ -120,7 +113,6 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  // Actualizar estado de un mantenimiento (completar/cancelar)
   updateMantenimientoEstado: async (id, estado, notas = null) => {
     const url = `${API_BASE}/mantenimiento/mantenimientos/${id}/estado`;
     const response = await fetch(url, {
@@ -131,27 +123,28 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  // Obtener último mantenimiento de un equipo (para tarjeta)
-  getUltimoMantenimiento: async (equipoId) => {
-    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/ultimo-mantenimiento`;
-    const response = await fetch(url);
-    const data = await handleResponse(response);
-    return data.datos;
+  // Actualizar mantenimiento (reprogramar)
+  updateMantenimiento: async (id, data) => {
+    const url = `${API_BASE}/mantenimiento/mantenimientos/${id}`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(response);
   },
 
-  // Obtener próximo mantenimiento de un equipo (para tarjeta)
-  getProximoMantenimiento: async (equipoId) => {
-    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/proximo-mantenimiento`;
-    const response = await fetch(url);
-    const data = await handleResponse(response);
-    return data.datos;
+  // Eliminar mantenimiento pendiente
+  deleteMantenimiento: async (id) => {
+    const url = `${API_BASE}/mantenimiento/mantenimientos/${id}`;
+    const response = await fetch(url, { method: 'DELETE' });
+    return handleResponse(response);
   },
 
   // ==========================================
   // INCIDENCIAS / DAÑOS
   // ==========================================
   
-  // Obtener incidencias de un equipo
   getIncidenciasByEquipo: async (equipoId) => {
     const url = `${API_BASE}/mantenimiento/incidencias/equipo/${equipoId}`;
     const response = await fetch(url);
@@ -159,7 +152,6 @@ export const mantenimientoAPI = {
     return data.datos || [];
   },
 
-  // Reportar una incidencia/daño
   createIncidencia: async (incidenciaData) => {
     const url = `${API_BASE}/mantenimiento/incidencias`;
     const response = await fetch(url, {
@@ -170,7 +162,6 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  // Actualizar estado de una incidencia
   updateIncidenciaEstado: async (id, estado, solucion = null) => {
     const url = `${API_BASE}/mantenimiento/incidencias/${id}/estado`;
     const response = await fetch(url, {
@@ -185,7 +176,6 @@ export const mantenimientoAPI = {
   // ÓRDENES DE TRABAJO
   // ==========================================
   
-  // Obtener órdenes de trabajo (con filtro por estado)
   getOrdenes: async (estado = null) => {
     const url = estado 
       ? `${API_BASE}/mantenimiento/ordenes?estado=${estado}`
@@ -195,7 +185,6 @@ export const mantenimientoAPI = {
     return data.datos || [];
   },
 
-  // Crear una orden de trabajo
   createOrden: async (ordenData) => {
     const url = `${API_BASE}/mantenimiento/ordenes`;
     const response = await fetch(url, {
@@ -206,7 +195,6 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  // Actualizar estado de una orden de trabajo
   updateOrdenEstado: async (id, estado, observaciones = null) => {
     const url = `${API_BASE}/mantenimiento/ordenes/${id}/estado`;
     const response = await fetch(url, {
@@ -221,7 +209,6 @@ export const mantenimientoAPI = {
   // HISTORIAL DE CAMBIOS
   // ==========================================
   
-  // Obtener historial de cambios de un equipo
   getHistorialEquipo: async (equipoId) => {
     const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
     const response = await fetch(url);
@@ -229,7 +216,6 @@ export const mantenimientoAPI = {
     return data.datos || [];
   },
 
-  // Registrar un cambio manual en el historial
   registrarCambio: async (equipoId, cambioData) => {
     const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
     const response = await fetch(url, {

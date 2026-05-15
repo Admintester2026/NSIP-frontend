@@ -7,7 +7,7 @@ import AddHistorialModal from '../../components/mantenimiento/AddHistorialModal'
 import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModal';
 import CompletarMantenimientoModal from '../../components/mantenimiento/CompletarMantenimientoModal';
 import DetalleMantenimientoModal from '../../components/mantenimiento/DetalleMantenimientoModal';
-import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal'; // <--- NUEVO IMPORT
+import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal';
 import styles from './styles/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -40,23 +40,17 @@ export default function DetalleEquipo() {
   const [showDetalleModal, setShowDetalleModal] = useState(false);
   const [mantenimientoSeleccionado, setMantenimientoSeleccionado] = useState(null);
 
-  // --- NUEVOS ESTADOS PARA LAS MEJORAS ---
-  // Buscador en mantenimientos completados
+  // Estados para las mejoras
   const [buscarEnCompletados, setBuscarEnCompletados] = useState('');
-  
-  // Reprogramación
   const [showReprogramarModal, setShowReprogramarModal] = useState(false);
   const [mantenimientoAReprogramar, setMantenimientoAReprogramar] = useState(null);
-  
-  // Alerta flotante
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
   // ==========================================
-  // FUNCIONES AUXILIARES (Indicadores, Filtros, etc.)
+  // FUNCIONES AUXILIARES
   // ==========================================
   
-  // Obtener indicador visual del mes (Actual, Pasado, Próximo)
   const obtenerIndicadorMes = (fecha) => {
     if (!fecha) return null;
     const fechaMant = new Date(fecha);
@@ -75,14 +69,12 @@ export default function DetalleEquipo() {
     }
   };
 
-  // Filtrar mantenimientos completados por fecha o texto
   const filtrarMantenimientosCompletados = () => {
     if (!buscarEnCompletados.trim()) return mantenimientosCompletados;
     
     const busqueda = buscarEnCompletados.toLowerCase();
     return mantenimientosCompletados.filter(m => {
       const fecha = new Date(m.fecha_completado || m.fecha_fin);
-      // Formato dd/mm/yyyy para buscar
       const fechaStr = `${fecha.getDate().toString().padStart(2,'0')}/${(fecha.getMonth()+1).toString().padStart(2,'0')}/${fecha.getFullYear()}`;
       
       return fechaStr.includes(busqueda) ||
@@ -195,7 +187,7 @@ export default function DetalleEquipo() {
   }, [id, fetchWithRetry]);
 
   // ==========================================
-  // EFECTOS (Heartbeat, Visibilidad, Offline)
+  // EFECTOS
   // ==========================================
   useEffect(() => {
     refreshIntervalRef.current = setInterval(async () => {
@@ -301,7 +293,6 @@ export default function DetalleEquipo() {
     setShowCompletarModal(false);
     setMantenimientoACompletar(null);
     cargarDatos();
-    // Mostrar alerta de éxito
     setAlertMessage('✅ Mantenimiento completado exitosamente');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
@@ -312,7 +303,6 @@ export default function DetalleEquipo() {
     setShowDetalleModal(true);
   };
 
-  // --- NUEVO: Manejar la reprogramación ---
   const handleReprogramarClick = (mantenimiento) => {
     setMantenimientoAReprogramar(mantenimiento);
     setShowReprogramarModal(true);
@@ -325,6 +315,22 @@ export default function DetalleEquipo() {
     setAlertMessage('✅ Mantenimiento reprogramado exitosamente');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
+  };
+
+  // --- NUEVO: Eliminar mantenimiento pendiente ---
+  const handleEliminarMantenimiento = async (mantenimiento) => {
+    if (window.confirm(`¿Eliminar permanentemente el mantenimiento "${mantenimiento.titulo}"?`)) {
+      try {
+        await mantenimientoAPI.deleteMantenimiento(mantenimiento.id);
+        cargarDatos();
+        setAlertMessage('🗑️ Mantenimiento eliminado');
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 3000);
+      } catch (err) {
+        console.error('Error eliminando mantenimiento:', err);
+        setError('Error al eliminar el mantenimiento');
+      }
+    }
   };
 
   // ==========================================
@@ -571,7 +577,7 @@ export default function DetalleEquipo() {
         {/* Tab Mantenimientos */}
         {activeTab === 'mantenimientos' && (
           <div className={styles.mantenimientosTab}>
-            {/* Próximos mantenimientos CON SCROLL, INDICADORES Y REPROGRAMAR */}
+            {/* Próximos mantenimientos */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>
                 ⏰ Próximos Mantenimientos ({mantenimientosProximos.length})
@@ -579,13 +585,17 @@ export default function DetalleEquipo() {
               <div className={styles.mantenimientosListScroll}>
                 {mantenimientosProximos.length > 0 ? (
                   mantenimientosProximos.map(m => {
+                    const prioridadClass = getPrioridadClass(m.prioridad);
                     const indicador = obtenerIndicadorMes(m.fecha_inicio);
                     return (
-                      <div key={m.id} className={`${styles.mantenimientoItem} ${styles[indicador?.clase || '']}`}>
+                      <div 
+                        key={m.id} 
+                        className={`${styles.mantenimientoItem} ${prioridadClass} ${styles[indicador?.clase || '']}`}
+                      >
                         <div className={styles.mantenimientoHeader}>
                           <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
                           {indicador && <span className={`${styles.indicadorMes} ${styles[indicador.clase]}`}>{indicador.texto}</span>}
-                          <span className={`${styles.prioridadBadge} ${getPrioridadClass(m.prioridad)}`}>
+                          <span className={`${styles.prioridadBadge} ${prioridadClass}`}>
                             {getPrioridadTexto(m.prioridad)}
                           </span>
                         </div>
@@ -602,6 +612,9 @@ export default function DetalleEquipo() {
                           <button className={styles.reprogramarButton} onClick={() => handleReprogramarClick(m)}>
                             📅 Reprogramar
                           </button>
+                          <button className={styles.eliminarButton} onClick={() => handleEliminarMantenimiento(m)}>
+                            🗑️ Eliminar
+                          </button>
                         </div>
                       </div>
                     );
@@ -612,39 +625,45 @@ export default function DetalleEquipo() {
               </div>
             </div>
 
-            {/* Mantenimientos vencidos CON SCROLL Y REPROGRAMAR */}
+            {/* Mantenimientos vencidos */}
             {mantenimientosVencidos.length > 0 && (
               <div className={`${styles.card} ${styles.vencido}`}>
                 <h3 className={styles.cardTitle}>
                   ⚠️ Mantenimientos Atrasados ({mantenimientosVencidos.length})
                 </h3>
                 <div className={styles.mantenimientosListScroll}>
-                  {mantenimientosVencidos.map(m => (
-                    <div key={m.id} className={styles.mantenimientoItem}>
-                      <div className={styles.mantenimientoHeader}>
-                        <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
-                        <span className={`${styles.prioridadBadge} ${getPrioridadClass(m.prioridad)}`}>
-                          {getPrioridadTexto(m.prioridad)}
-                        </span>
+                  {mantenimientosVencidos.map(m => {
+                    const prioridadClass = getPrioridadClass(m.prioridad);
+                    return (
+                      <div key={m.id} className={`${styles.mantenimientoItem} ${prioridadClass}`}>
+                        <div className={styles.mantenimientoHeader}>
+                          <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
+                          <span className={`${styles.prioridadBadge} ${prioridadClass}`}>
+                            {getPrioridadTexto(m.prioridad)}
+                          </span>
+                        </div>
+                        <div className={styles.mantenimientoInfo}>
+                          <span>📅 Debía iniciar: {formatDate(m.fecha_inicio)}</span>
+                        </div>
+                        <div className={styles.mantenimientoActions}>
+                          <button className={styles.completarButton} onClick={() => handleCompletarClick(m)}>
+                            ✅ Completar
+                          </button>
+                          <button className={styles.reprogramarButton} onClick={() => handleReprogramarClick(m)}>
+                            📅 Reprogramar
+                          </button>
+                          <button className={styles.eliminarButton} onClick={() => handleEliminarMantenimiento(m)}>
+                            🗑️ Eliminar
+                          </button>
+                        </div>
                       </div>
-                      <div className={styles.mantenimientoInfo}>
-                        <span>📅 Debía iniciar: {formatDate(m.fecha_inicio)}</span>
-                      </div>
-                      <div className={styles.mantenimientoActions}>
-                        <button className={styles.completarButton} onClick={() => handleCompletarClick(m)}>
-                          ✅ Completar
-                        </button>
-                        <button className={styles.reprogramarButton} onClick={() => handleReprogramarClick(m)}>
-                          📅 Reprogramar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Mantenimientos completados CON BUSCADOR Y SCROLL */}
+            {/* Mantenimientos completados */}
             <div className={styles.card}>
               <div className={styles.cardHeaderWithSearch}>
                 <h3 className={styles.cardTitle}>
@@ -848,7 +867,6 @@ export default function DetalleEquipo() {
         equipoNombre={equipo?.nombre}
       />
 
-      {/* NUEVO MODAL DE REPROGRAMACIÓN */}
       <ReprogramarModal
         isOpen={showReprogramarModal}
         onClose={() => setShowReprogramarModal(false)}
@@ -856,7 +874,7 @@ export default function DetalleEquipo() {
         mantenimiento={mantenimientoAReprogramar}
       />
 
-      {/* Modal de confirmación de eliminación */}
+      {/* Modal de confirmación de eliminación del equipo */}
       {showDeleteConfirm && (
         <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>

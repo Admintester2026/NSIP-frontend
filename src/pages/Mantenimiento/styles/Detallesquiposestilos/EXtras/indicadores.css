@@ -1,0 +1,28 @@
+/* ==========================================
+   INDICADORES DE MES
+   ========================================== */
+.indicadorMes {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mesActual {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+}
+
+.mesPasado {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+}
+
+.mesProximo {
+  background: rgba(0, 255, 157, 0.08);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-dim);
+}

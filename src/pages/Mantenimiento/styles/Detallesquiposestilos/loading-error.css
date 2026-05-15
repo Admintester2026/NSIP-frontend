@@ -1,0 +1,87 @@
+/* ==========================================
+   LOADING Y ERROR
+   ========================================== */
+.loadingContainer {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--border-dim);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.errorContainer {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 3rem;
+}
+
+.errorActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.retryButton {
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--green);
+  border-radius: var(--r-md);
+  color: var(--green);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  background: var(--green);
+  color: var(--bg-primary);
+}
+
+.backButton {
+  padding: 0.75rem 1.5rem;
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  border-radius: var(--r-md);
+  color: var(--green);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: var(--green);
+  color: var(--bg-primary);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
