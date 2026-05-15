@@ -7,6 +7,7 @@ import AddHistorialModal from '../../components/mantenimiento/AddHistorialModal'
 import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModal';
 import CompletarMantenimientoModal from '../../components/mantenimiento/CompletarMantenimientoModal';
 import DetalleMantenimientoModal from '../../components/mantenimiento/DetalleMantenimientoModal';
+import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal'; // <--- NUEVO IMPORT
 import styles from './styles/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -38,6 +39,58 @@ export default function DetalleEquipo() {
   // Estados para detalle de mantenimiento
   const [showDetalleModal, setShowDetalleModal] = useState(false);
   const [mantenimientoSeleccionado, setMantenimientoSeleccionado] = useState(null);
+
+  // --- NUEVOS ESTADOS PARA LAS MEJORAS ---
+  // Buscador en mantenimientos completados
+  const [buscarEnCompletados, setBuscarEnCompletados] = useState('');
+  
+  // Reprogramación
+  const [showReprogramarModal, setShowReprogramarModal] = useState(false);
+  const [mantenimientoAReprogramar, setMantenimientoAReprogramar] = useState(null);
+  
+  // Alerta flotante
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  // ==========================================
+  // FUNCIONES AUXILIARES (Indicadores, Filtros, etc.)
+  // ==========================================
+  
+  // Obtener indicador visual del mes (Actual, Pasado, Próximo)
+  const obtenerIndicadorMes = (fecha) => {
+    if (!fecha) return null;
+    const fechaMant = new Date(fecha);
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const añoActual = ahora.getFullYear();
+    const mesMant = fechaMant.getMonth();
+    const añoMant = fechaMant.getFullYear();
+    
+    if (añoMant === añoActual && mesMant === mesActual) {
+      return { texto: '📅 Mes actual', clase: 'mesActual' };
+    } else if (añoMant < añoActual || (añoMant === añoActual && mesMant < mesActual)) {
+      return { texto: '📆 Mes pasado', clase: 'mesPasado' };
+    } else {
+      return { texto: '📅 Mes próximo', clase: 'mesProximo' };
+    }
+  };
+
+  // Filtrar mantenimientos completados por fecha o texto
+  const filtrarMantenimientosCompletados = () => {
+    if (!buscarEnCompletados.trim()) return mantenimientosCompletados;
+    
+    const busqueda = buscarEnCompletados.toLowerCase();
+    return mantenimientosCompletados.filter(m => {
+      const fecha = new Date(m.fecha_completado || m.fecha_fin);
+      // Formato dd/mm/yyyy para buscar
+      const fechaStr = `${fecha.getDate().toString().padStart(2,'0')}/${(fecha.getMonth()+1).toString().padStart(2,'0')}/${fecha.getFullYear()}`;
+      
+      return fechaStr.includes(busqueda) ||
+             m.titulo?.toLowerCase().includes(busqueda) ||
+             m.completado_por?.toLowerCase().includes(busqueda) ||
+             m.notas_completado?.toLowerCase().includes(busqueda);
+    });
+  };
 
   // ==========================================
   // FUNCIÓN CON REINTENTOS
@@ -142,7 +195,7 @@ export default function DetalleEquipo() {
   }, [id, fetchWithRetry]);
 
   // ==========================================
-  // HEARTBEAT
+  // EFECTOS (Heartbeat, Visibilidad, Offline)
   // ==========================================
   useEffect(() => {
     refreshIntervalRef.current = setInterval(async () => {
@@ -167,9 +220,6 @@ export default function DetalleEquipo() {
     };
   }, []);
 
-  // ==========================================
-  // RECARGAR CUANDO LA PÁGINA SE VUELVE VISIBLE
-  // ==========================================
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && mountedRef.current && id && !loading) {
@@ -185,9 +235,6 @@ export default function DetalleEquipo() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [id, cargarDatos, loading]);
 
-  // ==========================================
-  // RECARGAR CUANDO CAMBIA EL ID
-  // ==========================================
   useEffect(() => {
     mountedRef.current = true;
     cargarDatos();
@@ -197,9 +244,6 @@ export default function DetalleEquipo() {
     };
   }, [id, cargarDatos]);
 
-  // ==========================================
-  // MANEJAR ERROR DE RED
-  // ==========================================
   useEffect(() => {
     const handleOffline = () => {
       setError('⚠️ Sin conexión a internet. Verifica tu red.');
@@ -219,6 +263,9 @@ export default function DetalleEquipo() {
     };
   }, [cargarDatos]);
 
+  // ==========================================
+  // HANDLERS
+  // ==========================================
   const handleEditSuccess = () => {
     setShowEditModal(false);
     cargarDatos();
@@ -254,6 +301,10 @@ export default function DetalleEquipo() {
     setShowCompletarModal(false);
     setMantenimientoACompletar(null);
     cargarDatos();
+    // Mostrar alerta de éxito
+    setAlertMessage('✅ Mantenimiento completado exitosamente');
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
   };
 
   const handleVerDetalle = (mantenimiento) => {
@@ -261,6 +312,24 @@ export default function DetalleEquipo() {
     setShowDetalleModal(true);
   };
 
+  // --- NUEVO: Manejar la reprogramación ---
+  const handleReprogramarClick = (mantenimiento) => {
+    setMantenimientoAReprogramar(mantenimiento);
+    setShowReprogramarModal(true);
+  };
+
+  const handleReprogramarSuccess = () => {
+    setShowReprogramarModal(false);
+    setMantenimientoAReprogramar(null);
+    cargarDatos();
+    setAlertMessage('✅ Mantenimiento reprogramado exitosamente');
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
+
+  // ==========================================
+  // FUNCIONES DE ESTILO Y FORMATO
+  // ==========================================
   const getEstadoClass = () => {
     switch (equipo?.estado) {
       case 'activo': return styles.estadoActivo;
@@ -325,11 +394,18 @@ export default function DetalleEquipo() {
     });
   };
 
+  // ==========================================
+  // FILTRADO DE MANTENIMIENTOS
+  // ==========================================
   const mantenimientosPendientes = mantenimientos.filter(m => m.estado === 'pendiente');
   const mantenimientosCompletados = mantenimientos.filter(m => m.estado === 'completado');
   const mantenimientosProximos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) > new Date());
   const mantenimientosVencidos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) < new Date());
+  const mantenimientosCompletadosFiltrados = filtrarMantenimientosCompletados();
 
+  // ==========================================
+  // RENDER
+  // ==========================================
   if (isRefreshing) {
     return (
       <div className={styles.loadingContainer}>
@@ -368,6 +444,13 @@ export default function DetalleEquipo() {
 
   return (
     <div className={styles.detalleEquipo}>
+      {/* Alerta flotante */}
+      {showAlert && (
+        <div className={styles.alert}>
+          <span>✅</span> {alertMessage}
+        </div>
+      )}
+
       {/* Header con botones */}
       <div className={styles.header}>
         <Link to="/mantenimiento/equipos" className={styles.backLink}>
@@ -488,50 +571,54 @@ export default function DetalleEquipo() {
         {/* Tab Mantenimientos */}
         {activeTab === 'mantenimientos' && (
           <div className={styles.mantenimientosTab}>
-            {/* Próximos mantenimientos */}
+            {/* Próximos mantenimientos CON SCROLL, INDICADORES Y REPROGRAMAR */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>
                 ⏰ Próximos Mantenimientos ({mantenimientosProximos.length})
               </h3>
-              {mantenimientosProximos.length > 0 ? (
-                <div className={styles.mantenimientosList}>
-                  {mantenimientosProximos.map(m => (
-                    <div key={m.id} className={styles.mantenimientoItem}>
-                      <div className={styles.mantenimientoHeader}>
-                        <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
-                        <span className={`${styles.prioridadBadge} ${getPrioridadClass(m.prioridad)}`}>
-                          {getPrioridadTexto(m.prioridad)}
-                        </span>
+              <div className={styles.mantenimientosListScroll}>
+                {mantenimientosProximos.length > 0 ? (
+                  mantenimientosProximos.map(m => {
+                    const indicador = obtenerIndicadorMes(m.fecha_inicio);
+                    return (
+                      <div key={m.id} className={`${styles.mantenimientoItem} ${styles[indicador?.clase || '']}`}>
+                        <div className={styles.mantenimientoHeader}>
+                          <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
+                          {indicador && <span className={`${styles.indicadorMes} ${styles[indicador.clase]}`}>{indicador.texto}</span>}
+                          <span className={`${styles.prioridadBadge} ${getPrioridadClass(m.prioridad)}`}>
+                            {getPrioridadTexto(m.prioridad)}
+                          </span>
+                        </div>
+                        <div className={styles.mantenimientoInfo}>
+                          <span>📅 Inicio: {formatDate(m.fecha_inicio)}</span>
+                          {m.fecha_fin && <span>🔚 Fin: {formatDate(m.fecha_fin)}</span>}
+                          <span className={styles.tipoTag}>{m.tipo || 'Rutina'}</span>
+                        </div>
+                        {m.descripcion && <p className={styles.mantenimientoDesc}>{m.descripcion}</p>}
+                        <div className={styles.mantenimientoActions}>
+                          <button className={styles.completarButton} onClick={() => handleCompletarClick(m)}>
+                            ✅ Completar
+                          </button>
+                          <button className={styles.reprogramarButton} onClick={() => handleReprogramarClick(m)}>
+                            📅 Reprogramar
+                          </button>
+                        </div>
                       </div>
-                      <div className={styles.mantenimientoInfo}>
-                        <span>📅 Inicio: {formatDate(m.fecha_inicio)}</span>
-                        {m.fecha_fin && <span>🔚 Fin: {formatDate(m.fecha_fin)}</span>}
-                        <span className={styles.tipoTag}>{m.tipo || 'Rutina'}</span>
-                      </div>
-                      {m.descripcion && <p className={styles.mantenimientoDesc}>{m.descripcion}</p>}
-                      <div className={styles.mantenimientoActions}>
-                        <button
-                          className={styles.completarButton}
-                          onClick={() => handleCompletarClick(m)}
-                        >
-                          ✅ Completar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className={styles.emptyMessage}>No hay mantenimientos programados próximamente</p>
-              )}
+                    );
+                  })
+                ) : (
+                  <p className={styles.emptyMessage}>No hay mantenimientos programados próximamente</p>
+                )}
+              </div>
             </div>
 
-            {/* Mantenimientos vencidos */}
+            {/* Mantenimientos vencidos CON SCROLL Y REPROGRAMAR */}
             {mantenimientosVencidos.length > 0 && (
               <div className={`${styles.card} ${styles.vencido}`}>
                 <h3 className={styles.cardTitle}>
                   ⚠️ Mantenimientos Atrasados ({mantenimientosVencidos.length})
                 </h3>
-                <div className={styles.mantenimientosList}>
+                <div className={styles.mantenimientosListScroll}>
                   {mantenimientosVencidos.map(m => (
                     <div key={m.id} className={styles.mantenimientoItem}>
                       <div className={styles.mantenimientoHeader}>
@@ -544,11 +631,11 @@ export default function DetalleEquipo() {
                         <span>📅 Debía iniciar: {formatDate(m.fecha_inicio)}</span>
                       </div>
                       <div className={styles.mantenimientoActions}>
-                        <button
-                          className={styles.completarButton}
-                          onClick={() => handleCompletarClick(m)}
-                        >
+                        <button className={styles.completarButton} onClick={() => handleCompletarClick(m)}>
                           ✅ Completar
+                        </button>
+                        <button className={styles.reprogramarButton} onClick={() => handleReprogramarClick(m)}>
+                          📅 Reprogramar
                         </button>
                       </div>
                     </div>
@@ -557,45 +644,67 @@ export default function DetalleEquipo() {
               </div>
             )}
 
-            {/* Mantenimientos completados - AHORA CLICKEABLES */}
+            {/* Mantenimientos completados CON BUSCADOR Y SCROLL */}
             <div className={styles.card}>
-              <h3 className={styles.cardTitle}>
-                ✅ Mantenimientos Completados ({mantenimientosCompletados.length})
-              </h3>
-              {mantenimientosCompletados.length > 0 ? (
-                <div className={styles.mantenimientosList}>
-                  {mantenimientosCompletados.map(m => (
-                    <div 
-                      key={m.id} 
-                      className={`${styles.mantenimientoItem} ${styles.clickable}`}
-                      onClick={() => handleVerDetalle(m)}
-                    >
-                      <div className={styles.mantenimientoHeader}>
-                        <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
-                        <span className={styles.verDetalleBadge}>🔍 Ver detalles</span>
-                      </div>
-                      <div className={styles.mantenimientoInfo}>
-                        <span>📅 Completado: {formatDateTime(m.fecha_completado || m.fecha_fin)}</span>
-                        {m.completado_por && <span>👤 Por: {m.completado_por}</span>}
-                        {m.duracion && <span>⏱️ Duración: {m.duracion} min</span>}
-                        {m.costo_materiales && <span>💰 Costo: ${m.costo_materiales}</span>}
-                      </div>
-                      {m.notas_completado && (
-                        <p className={styles.mantenimientoDesc}>
-                          📝 {m.notas_completado.length > 100 
-                            ? m.notas_completado.substring(0, 100) + '...' 
-                            : m.notas_completado}
-                        </p>
-                      )}
-                      {m.materiales_usados && (
-                        <p className={styles.materialesUsados}>🔧 Materiales: {m.materiales_usados}</p>
-                      )}
-                    </div>
-                  ))}
+              <div className={styles.cardHeaderWithSearch}>
+                <h3 className={styles.cardTitle}>
+                  ✅ Mantenimientos Completados ({mantenimientosCompletados.length})
+                </h3>
+                <div className={styles.searchContainer}>
+                  <input
+                    type="text"
+                    className={styles.searchInputSmall}
+                    placeholder="Buscar por fecha (dd/mm/aaaa) o texto..."
+                    value={buscarEnCompletados}
+                    onChange={(e) => setBuscarEnCompletados(e.target.value)}
+                  />
+                  {buscarEnCompletados && (
+                    <button className={styles.clearSearchBtn} onClick={() => setBuscarEnCompletados('')}>
+                      ✕
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <p className={styles.emptyMessage}>No hay mantenimientos completados registrados</p>
-              )}
+              </div>
+              <div className={styles.mantenimientosListScroll}>
+                {mantenimientosCompletadosFiltrados.length > 0 ? (
+                  mantenimientosCompletadosFiltrados.map(m => {
+                    const indicador = obtenerIndicadorMes(m.fecha_completado || m.fecha_fin);
+                    return (
+                      <div 
+                        key={m.id} 
+                        className={`${styles.mantenimientoItem} ${styles.clickable} ${styles[indicador?.clase || '']}`}
+                        onClick={() => handleVerDetalle(m)}
+                      >
+                        <div className={styles.mantenimientoHeader}>
+                          <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
+                          {indicador && <span className={`${styles.indicadorMes} ${styles[indicador.clase]}`}>{indicador.texto}</span>}
+                          <span className={styles.verDetalleBadge}>🔍 Ver detalles</span>
+                        </div>
+                        <div className={styles.mantenimientoInfo}>
+                          <span>📅 Completado: {formatDateTime(m.fecha_completado || m.fecha_fin)}</span>
+                          {m.completado_por && <span>👤 Por: {m.completado_por}</span>}
+                          {m.duracion && <span>⏱️ Duración: {m.duracion} min</span>}
+                          {m.costo_materiales && <span>💰 Costo: ${m.costo_materiales}</span>}
+                        </div>
+                        {m.notas_completado && (
+                          <p className={styles.mantenimientoDesc}>
+                            📝 {m.notas_completado.length > 100 
+                              ? m.notas_completado.substring(0, 100) + '...' 
+                              : m.notas_completado}
+                          </p>
+                        )}
+                        {m.materiales_usados && (
+                          <p className={styles.materialesUsados}>🔧 Materiales: {m.materiales_usados}</p>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className={styles.emptyMessage}>
+                    {buscarEnCompletados ? 'No se encontraron resultados' : 'No hay mantenimientos completados registrados'}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -737,6 +846,14 @@ export default function DetalleEquipo() {
         onClose={() => setShowDetalleModal(false)}
         mantenimiento={mantenimientoSeleccionado}
         equipoNombre={equipo?.nombre}
+      />
+
+      {/* NUEVO MODAL DE REPROGRAMACIÓN */}
+      <ReprogramarModal
+        isOpen={showReprogramarModal}
+        onClose={() => setShowReprogramarModal(false)}
+        onSuccess={handleReprogramarSuccess}
+        mantenimiento={mantenimientoAReprogramar}
       />
 
       {/* Modal de confirmación de eliminación */}
