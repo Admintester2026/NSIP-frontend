@@ -1,5 +1,5 @@
 /* ==========================================
-   MANTENIMIENTOS
+   MANTENIMIENTOS - FONDO GRIS, BORDE DE COLOR
    ========================================== */
 .mantenimientosList {
   display: flex;
@@ -9,31 +9,24 @@
 
 .mantenimientoItem {
   padding: 1rem;
-  background: var(--bg-raised);
+  background: var(--bg-raised) !important;  /* Fondo gris forzado */
   border-radius: var(--r-md);
-  border: 1px solid var(--border-dim);
   transition: all 0.2s ease;
 }
 
-/* ==========================================
-   BORDES COMPLETOS SEGÚN PRIORIDAD
-   ========================================== */
-.mantenimientoItem[class*="prioridadUrgente"],
+/* BORDE COMPLETO según prioridad */
 .mantenimientoItem.prioridadUrgente {
   border: 1px solid var(--red) !important;
 }
 
-.mantenimientoItem[class*="prioridadAlta"],
 .mantenimientoItem.prioridadAlta {
   border: 1px solid var(--amber) !important;
 }
 
-.mantenimientoItem[class*="prioridadMedia"],
 .mantenimientoItem.prioridadMedia {
   border: 1px solid var(--green) !important;
 }
 
-.mantenimientoItem[class*="prioridadBaja"],
 .mantenimientoItem.prioridadBaja {
   border: 1px solid var(--text-muted) !important;
 }
@@ -43,38 +36,7 @@
   border: 1px solid var(--red) !important;
 }
 
-/* ==========================================
-   INDICADORES DE MES (SOLO TEXTO, NO AFECTAN BORDE)
-   ========================================== */
-.indicadorMes {
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  font-size: 0.65rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.mesActual {
-  background: rgba(0, 255, 157, 0.15);
-  color: var(--green);
-  border: 1px solid rgba(0, 255, 157, 0.3);
-}
-
-.mesPasado {
-  background: rgba(255, 179, 64, 0.15);
-  color: var(--amber);
-  border: 1px solid rgba(255, 179, 64, 0.3);
-}
-
-.mesProximo {
-  background: rgba(0, 255, 157, 0.08);
-  color: var(--text-muted);
-  border: 1px dashed var(--border-dim);
-}
-
-/* ==========================================
-   HEADER DE LA TARJETA
-   ========================================== */
+/* Header de la tarjeta */
 .mantenimientoHeader {
   display: flex;
   align-items: center;
@@ -89,9 +51,7 @@
   color: var(--text-primary);
 }
 
-/* ==========================================
-   BADGES DE PRIORIDAD
-   ========================================== */
+/* Badges de prioridad (solo texto) */
 .prioridadBadge {
   padding: 0.2rem 0.6rem;
   border-radius: 20px;
@@ -119,9 +79,7 @@
   color: var(--text-muted);
 }
 
-/* ==========================================
-   INFORMACIÓN DE LA TARJETA
-   ========================================== */
+/* Información de la tarjeta */
 .mantenimientoInfo {
   display: flex;
   gap: 1rem;
@@ -145,9 +103,7 @@
   border-top: 1px solid var(--border-dim);
 }
 
-/* ==========================================
-   BOTONES DE ACCIÓN
-   ========================================== */
+/* Botones de acción */
 .mantenimientoActions {
   display: flex;
   gap: 0.5rem;
@@ -218,9 +174,7 @@
   transform: translateY(-1px);
 }
 
-/* ==========================================
-   MANTENIMIENTOS COMPLETADOS (CLICKEABLES)
-   ========================================== */
+/* Mantenimientos completados (clickeables) */
 .clickable {
   cursor: pointer;
   transition: all 0.2s ease;
@@ -240,7 +194,7 @@
   font-weight: 500;
 }
 
-/* Materiales usados en mantenimientos completados */
+/* Materiales usados */
 .materialesUsados {
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -249,9 +203,34 @@
   border-top: 1px solid var(--border-dim);
 }
 
-/* ==========================================
-   RESPONSIVE
-   ========================================== */
+/* Indicadores de mes (solo texto, no afectan borde) */
+.indicadorMes {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mesActual {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+}
+
+.mesPasado {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+}
+
+.mesProximo {
+  background: rgba(0, 255, 157, 0.08);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-dim);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .mantenimientoActions {
     flex-direction: column;
