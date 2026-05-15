@@ -15,46 +15,48 @@
   transition: all 0.2s ease;
 }
 
-/* Bordes de color según prioridad (sin fondo de color) */
+/* Borde COMPLETO (los 4 lados) de color según prioridad */
 .mantenimientoItem.prioridadUrgente {
-  border-left: 4px solid var(--red);
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
+  border: 1px solid var(--red);
 }
 
 .mantenimientoItem.prioridadAlta {
-  border-left: 4px solid var(--amber);
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
+  border: 1px solid var(--amber);
 }
 
 .mantenimientoItem.prioridadMedia {
-  border-left: 4px solid var(--green);
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
+  border: 1px solid var(--green);
 }
 
 .mantenimientoItem.prioridadBaja {
-  border-left: 4px solid var(--text-muted);
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
+  border: 1px solid var(--text-muted);
 }
 
-/* Indicadores de mes también afectan el borde izquierdo */
+/* Mantenimientos vencidos - borde rojo */
+.mantenimientoItem.vencido {
+  border: 1px solid var(--red);
+}
+
+/* Indicadores de mes - también afectan el borde completo */
 .mantenimientoItem.mesActual {
-  border-left: 4px solid var(--green);
+  border: 1px solid var(--green);
 }
 
 .mantenimientoItem.mesPasado {
-  border-left: 4px solid var(--amber);
+  border: 1px solid var(--amber);
 }
 
 .mantenimientoItem.mesProximo {
-  border-left: 4px dashed var(--text-muted);
+  border: 1px dashed var(--text-muted);
+}
+
+/* Combinación: si tiene prioridad Y es vencido, prioridad tiene preferencia */
+.mantenimientoItem.prioridadUrgente.vencido {
+  border: 2px solid var(--red);
+}
+
+.mantenimientoItem.prioridadAlta.vencido {
+  border: 2px solid var(--amber);
 }
 
 .mantenimientoHeader {
