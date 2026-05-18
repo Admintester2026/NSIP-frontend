@@ -47,6 +47,15 @@ export default function DetalleEquipo() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
+  // Estados para clave preventiva
+  const [showClaveModal, setShowClaveModal] = useState(false);
+  const [mantenimientoPendienteClave, setMantenimientoPendienteClave] = useState(null);
+  const [clavePreventiva, setClavePreventiva] = useState('');
+  const [claveError, setClaveError] = useState('');
+
+  // Clave especial (temporalmente fija)
+  const CLAVE_PREVENTIVA = 'ADMIN2026';
+
   // ==========================================
   // FUNCIONES AUXILIARES
   // ==========================================
@@ -284,9 +293,33 @@ export default function DetalleEquipo() {
     cargarDatos();
   };
 
+  // HANDLER MODIFICADO: Verifica si es preventivo futuro para pedir clave
   const handleCompletarClick = (mantenimiento) => {
-    setMantenimientoACompletar(mantenimiento);
-    setShowCompletarModal(true);
+    // Verificar si es preventivo y está en el futuro
+    const esPreventivo = mantenimiento.tipo === 'preventivo';
+    const esFuturo = new Date(mantenimiento.fecha_inicio) > new Date();
+    
+    if (esPreventivo && esFuturo) {
+      // Solicitar clave especial
+      setMantenimientoPendienteClave(mantenimiento);
+      setShowClaveModal(true);
+    } else {
+      // Completar normalmente
+      setMantenimientoACompletar(mantenimiento);
+      setShowCompletarModal(true);
+    }
+  };
+
+  const verificarClavePreventiva = () => {
+    if (clavePreventiva === CLAVE_PREVENTIVA) {
+      setShowClaveModal(false);
+      setClavePreventiva('');
+      setClaveError('');
+      setMantenimientoACompletar(mantenimientoPendienteClave);
+      setShowCompletarModal(true);
+    } else {
+      setClaveError('Clave incorrecta. No puedes adelantar este mantenimiento preventivo.');
+    }
   };
 
   const handleCompletarSuccess = () => {
@@ -317,7 +350,6 @@ export default function DetalleEquipo() {
     setTimeout(() => setShowAlert(false), 3000);
   };
 
-  // --- NUEVO: Eliminar mantenimiento pendiente ---
   const handleEliminarMantenimiento = async (mantenimiento) => {
     if (window.confirm(`¿Eliminar permanentemente el mantenimiento "${mantenimiento.titulo}"?`)) {
       try {
@@ -873,6 +905,39 @@ export default function DetalleEquipo() {
         onSuccess={handleReprogramarSuccess}
         mantenimiento={mantenimientoAReprogramar}
       />
+
+      {/* Modal para clave preventiva */}
+      {showClaveModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowClaveModal(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmModalHeader}>
+              <span className={styles.confirmIcon}>🔐</span>
+              <h3>Clave de Autorización</h3>
+            </div>
+            <div className={styles.confirmModalBody}>
+              <p>Este es un mantenimiento <strong>preventivo</strong> programado para el futuro.</p>
+              <p>Para adelantarlo, ingresa la clave de autorización:</p>
+              {claveError && <p className={styles.claveError}>{claveError}</p>}
+              <input
+                type="password"
+                className={styles.claveInput}
+                value={clavePreventiva}
+                onChange={(e) => setClavePreventiva(e.target.value)}
+                placeholder="Ingrese clave"
+                autoFocus
+              />
+            </div>
+            <div className={styles.confirmModalFooter}>
+              <button className={styles.cancelConfirmBtn} onClick={() => setShowClaveModal(false)}>
+                Cancelar
+              </button>
+              <button className={styles.confirmDeleteBtn} onClick={verificarClavePreventiva}>
+                Verificar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmación de eliminación del equipo */}
       {showDeleteConfirm && (

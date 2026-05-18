@@ -141,6 +141,32 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
+  // Editar mantenimiento completado (con historial)
+  editarMantenimientoCompletado: async (id, data) => {
+    const url = `${API_BASE}/mantenimiento/mantenimientos/${id}/editar`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        notas_completado: data.notas_completado,
+        tecnico: data.tecnico,
+        duracion: data.duracion,
+        materiales_usados: data.materiales_usados,
+        costo_materiales: data.costo_materiales,
+        observaciones: data.observaciones || ''
+      })
+    });
+    return handleResponse(response);
+  },
+
+  // Obtener historial de versiones de un mantenimiento
+  getHistorialVersiones: async (id) => {
+    const url = `${API_BASE}/mantenimiento/mantenimientos/${id}/historial-versiones`;
+    const response = await fetch(url);
+    const data = await handleResponse(response);
+    return data.datos || [];
+  },
+
   // ==========================================
   // INCIDENCIAS / DAÑOS
   // ==========================================

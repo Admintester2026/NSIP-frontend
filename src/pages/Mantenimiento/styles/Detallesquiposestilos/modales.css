@@ -97,3 +97,25 @@
   background: var(--red);
   color: var(--bg-primary);
 }
+
+.claveError {
+  color: var(--red);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.claveInput {
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.claveInput:focus {
+  outline: none;
+  border-color: var(--green);
+}
