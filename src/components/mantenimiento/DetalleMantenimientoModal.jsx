@@ -20,28 +20,43 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const [cargandoVersiones, setCargandoVersiones] = useState(false);
   const [mostrarSidebar, setMostrarSidebar] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
-  const [datosActuales, setDatosActuales] = useState(null);
+  const [datosActuales, setDatosActuales] = useState({
+    tecnico: '',
+    notas_completado: '',
+    duracion: '',
+    materiales_usados: '',
+    costo_materiales: ''
+  });
   const [editando, setEditando] = useState(false);
   const [editError, setEditError] = useState('');
   const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
 
+  // Inicializar datos cuando se abre el modal o cambia el mantenimiento
   useEffect(() => {
     if (isOpen && mantenimiento?.id) {
-      cargarEvidencias();
-      cargarVersiones();
+      // Resetear estados
       setModoEdicion(false);
       setVistaPreviaVersion(null);
+      setMostrarSidebar(false);
+      setEditError('');
+      
+      // Inicializar datos actuales desde el mantenimiento
       setDatosActuales({
-        tecnico: mantenimiento?.completado_por || '',
-        notas_completado: mantenimiento?.notas_completado || '',
-        duracion: mantenimiento?.duracion || '',
-        materiales_usados: mantenimiento?.materiales_usados || '',
-        costo_materiales: mantenimiento?.costo_materiales || ''
+        tecnico: mantenimiento.completado_por || '',
+        notas_completado: mantenimiento.notas_completado || '',
+        duracion: mantenimiento.duracion || '',
+        materiales_usados: mantenimiento.materiales_usados || '',
+        costo_materiales: mantenimiento.costo_materiales || ''
       });
+      
+      // Cargar datos adicionales
+      cargarEvidencias();
+      cargarVersiones();
     }
   }, [isOpen, mantenimiento]);
 
   const cargarEvidencias = async () => {
+    if (!mantenimiento?.id) return;
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
@@ -59,6 +74,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   };
 
   const cargarVersiones = async () => {
+    if (!mantenimiento?.id) return;
     setCargandoVersiones(true);
     try {
       const data = await mantenimientoAPI.getHistorialVersiones(mantenimiento.id);
@@ -76,11 +92,12 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   };
 
   const handleGuardarEdicion = async () => {
+    if (!mantenimiento?.id) return;
     setEditando(true);
     setEditError('');
     try {
-      if (!datosActuales.tecnico.trim()) throw new Error('El técnico es requerido');
-      if (!datosActuales.notas_completado.trim()) throw new Error('Las notas son requeridas');
+      if (!datosActuales.tecnico?.trim()) throw new Error('El técnico es requerido');
+      if (!datosActuales.notas_completado?.trim()) throw new Error('Las notas son requeridas');
 
       await mantenimientoAPI.editarMantenimientoCompletado(mantenimiento.id, {
         notas_completado: datosActuales.notas_completado,
@@ -93,14 +110,9 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
       setModoEdicion(false);
       if (onEdit) onEdit();
       await cargarVersiones();
-      // Actualizar datos actuales después de guardar
-      setDatosActuales({
-        tecnico: datosActuales.tecnico,
-        notas_completado: datosActuales.notas_completado,
-        duracion: datosActuales.duracion,
-        materiales_usados: datosActuales.materiales_usados,
-        costo_materiales: datosActuales.costo_materiales
-      });
+      
+      // Actualizar los datos actuales después de guardar
+      setDatosActuales(prev => ({ ...prev }));
     } catch (err) {
       setEditError(err.message);
     } finally {
@@ -115,14 +127,16 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
 
   const cerrarVistaPrevia = () => {
     setVistaPreviaVersion(null);
-    // Resetear a los datos actuales
-    setDatosActuales({
-      tecnico: mantenimiento?.completado_por || '',
-      notas_completado: mantenimiento?.notas_completado || '',
-      duracion: mantenimiento?.duracion || '',
-      materiales_usados: mantenimiento?.materiales_usados || '',
-      costo_materiales: mantenimiento?.costo_materiales || ''
-    });
+    // Resetear a los datos actuales desde el mantenimiento original
+    if (mantenimiento) {
+      setDatosActuales({
+        tecnico: mantenimiento.completado_por || '',
+        notas_completado: mantenimiento.notas_completado || '',
+        duracion: mantenimiento.duracion || '',
+        materiales_usados: mantenimiento.materiales_usados || '',
+        costo_materiales: mantenimiento.costo_materiales || ''
+      });
+    }
     setModoEdicion(false);
   };
 
@@ -150,7 +164,25 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     });
   };
 
+  // Si el modal no está abierto, no renderizar nada
   if (!isOpen) return null;
+
+  // Si no hay mantenimiento, mostrar un estado de carga
+  if (!mantenimiento) {
+    return (
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h2>Cargando...</h2>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
+          </div>
+          <div className={styles.modalBody}>
+            <p className={styles.loadingText}>Cargando información del mantenimiento...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Determinar qué datos mostrar (versión previa o actual)
   const mostrarDatos = vistaPreviaVersion || datosActuales;
@@ -222,7 +254,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
             <div className={styles.infoSection}>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Título:</span>
-                <span className={styles.infoValue}>{mantenimiento?.titulo}</span>
+                <span className={styles.infoValue}>{mantenimiento.titulo}</span>
               </div>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Equipo:</span>
@@ -230,16 +262,16 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               </div>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Tipo:</span>
-                <span className={styles.infoValue}>{mantenimiento?.tipo || 'No especificado'}</span>
+                <span className={styles.infoValue}>{mantenimiento.tipo || 'No especificado'}</span>
               </div>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Prioridad:</span>
                 <span className={`${styles.prioridadBadge} ${
-                  mantenimiento?.prioridad === 'urgente' ? styles.urgente :
-                  mantenimiento?.prioridad === 'alta' ? styles.alta :
-                  mantenimiento?.prioridad === 'media' ? styles.media : styles.baja
+                  mantenimiento.prioridad === 'urgente' ? styles.urgente :
+                  mantenimiento.prioridad === 'alta' ? styles.alta :
+                  mantenimiento.prioridad === 'media' ? styles.media : styles.baja
                 }`}>
-                  {mantenimiento?.prioridad || 'No especificada'}
+                  {mantenimiento.prioridad || 'No especificada'}
                 </span>
               </div>
             </div>
@@ -249,17 +281,17 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Programado:</span>
-                <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_inicio)}</span>
+                <span className={styles.infoValue}>{formatDate(mantenimiento.fecha_inicio)}</span>
               </div>
-              {mantenimiento?.fecha_fin && (
+              {mantenimiento.fecha_fin && (
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Fin programado:</span>
-                  <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_fin)}</span>
+                  <span className={styles.infoValue}>{formatDate(mantenimiento.fecha_fin)}</span>
                 </div>
               )}
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Completado original:</span>
-                <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_completado)}</span>
+                <span className={styles.infoValue}>{formatDate(mantenimiento.fecha_completado)}</span>
               </div>
               {vistaPreviaVersion?.fecha_modificacion && (
                 <div className={styles.infoRow}>
@@ -285,25 +317,25 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
                   {editError && <div className={styles.editError}>{editError}</div>}
                   <div className={styles.formGroup}>
                     <label>Técnico *</label>
-                    <input type="text" name="tecnico" value={mostrarDatos.tecnico} onChange={handleEditChange} />
+                    <input type="text" name="tecnico" value={mostrarDatos.tecnico || ''} onChange={handleEditChange} />
                   </div>
                   <div className={styles.formGroup}>
                     <label>Notas / Trabajo *</label>
-                    <textarea name="notas_completado" value={mostrarDatos.notas_completado} onChange={handleEditChange} rows="3" />
+                    <textarea name="notas_completado" value={mostrarDatos.notas_completado || ''} onChange={handleEditChange} rows="3" />
                   </div>
                   <div className={styles.row}>
                     <div className={styles.formGroup}>
                       <label>Duración (min)</label>
-                      <input type="number" name="duracion" value={mostrarDatos.duracion} onChange={handleEditChange} />
+                      <input type="number" name="duracion" value={mostrarDatos.duracion || ''} onChange={handleEditChange} />
                     </div>
                     <div className={styles.formGroup}>
                       <label>Costo materiales</label>
-                      <input type="number" name="costo_materiales" value={mostrarDatos.costo_materiales} onChange={handleEditChange} step="0.01" />
+                      <input type="number" name="costo_materiales" value={mostrarDatos.costo_materiales || ''} onChange={handleEditChange} step="0.01" />
                     </div>
                   </div>
                   <div className={styles.formGroup}>
                     <label>Materiales usados</label>
-                    <textarea name="materiales_usados" value={mostrarDatos.materiales_usados} onChange={handleEditChange} rows="2" />
+                    <textarea name="materiales_usados" value={mostrarDatos.materiales_usados || ''} onChange={handleEditChange} rows="2" />
                   </div>
                   <div className={styles.editActions}>
                     <button className={styles.cancelEditBtn} onClick={() => setModoEdicion(false)}>Cancelar</button>
@@ -316,9 +348,9 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
                 <>
                   <div className={styles.infoRow}>
                     <span className={styles.infoLabel}>Técnico:</span>
-                    <span className={styles.infoValue}>{mostrarDatos.tecnico || 'No registrado'}</span>
+                    <span className={styles.infoValue}>{mostrarDatos?.tecnico || 'No registrado'}</span>
                   </div>
-                  {mostrarDatos.duracion && (
+                  {mostrarDatos?.duracion && (
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Duración:</span>
                       <span className={styles.infoValue}>{mostrarDatos.duracion} minutos</span>
@@ -329,7 +361,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
             </div>
 
             {/* Materiales y costo */}
-            {(mostrarDatos.materiales_usados || mostrarDatos.costo_materiales) && (
+            {(mostrarDatos?.materiales_usados || mostrarDatos?.costo_materiales) && (
               <div className={styles.infoSection}>
                 <h4 className={styles.sectionSubtitle}>🔧 Materiales y Costos</h4>
                 {mostrarDatos.materiales_usados && (
@@ -348,7 +380,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
             )}
 
             {/* Notas */}
-            {mostrarDatos.notas_completado && (
+            {mostrarDatos?.notas_completado && (
               <div className={styles.infoSection}>
                 <h4 className={styles.sectionSubtitle}>📝 Notas del trabajo</h4>
                 <div className={styles.notasBox}>{mostrarDatos.notas_completado}</div>
