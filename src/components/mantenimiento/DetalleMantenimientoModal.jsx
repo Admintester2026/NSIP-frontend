@@ -30,17 +30,52 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const [editando, setEditando] = useState(false);
   const [editError, setEditError] = useState('');
   const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
+  const [recargando, setRecargando] = useState(false);
+
+  // Función para recargar todos los datos del mantenimiento actual
+  const recargarDatosMantenimiento = async () => {
+    if (!mantenimiento?.id) return;
+    
+    setRecargando(true);
+    try {
+      // Recargar el mantenimiento actualizado desde el backend
+      const mantenimientoActualizado = await mantenimientoAPI.getEquipoById(mantenimiento.id);
+      // Buscar el mantenimiento específico actualizado
+      const mantenimientoActualizadoList = await mantenimientoAPI.getMantenimientosByEquipo(mantenimiento.id);
+      const mantenimientoEncontrado = mantenimientoActualizadoList.find(m => m.id === mantenimiento.id);
+      
+      if (mantenimientoEncontrado) {
+        // Actualizar los datos actuales con la nueva información
+        setDatosActuales({
+          tecnico: mantenimientoEncontrado.completado_por || '',
+          notas_completado: mantenimientoEncontrado.notas_completado || '',
+          duracion: mantenimientoEncontrado.duracion || '',
+          materiales_usados: mantenimientoEncontrado.materiales_usados || '',
+          costo_materiales: mantenimientoEncontrado.costo_materiales || ''
+        });
+        
+        // Actualizar también la prop mantenimiento (efecto secundario)
+        Object.assign(mantenimiento, mantenimientoEncontrado);
+      }
+      
+      // Recargar versiones
+      await cargarVersiones();
+      
+    } catch (err) {
+      console.error('Error recargando datos:', err);
+    } finally {
+      setRecargando(false);
+    }
+  };
 
   // Inicializar datos cuando se abre el modal o cambia el mantenimiento
   useEffect(() => {
     if (isOpen && mantenimiento?.id) {
-      // Resetear estados
       setModoEdicion(false);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setEditError('');
       
-      // Inicializar datos actuales desde el mantenimiento
       setDatosActuales({
         tecnico: mantenimiento.completado_por || '',
         notas_completado: mantenimiento.notas_completado || '',
@@ -49,11 +84,10 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
         costo_materiales: mantenimiento.costo_materiales || ''
       });
       
-      // Cargar datos adicionales
       cargarEvidencias();
       cargarVersiones();
     }
-  }, [isOpen, mantenimiento]);
+  }, [isOpen, mantenimiento?.id]);
 
   const cargarEvidencias = async () => {
     if (!mantenimiento?.id) return;
@@ -108,11 +142,13 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
       });
       
       setModoEdicion(false);
-      if (onEdit) onEdit();
-      await cargarVersiones();
       
-      // Actualizar los datos actuales después de guardar
-      setDatosActuales(prev => ({ ...prev }));
+      // Recargar los datos actualizados
+      await recargarDatosMantenimiento();
+      
+      // Notificar al padre que hubo cambios
+      if (onEdit) onEdit();
+      
     } catch (err) {
       setEditError(err.message);
     } finally {
@@ -121,22 +157,28 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   };
 
   const verVersionAnterior = (version) => {
-    setVistaPreviaVersion(version);
+    // Mostrar la versión anterior en vista previa
+    setVistaPreviaVersion({
+      ...version,
+      tecnico: version.completado_por || '',
+      notas_completado: version.notas_completado || '',
+      duracion: version.duracion || '',
+      materiales_usados: version.materiales_usados || '',
+      costo_materiales: version.costo_materiales || ''
+    });
     setMostrarSidebar(false);
   };
 
   const cerrarVistaPrevia = () => {
     setVistaPreviaVersion(null);
-    // Resetear a los datos actuales desde el mantenimiento original
-    if (mantenimiento) {
-      setDatosActuales({
-        tecnico: mantenimiento.completado_por || '',
-        notas_completado: mantenimiento.notas_completado || '',
-        duracion: mantenimiento.duracion || '',
-        materiales_usados: mantenimiento.materiales_usados || '',
-        costo_materiales: mantenimiento.costo_materiales || ''
-      });
-    }
+    // Restaurar los datos actuales desde el mantenimiento original
+    setDatosActuales({
+      tecnico: mantenimiento?.completado_por || '',
+      notas_completado: mantenimiento?.notas_completado || '',
+      duracion: mantenimiento?.duracion || '',
+      materiales_usados: mantenimiento?.materiales_usados || '',
+      costo_materiales: mantenimiento?.costo_materiales || ''
+    });
     setModoEdicion(false);
   };
 
@@ -164,10 +206,8 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     });
   };
 
-  // Si el modal no está abierto, no renderizar nada
   if (!isOpen) return null;
 
-  // Si no hay mantenimiento, mostrar un estado de carga
   if (!mantenimiento) {
     return (
       <div className={styles.modalOverlay} onClick={onClose}>
@@ -178,6 +218,22 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
           </div>
           <div className={styles.modalBody}>
             <p className={styles.loadingText}>Cargando información del mantenimiento...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (recargando) {
+    return (
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h2>Actualizando...</h2>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
+          </div>
+          <div className={styles.modalBody}>
+            <p className={styles.loadingText}>Actualizando información...</p>
           </div>
         </div>
       </div>
