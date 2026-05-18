@@ -927,6 +927,7 @@ export default function DetalleEquipo() {
         onClose={() => setShowDetalleModal(false)}
         mantenimiento={mantenimientoSeleccionado}
         equipoNombre={equipo?.nombre}
+        onEdit={cargarDatos}
       />
 
       <ReprogramarModal

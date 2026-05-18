@@ -1,83 +1,28 @@
 /* ==========================================
-   HEADER
+   INDICADORES DE MES
    ========================================== */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-dim);
-  flex-wrap: wrap;
-  gap: 1rem;
+.indicadorMes {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.backLink {
+.mesActual {
+  background: rgba(0, 255, 157, 0.15);
   color: var(--green);
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
+  border: 1px solid var(--green);
 }
 
-.backLink:hover {
-  transform: translateX(-4px);
-  color: var(--green-bright);
+.mesPasado {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  border: 1px solid var(--amber);
 }
 
-.headerActions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.editButton, .deleteButton, .refreshButton {
-  padding: 0.5rem 1rem;
-  border-radius: var(--r-md);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.editButton {
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  color: var(--text-secondary);
-}
-
-.editButton:hover {
-  border-color: var(--green);
-  color: var(--green);
-  transform: translateY(-1px);
-}
-
-.deleteButton {
-  background: rgba(255, 77, 77, 0.1);
-  border: 1px solid rgba(255, 77, 77, 0.3);
-  color: var(--red);
-}
-
-.deleteButton:hover {
-  background: var(--red);
-  border-color: var(--red);
-  color: var(--bg-primary);
-  transform: translateY(-1px);
-}
-
-.refreshButton {
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  color: var(--text-secondary);
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.refreshButton:hover {
-  border-color: var(--green);
-  color: var(--green);
-  transform: rotate(15deg);
+.mesProximo {
+  background: rgba(255, 179, 64, 0.1);
+  color: var(--amber);
+  border: 1px solid var(--amber);
 }
