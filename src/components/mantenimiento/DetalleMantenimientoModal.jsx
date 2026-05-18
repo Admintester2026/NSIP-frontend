@@ -18,24 +18,20 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const [loadingEvidencias, setLoadingEvidencias] = useState(false);
   const [versiones, setVersiones] = useState([]);
   const [cargandoVersiones, setCargandoVersiones] = useState(false);
-  const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  const [mostrarSidebar, setMostrarSidebar] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
-  const [formData, setFormData] = useState({
-    tecnico: '',
-    notas_completado: '',
-    duracion: '',
-    materiales_usados: '',
-    costo_materiales: ''
-  });
+  const [datosActuales, setDatosActuales] = useState(null);
   const [editando, setEditando] = useState(false);
   const [editError, setEditError] = useState('');
+  const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
 
   useEffect(() => {
     if (isOpen && mantenimiento?.id) {
       cargarEvidencias();
       cargarVersiones();
       setModoEdicion(false);
-      setFormData({
+      setVistaPreviaVersion(null);
+      setDatosActuales({
         tecnico: mantenimiento?.completado_por || '',
         notas_completado: mantenimiento?.notas_completado || '',
         duracion: mantenimiento?.duracion || '',
@@ -76,32 +72,58 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setDatosActuales(prev => ({ ...prev, [name]: value }));
   };
 
   const handleGuardarEdicion = async () => {
     setEditando(true);
     setEditError('');
     try {
-      if (!formData.tecnico.trim()) throw new Error('El técnico es requerido');
-      if (!formData.notas_completado.trim()) throw new Error('Las notas son requeridas');
+      if (!datosActuales.tecnico.trim()) throw new Error('El técnico es requerido');
+      if (!datosActuales.notas_completado.trim()) throw new Error('Las notas son requeridas');
 
       await mantenimientoAPI.editarMantenimientoCompletado(mantenimiento.id, {
-        notas_completado: formData.notas_completado,
-        tecnico: formData.tecnico,
-        duracion: formData.duracion,
-        materiales_usados: formData.materiales_usados,
-        costo_materiales: formData.costo_materiales
+        notas_completado: datosActuales.notas_completado,
+        tecnico: datosActuales.tecnico,
+        duracion: datosActuales.duracion,
+        materiales_usados: datosActuales.materiales_usados,
+        costo_materiales: datosActuales.costo_materiales
       });
       
       setModoEdicion(false);
       if (onEdit) onEdit();
       await cargarVersiones();
+      // Actualizar datos actuales después de guardar
+      setDatosActuales({
+        tecnico: datosActuales.tecnico,
+        notas_completado: datosActuales.notas_completado,
+        duracion: datosActuales.duracion,
+        materiales_usados: datosActuales.materiales_usados,
+        costo_materiales: datosActuales.costo_materiales
+      });
     } catch (err) {
       setEditError(err.message);
     } finally {
       setEditando(false);
     }
+  };
+
+  const verVersionAnterior = (version) => {
+    setVistaPreviaVersion(version);
+    setMostrarSidebar(false);
+  };
+
+  const cerrarVistaPrevia = () => {
+    setVistaPreviaVersion(null);
+    // Resetear a los datos actuales
+    setDatosActuales({
+      tecnico: mantenimiento?.completado_por || '',
+      notas_completado: mantenimiento?.notas_completado || '',
+      duracion: mantenimiento?.duracion || '',
+      materiales_usados: mantenimiento?.materiales_usados || '',
+      costo_materiales: mantenimiento?.costo_materiales || ''
+    });
+    setModoEdicion(false);
   };
 
   const formatDate = (dateString) => {
@@ -118,9 +140,9 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   };
 
   const formatDateShort = (dateString) => {
-    if (!dateString) return 'No definida';
+    if (!dateString) return '';
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Fecha inválida';
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleDateString('es-MX', { 
       day: '2-digit', 
       month: 'short', 
@@ -130,242 +152,236 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
 
   if (!isOpen) return null;
 
-  const versionActual = { version: 0, ...mantenimiento };
-  const todasVersiones = [versionActual, ...versiones];
+  // Determinar qué datos mostrar (versión previa o actual)
+  const mostrarDatos = vistaPreviaVersion || datosActuales;
+  const esVistaPrevia = vistaPreviaVersion !== null;
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2>📋 Detalle del Mantenimiento</h2>
-          <button className={styles.modalClose} onClick={onClose}>✕</button>
-        </div>
-
-        <div className={styles.modalBody}>
-          {/* Información básica */}
-          <div className={styles.infoSection}>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Título:</span>
-              <span className={styles.infoValue}>{mantenimiento?.titulo}</span>
+      <div className={`${styles.modal} ${mostrarSidebar ? styles.withSidebar : ''}`} onClick={(e) => e.stopPropagation()}>
+        {/* Sidebar de versiones */}
+        {mostrarSidebar && (
+          <div className={styles.sidebar}>
+            <div className={styles.sidebarHeader}>
+              <h3>📜 Versiones anteriores</h3>
+              <button className={styles.sidebarClose} onClick={() => setMostrarSidebar(false)}>✕</button>
             </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Equipo:</span>
-              <span className={styles.infoValue}>{equipoNombre}</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Tipo:</span>
-              <span className={styles.infoValue}>{mantenimiento?.tipo || 'No especificado'}</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Prioridad:</span>
-              <span className={`${styles.prioridadBadge} ${
-                mantenimiento?.prioridad === 'urgente' ? styles.urgente :
-                mantenimiento?.prioridad === 'alta' ? styles.alta :
-                mantenimiento?.prioridad === 'media' ? styles.media : styles.baja
-              }`}>
-                {mantenimiento?.prioridad || 'No especificada'}
-              </span>
+            <div className={styles.sidebarContent}>
+              {cargandoVersiones ? (
+                <p className={styles.loadingText}>Cargando...</p>
+              ) : versiones.length > 0 ? (
+                versiones.map((v, idx) => (
+                  <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
+                    <div className={styles.versionHeaderSidebar}>
+                      <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
+                      <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                    </div>
+                    <div className={styles.versionPreviewSidebar}>
+                      {v.notas_completado?.substring(0, 60)}...
+                    </div>
+                    <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
+                  </div>
+                ))
+              ) : (
+                <p className={styles.emptyMessage}>No hay versiones anteriores</p>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Fechas */}
-          <div className={styles.infoSection}>
-            <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Programado:</span>
-              <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_inicio)}</span>
-            </div>
-            {mantenimiento?.fecha_fin && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Fin programado:</span>
-                <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_fin)}</span>
-              </div>
-            )}
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Completado:</span>
-              <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_completado)}</span>
-            </div>
-          </div>
-
-          {/* Ejecución - MODO EDICIÓN */}
-          <div className={styles.infoSection}>
-            <div className={styles.sectionHeader}>
-              <h4 className={styles.sectionSubtitle}>👤 Ejecución</h4>
-              {!modoEdicion && (
-                <button className={styles.editarButton} onClick={() => setModoEdicion(true)}>
-                  ✏️ Editar
+        <div className={styles.modalMain}>
+          <div className={styles.modalHeader}>
+            <div className={styles.headerLeft}>
+              <h2>
+                {esVistaPrevia ? (
+                  <span className={styles.versionPreviewBadge}>🔍 Vista previa - Versión {vistaPreviaVersion.version}</span>
+                ) : (
+                  '📋 Detalle del Mantenimiento'
+                )}
+              </h2>
+              {versiones.length > 0 && !esVistaPrevia && (
+                <button 
+                  className={styles.historyButton} 
+                  onClick={() => setMostrarSidebar(true)}
+                  title="Ver historial de versiones"
+                >
+                  ⏱️ {versiones.length}
+                </button>
+              )}
+              {esVistaPrevia && (
+                <button className={styles.backToCurrentBtn} onClick={cerrarVistaPrevia}>
+                  ← Volver a versión actual
                 </button>
               )}
             </div>
-            
-            {modoEdicion ? (
-              <>
-                {editError && <div className={styles.editError}>{editError}</div>}
-                <div className={styles.formGroup}>
-                  <label>Técnico *</label>
-                  <input type="text" name="tecnico" value={formData.tecnico} onChange={handleEditChange} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Notas / Trabajo *</label>
-                  <textarea name="notas_completado" value={formData.notas_completado} onChange={handleEditChange} rows="3" />
-                </div>
-                <div className={styles.row}>
-                  <div className={styles.formGroup}>
-                    <label>Duración (min)</label>
-                    <input type="number" name="duracion" value={formData.duracion} onChange={handleEditChange} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Costo materiales</label>
-                    <input type="number" name="costo_materiales" value={formData.costo_materiales} onChange={handleEditChange} step="0.01" />
-                  </div>
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Materiales usados</label>
-                  <textarea name="materiales_usados" value={formData.materiales_usados} onChange={handleEditChange} rows="2" />
-                </div>
-                <div className={styles.editActions}>
-                  <button className={styles.cancelEditBtn} onClick={() => setModoEdicion(false)}>Cancelar</button>
-                  <button className={styles.saveEditBtn} onClick={handleGuardarEdicion} disabled={editando}>
-                    {editando ? 'Guardando...' : 'Guardar cambios'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Técnico:</span>
-                  <span className={styles.infoValue}>{mantenimiento?.completado_por || 'No registrado'}</span>
-                </div>
-                {mantenimiento?.duracion && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Duración:</span>
-                    <span className={styles.infoValue}>{mantenimiento.duracion} minutos</span>
-                  </div>
-                )}
-              </>
-            )}
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
           </div>
 
-          {/* Materiales y costo - solo en modo vista */}
-          {!modoEdicion && (mantenimiento?.materiales_usados || mantenimiento?.costo_materiales) && (
+          <div className={styles.modalBody}>
+            {/* Información básica */}
             <div className={styles.infoSection}>
-              <h4 className={styles.sectionSubtitle}>🔧 Materiales y Costos</h4>
-              {mantenimiento?.materiales_usados && (
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Materiales usados:</span>
-                  <span className={styles.infoValue}>{mantenimiento.materiales_usados}</span>
-                </div>
-              )}
-              {mantenimiento?.costo_materiales && (
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Costo de materiales:</span>
-                  <span className={styles.infoValue}>${mantenimiento.costo_materiales.toFixed(2)}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Notas - solo en modo vista */}
-          {!modoEdicion && mantenimiento?.notas_completado && (
-            <div className={styles.infoSection}>
-              <h4 className={styles.sectionSubtitle}>📝 Notas del trabajo</h4>
-              <div className={styles.notasBox}>{mantenimiento.notas_completado}</div>
-            </div>
-          )}
-
-          {/* Evidencias */}
-          <div className={styles.infoSection}>
-            <h4 className={styles.sectionSubtitle}>📸 Evidencias</h4>
-            {loadingEvidencias ? (
-              <p className={styles.loadingText}>Cargando evidencias...</p>
-            ) : evidencias.length > 0 ? (
-              <div className={styles.evidenciasGrid}>
-                {evidencias.map((ev, idx) => (
-                  <div key={idx} className={styles.evidenciaItem}>
-                    {ev.url?.match(/\.(mp4|webm)$/i) ? (
-                      <video src={ev.url} className={styles.evidenciaVideo} controls />
-                    ) : (
-                      <img src={ev.url} alt={`Evidencia ${idx + 1}`} className={styles.evidenciaImg} />
-                    )}
-                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className={styles.evidenciaLink}>Ver completo</a>
-                  </div>
-                ))}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Título:</span>
+                <span className={styles.infoValue}>{mantenimiento?.titulo}</span>
               </div>
-            ) : (
-              <p className={styles.emptyMessage}>No hay evidencias adjuntas</p>
-            )}
-          </div>
-
-          {/* Historial de versiones - Estilo timeline */}
-          <div className={styles.infoSection}>
-            <div className={styles.sectionHeader}>
-              <h4 className={styles.sectionSubtitle}>
-                <span>📜 Historial de versiones</span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                  ({versiones.length + 1} {versiones.length + 1 === 1 ? 'versión' : 'versiones'})
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Equipo:</span>
+                <span className={styles.infoValue}>{equipoNombre}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Tipo:</span>
+                <span className={styles.infoValue}>{mantenimiento?.tipo || 'No especificado'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Prioridad:</span>
+                <span className={`${styles.prioridadBadge} ${
+                  mantenimiento?.prioridad === 'urgente' ? styles.urgente :
+                  mantenimiento?.prioridad === 'alta' ? styles.alta :
+                  mantenimiento?.prioridad === 'media' ? styles.media : styles.baja
+                }`}>
+                  {mantenimiento?.prioridad || 'No especificada'}
                 </span>
-              </h4>
-              <button className={styles.toggleHistorialBtn} onClick={() => setMostrarHistorial(!mostrarHistorial)}>
-                {mostrarHistorial ? '▲ Ocultar' : '▼ Mostrar'}
-              </button>
+              </div>
             </div>
-            
-            {mostrarHistorial && (
-              <div className={styles.historialContainer}>
-                {cargandoVersiones ? (
-                  <p className={styles.loadingText}>Cargando historial...</p>
-                ) : (
-                  <div className={styles.versionTimeline}>
-                    {todasVersiones.map((v, idx) => {
-                      const esVersionActual = v.version === 0 || idx === 0;
-                      return (
-                        <div key={idx} className={styles.versionItem}>
-                          <div className={`${styles.versionDot} ${!esVersionActual ? styles.old : ''}`} />
-                          <div className={styles.versionCard}>
-                            <div className={styles.versionHeader}>
-                              <span className={`${styles.versionBadge} ${!esVersionActual ? styles.old : ''}`}>
-                                {esVersionActual ? '📌 Versión actual' : `📄 Versión ${v.version}`}
-                              </span>
-                              {v.fecha_modificacion && (
-                                <span className={styles.versionDate}>
-                                  🕐 {formatDateShort(v.fecha_modificacion)}
-                                </span>
-                              )}
-                              {v.modificado_por && (
-                                <span className={styles.versionUser}>
-                                  👤 {v.modificado_por}
-                                </span>
-                              )}
-                            </div>
-                            <div className={styles.versionContent}>
-                              {v.notas_completado && (
-                                <p><strong>📝 Notas:</strong> {v.notas_completado}</p>
-                              )}
-                              {v.materiales_usados && (
-                                <p><strong>🔧 Materiales:</strong> {v.materiales_usados}</p>
-                              )}
-                              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-                                {v.duracion && (
-                                  <span><strong>⏱️ Duración:</strong> {v.duracion} min</span>
-                                )}
-                                {v.costo_materiales && (
-                                  <span><strong>💰 Costo:</strong> ${Number(v.costo_materiales).toFixed(2)}</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+
+            {/* Fechas */}
+            <div className={styles.infoSection}>
+              <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Programado:</span>
+                <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_inicio)}</span>
+              </div>
+              {mantenimiento?.fecha_fin && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Fin programado:</span>
+                  <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_fin)}</span>
+                </div>
+              )}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Completado original:</span>
+                <span className={styles.infoValue}>{formatDate(mantenimiento?.fecha_completado)}</span>
+              </div>
+              {vistaPreviaVersion?.fecha_modificacion && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Modificado:</span>
+                  <span className={styles.infoValue}>{formatDate(vistaPreviaVersion.fecha_modificacion)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Ejecución */}
+            <div className={styles.infoSection}>
+              <div className={styles.sectionHeader}>
+                <h4 className={styles.sectionSubtitle}>👤 Ejecución</h4>
+                {!modoEdicion && !esVistaPrevia && (
+                  <button className={styles.editarButton} onClick={() => setModoEdicion(true)}>
+                    ✏️ Editar
+                  </button>
+                )}
+              </div>
+              
+              {modoEdicion && !esVistaPrevia ? (
+                <>
+                  {editError && <div className={styles.editError}>{editError}</div>}
+                  <div className={styles.formGroup}>
+                    <label>Técnico *</label>
+                    <input type="text" name="tecnico" value={mostrarDatos.tecnico} onChange={handleEditChange} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Notas / Trabajo *</label>
+                    <textarea name="notas_completado" value={mostrarDatos.notas_completado} onChange={handleEditChange} rows="3" />
+                  </div>
+                  <div className={styles.row}>
+                    <div className={styles.formGroup}>
+                      <label>Duración (min)</label>
+                      <input type="number" name="duracion" value={mostrarDatos.duracion} onChange={handleEditChange} />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>Costo materiales</label>
+                      <input type="number" name="costo_materiales" value={mostrarDatos.costo_materiales} onChange={handleEditChange} step="0.01" />
+                    </div>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Materiales usados</label>
+                    <textarea name="materiales_usados" value={mostrarDatos.materiales_usados} onChange={handleEditChange} rows="2" />
+                  </div>
+                  <div className={styles.editActions}>
+                    <button className={styles.cancelEditBtn} onClick={() => setModoEdicion(false)}>Cancelar</button>
+                    <button className={styles.saveEditBtn} onClick={handleGuardarEdicion} disabled={editando}>
+                      {editando ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Técnico:</span>
+                    <span className={styles.infoValue}>{mostrarDatos.tecnico || 'No registrado'}</span>
+                  </div>
+                  {mostrarDatos.duracion && (
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Duración:</span>
+                      <span className={styles.infoValue}>{mostrarDatos.duracion} minutos</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Materiales y costo */}
+            {(mostrarDatos.materiales_usados || mostrarDatos.costo_materiales) && (
+              <div className={styles.infoSection}>
+                <h4 className={styles.sectionSubtitle}>🔧 Materiales y Costos</h4>
+                {mostrarDatos.materiales_usados && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Materiales usados:</span>
+                    <span className={styles.infoValue}>{mostrarDatos.materiales_usados}</span>
+                  </div>
+                )}
+                {mostrarDatos.costo_materiales && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Costo de materiales:</span>
+                    <span className={styles.infoValue}>${Number(mostrarDatos.costo_materiales).toFixed(2)}</span>
                   </div>
                 )}
               </div>
             )}
-          </div>
-        </div>
 
-        <div className={styles.modalFooter}>
-          <button className={styles.closeButton} onClick={onClose}>Cerrar</button>
+            {/* Notas */}
+            {mostrarDatos.notas_completado && (
+              <div className={styles.infoSection}>
+                <h4 className={styles.sectionSubtitle}>📝 Notas del trabajo</h4>
+                <div className={styles.notasBox}>{mostrarDatos.notas_completado}</div>
+              </div>
+            )}
+
+            {/* Evidencias */}
+            <div className={styles.infoSection}>
+              <h4 className={styles.sectionSubtitle}>📸 Evidencias</h4>
+              {loadingEvidencias ? (
+                <p className={styles.loadingText}>Cargando evidencias...</p>
+              ) : evidencias.length > 0 ? (
+                <div className={styles.evidenciasGrid}>
+                  {evidencias.map((ev, idx) => (
+                    <div key={idx} className={styles.evidenciaItem}>
+                      {ev.url?.match(/\.(mp4|webm)$/i) ? (
+                        <video src={ev.url} className={styles.evidenciaVideo} controls />
+                      ) : (
+                        <img src={ev.url} alt={`Evidencia ${idx + 1}`} className={styles.evidenciaImg} />
+                      )}
+                      <a href={ev.url} target="_blank" rel="noopener noreferrer" className={styles.evidenciaLink}>Ver completo</a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.emptyMessage}>No hay evidencias adjuntas</p>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button className={styles.closeButton} onClick={onClose}>Cerrar</button>
+          </div>
         </div>
       </div>
     </div>

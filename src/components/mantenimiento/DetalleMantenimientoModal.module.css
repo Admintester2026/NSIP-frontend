@@ -3,6 +3,7 @@
 /* ==========================================
    MODAL OVERLAY
    ========================================== */
+   
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -24,26 +25,188 @@
   width: 90%;
   max-width: 750px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   animation: slideIn 0.2s ease;
+  display: flex;
+  transition: all 0.3s ease;
+}
+
+.modal.withSidebar {
+  max-width: 950px;
+}
+
+/* Sidebar de versiones */
+.sidebar {
+  width: 280px;
+  background: var(--bg-raised);
+  border-right: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-surface);
+}
+
+.sidebarHeader h3 {
+  font-size: 0.9rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.sidebarClose {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.sidebarClose:hover {
+  color: var(--red);
+}
+
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Items de versión en sidebar */
+.versionItemSidebar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.versionItemSidebar:hover {
+  border-color: var(--green);
+  transform: translateX(4px);
+}
+
+.versionHeaderSidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.versionBadgeSidebar {
+  background: var(--green-dim);
+  color: var(--green);
+  padding: 0.15rem 0.4rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.versionDateSidebar {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.versionPreviewSidebar {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.versionUserSidebar {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Main content */
+.modalMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modalHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-dim);
   background: var(--bg-raised);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .modalHeader h2 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   color: var(--text-primary);
   margin: 0;
+}
+
+.versionPreviewBadge {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+}
+
+.historyButton {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-secondary);
+}
+
+.historyButton:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.backToCurrentBtn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.backToCurrentBtn:hover {
+  border-color: var(--green);
+  color: var(--green);
 }
 
 .modalClose {
@@ -71,16 +234,17 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modalFooter {
   display: flex;
   justify-content: flex-end;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-dim);
   background: var(--bg-raised);
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
 }
 
 /* ==========================================
@@ -94,7 +258,7 @@
 }
 
 .sectionSubtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.75rem;
@@ -183,25 +347,6 @@
   transform: translateY(-1px);
 }
 
-.toggleHistorialBtn {
-  padding: 0.35rem 0.85rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.toggleHistorialBtn:hover {
-  border-color: var(--green);
-  color: var(--green);
-}
-
 /* ==========================================
    FORMULARIO DE EDICIÓN
    ========================================== */
@@ -233,7 +378,6 @@
 .formGroup textarea:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.1);
 }
 
 .row {
@@ -259,7 +403,6 @@
   border-radius: var(--r-md);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .cancelEditBtn:hover {
@@ -276,18 +419,11 @@
   color: #000;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.saveEditBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 
 .saveEditBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 .editError {
@@ -325,13 +461,13 @@
 }
 
 .evidenciaItem {
-  width: 120px;
+  width: 100px;
   text-align: center;
 }
 
 .evidenciaImg, .evidenciaVideo {
   width: 100%;
-  height: 100px;
+  height: 80px;
   object-fit: cover;
   border-radius: var(--r-md);
   border: 1px solid var(--border-dim);
@@ -340,7 +476,7 @@
 
 .evidenciaLink {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--green);
   margin-top: 0.25rem;
   text-decoration: none;
@@ -351,153 +487,15 @@
 }
 
 /* ==========================================
-   HISTORIAL DE VERSIONES (ESTILO PDF/GOOGLE)
+   ESTADOS COMUNES
    ========================================== */
-.historialContainer {
-  margin-top: 0.75rem;
-  border-radius: var(--r-md);
-  overflow: hidden;
-}
-
-.versionTimeline {
-  position: relative;
-  padding-left: 2rem;
-}
-
-.versionTimeline::before {
-  content: '';
-  position: absolute;
-  left: 0.5rem;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--border-dim);
-}
-
-.versionItem {
-  position: relative;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.versionItem:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.versionDot {
-  position: absolute;
-  left: -1.8rem;
-  top: 0.25rem;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--green);
-  border: 2px solid var(--bg-surface);
-  z-index: 1;
-}
-
-.versionDot.old {
-  background: var(--text-muted);
-}
-
-.versionCard {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  padding: 0.75rem 1rem;
-  transition: all 0.2s ease;
-}
-
-.versionCard:hover {
-  border-color: var(--green-dim);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.versionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.versionBadge {
-  background: var(--green-dim);
-  color: var(--green);
-  padding: 0.2rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.65rem;
-  font-weight: 600;
-}
-
-.versionBadge.old {
-  background: rgba(100, 100, 100, 0.15);
-  color: var(--text-muted);
-}
-
-.versionDate {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.versionUser {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.versionContent {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.versionContent p {
-  margin: 0.5rem 0;
-}
-
-.versionContent strong {
-  color: var(--text-primary);
-}
-
-.diffBadge {
-  display: inline-block;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-
-.diffAdded {
-  background: rgba(0, 255, 157, 0.15);
-  color: var(--green);
-}
-
-.diffChanged {
-  background: rgba(255, 179, 64, 0.15);
-  color: var(--amber);
-}
-
 .loadingText, .emptyMessage {
   text-align: center;
   color: var(--text-muted);
   padding: 1rem;
+  font-size: 0.8rem;
 }
 
-/* ==========================================
-   BOTÓN CERRAR
-   ========================================== */
 .closeButton {
   padding: 0.5rem 1.5rem;
   background: var(--bg-raised);
@@ -530,22 +528,20 @@
 /* ==========================================
    SCROLLBAR
    ========================================== */
-.modal::-webkit-scrollbar {
-  width: 6px;
+.modalBody::-webkit-scrollbar,
+.sidebarContent::-webkit-scrollbar {
+  width: 4px;
 }
 
-.modal::-webkit-scrollbar-track {
+.modalBody::-webkit-scrollbar-track,
+.sidebarContent::-webkit-scrollbar-track {
   background: var(--bg-raised);
-  border-radius: 3px;
 }
 
-.modal::-webkit-scrollbar-thumb {
+.modalBody::-webkit-scrollbar-thumb,
+.sidebarContent::-webkit-scrollbar-thumb {
   background: var(--green-dim);
-  border-radius: 3px;
-}
-
-.modal::-webkit-scrollbar-thumb:hover {
-  background: var(--green);
+  border-radius: 4px;
 }
 
 /* ==========================================
@@ -555,47 +551,49 @@
   .modal {
     width: 95%;
     max-height: 95vh;
-    margin: 1rem;
+    flex-direction: column;
   }
-
-  .modalHeader, .modalBody, .modalFooter {
+  
+  .modal.withSidebar {
+    max-width: 95%;
+  }
+  
+  .sidebar {
+    width: 100%;
+    max-height: 40%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  
+  .modalHeader {
     padding: 1rem;
   }
-
-  .sectionHeader {
+  
+  .modalBody {
+    padding: 1rem;
+  }
+  
+  .modalFooter {
+    padding: 0.75rem 1rem;
+  }
+  
+  .headerLeft {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-
+  
   .row {
     flex-direction: column;
     gap: 0.75rem;
   }
-
+  
   .infoRow {
     flex-direction: column;
     gap: 0.25rem;
   }
-
+  
   .infoLabel {
     min-width: auto;
-  }
-
-  .versionHeader {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .versionTimeline {
-    padding-left: 1.5rem;
-  }
-
-  .versionTimeline::before {
-    left: 0;
-  }
-
-  .versionDot {
-    left: -1.3rem;
   }
 }
