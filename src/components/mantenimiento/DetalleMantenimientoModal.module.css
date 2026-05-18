@@ -22,15 +22,12 @@
   border: 1px solid var(--border-dim);
   border-radius: var(--r-lg);
   width: 90%;
-  max-width: 700px;
+  max-width: 750px;
   max-height: 90vh;
   overflow-y: auto;
   animation: slideIn 0.2s ease;
 }
 
-/* ==========================================
-   HEADER
-   ========================================== */
 .modalHeader {
   display: flex;
   align-items: center;
@@ -38,6 +35,9 @@
   padding: 1.5rem;
   border-bottom: 1px solid var(--border-dim);
   background: var(--bg-raised);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .modalHeader h2 {
@@ -52,7 +52,7 @@
   font-size: 1.5rem;
   cursor: pointer;
   color: var(--text-muted);
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
   width: 32px;
   height: 32px;
   display: flex;
@@ -66,9 +66,6 @@
   background: var(--bg-surface);
 }
 
-/* ==========================================
-   BODY
-   ========================================== */
 .modalBody {
   padding: 1.5rem;
   display: flex;
@@ -82,6 +79,8 @@
   padding: 1.5rem;
   border-top: 1px solid var(--border-dim);
   background: var(--bg-raised);
+  position: sticky;
+  bottom: 0;
 }
 
 /* ==========================================
@@ -98,6 +97,15 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-dim);
@@ -121,7 +129,7 @@
 }
 
 /* ==========================================
-   PRIORIDAD BADGE
+   BADGES DE PRIORIDAD
    ========================================== */
 .prioridadBadge {
   padding: 0.2rem 0.6rem;
@@ -149,6 +157,147 @@
 .baja {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
+}
+
+/* ==========================================
+   BOTONES DE ACCIÓN
+   ========================================== */
+.editarButton {
+  padding: 0.35rem 0.85rem;
+  background: rgba(255, 179, 64, 0.1);
+  border: 1px solid var(--amber);
+  border-radius: var(--r-md);
+  color: var(--amber);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.editarButton:hover {
+  background: var(--amber);
+  color: var(--bg-primary);
+  transform: translateY(-1px);
+}
+
+.toggleHistorialBtn {
+  padding: 0.35rem 0.85rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.toggleHistorialBtn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ==========================================
+   FORMULARIO DE EDICIÓN
+   ========================================== */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.formGroup label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.formGroup input,
+.formGroup textarea {
+  padding: 0.6rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.1);
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+}
+
+.row .formGroup {
+  flex: 1;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.cancelEditBtn {
+  flex: 1;
+  padding: 0.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelEditBtn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.saveEditBtn {
+  flex: 1;
+  padding: 0.5rem;
+  background: var(--green);
+  border: none;
+  border-radius: var(--r-md);
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveEditBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
+}
+
+.saveEditBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.editError {
+  padding: 0.5rem;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  border-radius: var(--r-md);
+  color: var(--red);
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
 }
 
 /* ==========================================
@@ -202,14 +351,153 @@
 }
 
 /* ==========================================
-   ESTADOS
+   HISTORIAL DE VERSIONES (ESTILO PDF/GOOGLE)
    ========================================== */
+.historialContainer {
+  margin-top: 0.75rem;
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.versionTimeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.versionTimeline::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-dim);
+}
+
+.versionItem {
+  position: relative;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.versionItem:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.versionDot {
+  position: absolute;
+  left: -1.8rem;
+  top: 0.25rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--bg-surface);
+  z-index: 1;
+}
+
+.versionDot.old {
+  background: var(--text-muted);
+}
+
+.versionCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.versionCard:hover {
+  border-color: var(--green-dim);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.versionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.versionBadge {
+  background: var(--green-dim);
+  color: var(--green);
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.versionBadge.old {
+  background: rgba(100, 100, 100, 0.15);
+  color: var(--text-muted);
+}
+
+.versionDate {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.versionUser {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.versionContent {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.versionContent p {
+  margin: 0.5rem 0;
+}
+
+.versionContent strong {
+  color: var(--text-primary);
+}
+
+.diffBadge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.diffAdded {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+}
+
+.diffChanged {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+}
+
 .loadingText, .emptyMessage {
   text-align: center;
   color: var(--text-muted);
   padding: 1rem;
 }
 
+/* ==========================================
+   BOTÓN CERRAR
+   ========================================== */
 .closeButton {
   padding: 0.5rem 1.5rem;
   background: var(--bg-raised);
@@ -240,16 +528,49 @@
 }
 
 /* ==========================================
+   SCROLLBAR
+   ========================================== */
+.modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+  border-radius: 3px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 3px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+
+/* ==========================================
    RESPONSIVE
    ========================================== */
 @media (max-width: 768px) {
   .modal {
     width: 95%;
+    max-height: 95vh;
     margin: 1rem;
   }
 
   .modalHeader, .modalBody, .modalFooter {
     padding: 1rem;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .infoRow {
@@ -261,204 +582,20 @@
     min-width: auto;
   }
 
-  .evidenciasGrid {
-    justify-content: center;
-  }
-}
-
-/* Header con botón de edición */
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.editarButton {
-  padding: 0.3rem 0.8rem;
-  background: rgba(255, 179, 64, 0.1);
-  border: 1px solid var(--amber);
-  border-radius: var(--r-md);
-  color: var(--amber);
-  font-size: 0.7rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.editarButton:hover {
-  background: var(--amber);
-  color: var(--bg-primary);
-  transform: translateY(-1px);
-}
-
-/* Formulario de edición */
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.formGroup label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.formGroup input,
-.formGroup textarea {
-  padding: 0.6rem;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  font-family: inherit;
-}
-
-.formGroup input:focus,
-.formGroup textarea:focus {
-  outline: none;
-  border-color: var(--green);
-}
-
-.editActions {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.cancelEditBtn {
-  flex: 1;
-  padding: 0.5rem;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-.cancelEditBtn:hover {
-  border-color: var(--red);
-  color: var(--red);
-}
-
-.saveEditBtn {
-  flex: 1;
-  padding: 0.5rem;
-  background: var(--green);
-  border: none;
-  border-radius: var(--r-md);
-  color: #000;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.saveEditBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.editError {
-  padding: 0.5rem;
-  background: rgba(255, 77, 77, 0.1);
-  border: 1px solid rgba(255, 77, 77, 0.3);
-  border-radius: var(--r-md);
-  color: var(--red);
-  font-size: 0.8rem;
-  margin-bottom: 0.75rem;
-}
-
-/* Historial de versiones */
-.toggleHistorialBtn {
-  padding: 0.2rem 0.6rem;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  cursor: pointer;
-}
-
-.toggleHistorialBtn:hover {
-  border-color: var(--green);
-  color: var(--green);
-}
-
-.historialContainer {
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  padding: 0.75rem;
-  max-height: 300px;
-  overflow-y: auto;
-  margin-top: 0.5rem;
-}
-
-.versionItem {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.versionItem:last-child {
-  margin-bottom: 0;
-}
-
-.versionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
-  font-size: 0.7rem;
-}
-
-.versionBadge {
-  background: var(--green-dim);
-  color: var(--green);
-  padding: 0.2rem 0.5rem;
-  border-radius: 20px;
-  font-weight: 600;
-}
-
-.versionDate {
-  color: var(--text-muted);
-}
-
-.versionUser {
-  color: var(--text-secondary);
-}
-
-.versionContent {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.versionContent p {
-  margin: 0.25rem 0;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .sectionHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
   .versionHeader {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .versionTimeline {
+    padding-left: 1.5rem;
+  }
+
+  .versionTimeline::before {
+    left: 0;
+  }
+
+  .versionDot {
+    left: -1.3rem;
   }
 }

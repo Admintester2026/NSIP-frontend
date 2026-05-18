@@ -34,7 +34,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     if (isOpen && mantenimiento?.id) {
       cargarEvidencias();
       cargarVersiones();
-      // Resetear modo edición
       setModoEdicion(false);
       setFormData({
         tecnico: mantenimiento?.completado_por || '',
@@ -97,7 +96,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
       
       setModoEdicion(false);
       if (onEdit) onEdit();
-      // Recargar versiones después de editar
       await cargarVersiones();
     } catch (err) {
       setEditError(err.message);
@@ -119,7 +117,21 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     });
   };
 
+  const formatDateShort = (dateString) => {
+    if (!dateString) return 'No definida';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha inválida';
+    return date.toLocaleDateString('es-MX', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric'
+    });
+  };
+
   if (!isOpen) return null;
+
+  const versionActual = { version: 0, ...mantenimiento };
+  const todasVersiones = [versionActual, ...versiones];
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -284,10 +296,15 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
             )}
           </div>
 
-          {/* Historial de versiones anteriores */}
+          {/* Historial de versiones - Estilo timeline */}
           <div className={styles.infoSection}>
             <div className={styles.sectionHeader}>
-              <h4 className={styles.sectionSubtitle}>📜 Versiones anteriores ({versiones.length})</h4>
+              <h4 className={styles.sectionSubtitle}>
+                <span>📜 Historial de versiones</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  ({versiones.length + 1} {versiones.length + 1 === 1 ? 'versión' : 'versiones'})
+                </span>
+              </h4>
               <button className={styles.toggleHistorialBtn} onClick={() => setMostrarHistorial(!mostrarHistorial)}>
                 {mostrarHistorial ? '▲ Ocultar' : '▼ Mostrar'}
               </button>
@@ -297,24 +314,50 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               <div className={styles.historialContainer}>
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando historial...</p>
-                ) : versiones.length > 0 ? (
-                  versiones.map((v, idx) => (
-                    <div key={idx} className={styles.versionItem}>
-                      <div className={styles.versionHeader}>
-                        <span className={styles.versionBadge}>Versión {v.version}</span>
-                        <span className={styles.versionDate}>{new Date(v.fecha_modificacion).toLocaleString()}</span>
-                        <span className={styles.versionUser}>👤 {v.modificado_por || 'sistema'}</span>
-                      </div>
-                      <div className={styles.versionContent}>
-                        {v.notas_completado && <p><strong>Notas:</strong> {v.notas_completado}</p>}
-                        {v.materiales_usados && <p><strong>Materiales:</strong> {v.materiales_usados}</p>}
-                        {v.costo_materiales && <p><strong>Costo:</strong> ${Number(v.costo_materiales).toFixed(2)}</p>}
-                        {v.duracion && <p><strong>Duración:</strong> {v.duracion} minutos</p>}
-                      </div>
-                    </div>
-                  ))
                 ) : (
-                  <p className={styles.emptyMessage}>No hay versiones anteriores</p>
+                  <div className={styles.versionTimeline}>
+                    {todasVersiones.map((v, idx) => {
+                      const esVersionActual = v.version === 0 || idx === 0;
+                      return (
+                        <div key={idx} className={styles.versionItem}>
+                          <div className={`${styles.versionDot} ${!esVersionActual ? styles.old : ''}`} />
+                          <div className={styles.versionCard}>
+                            <div className={styles.versionHeader}>
+                              <span className={`${styles.versionBadge} ${!esVersionActual ? styles.old : ''}`}>
+                                {esVersionActual ? '📌 Versión actual' : `📄 Versión ${v.version}`}
+                              </span>
+                              {v.fecha_modificacion && (
+                                <span className={styles.versionDate}>
+                                  🕐 {formatDateShort(v.fecha_modificacion)}
+                                </span>
+                              )}
+                              {v.modificado_por && (
+                                <span className={styles.versionUser}>
+                                  👤 {v.modificado_por}
+                                </span>
+                              )}
+                            </div>
+                            <div className={styles.versionContent}>
+                              {v.notas_completado && (
+                                <p><strong>📝 Notas:</strong> {v.notas_completado}</p>
+                              )}
+                              {v.materiales_usados && (
+                                <p><strong>🔧 Materiales:</strong> {v.materiales_usados}</p>
+                              )}
+                              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                                {v.duracion && (
+                                  <span><strong>⏱️ Duración:</strong> {v.duracion} min</span>
+                                )}
+                                {v.costo_materiales && (
+                                  <span><strong>💰 Costo:</strong> ${Number(v.costo_materiales).toFixed(2)}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             )}
