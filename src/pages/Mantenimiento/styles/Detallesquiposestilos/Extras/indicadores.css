@@ -1,9 +1,6 @@
 /* ==========================================
    INDICADORES DE MES
    ========================================== */
-/* ==========================================
-   INDICADORES DE MES
-   ========================================== */
 .indicadorMes {
   padding: 0.2rem 0.6rem;
   border-radius: 20px;
@@ -25,7 +22,7 @@
 }
 
 .mesProximo {
-  background: rgba(100, 100, 100, 0.1);
-  color: var(--text-muted);
-  border: 1px solid var(--text-muted);
+  background: rgba(255, 179, 64, 0.1);
+  color: var(--amber);
+  border: 1px solid var(--amber);
 }

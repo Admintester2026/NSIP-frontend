@@ -8,6 +8,7 @@ import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModa
 import CompletarMantenimientoModal from '../../components/mantenimiento/CompletarMantenimientoModal';
 import DetalleMantenimientoModal from '../../components/mantenimiento/DetalleMantenimientoModal';
 import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal';
+import EditarMantenimientoModal from '../../components/mantenimiento/EditarMantenimientoModal';
 import styles from './styles/Detallesquiposestilos/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -46,6 +47,10 @@ export default function DetalleEquipo() {
   const [mantenimientoAReprogramar, setMantenimientoAReprogramar] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+
+  // Estados para editar mantenimiento completado
+  const [showEditarModal, setShowEditarModal] = useState(false);
+  const [mantenimientoAEditar, setMantenimientoAEditar] = useState(null);
 
   // Estados para clave preventiva
   const [showClaveModal, setShowClaveModal] = useState(false);
@@ -291,6 +296,21 @@ export default function DetalleEquipo() {
     setError('');
     retryCountRef.current = 0;
     cargarDatos();
+  };
+
+  // Handler para editar mantenimiento completado
+  const handleEditarClick = (mantenimiento) => {
+    setMantenimientoAEditar(mantenimiento);
+    setShowEditarModal(true);
+  };
+
+  const handleEditarSuccess = () => {
+    setShowEditarModal(false);
+    setMantenimientoAEditar(null);
+    cargarDatos();
+    setAlertMessage('✅ Mantenimiento actualizado exitosamente');
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
   };
 
   // HANDLER MODIFICADO: Verifica si es preventivo futuro para pedir clave
@@ -695,7 +715,7 @@ export default function DetalleEquipo() {
               </div>
             )}
 
-            {/* Mantenimientos completados */}
+            {/* Mantenimientos completados - CON BOTÓN EDITAR */}
             <div className={styles.card}>
               <div className={styles.cardHeaderWithSearch}>
                 <h3 className={styles.cardTitle}>
@@ -724,12 +744,22 @@ export default function DetalleEquipo() {
                       <div 
                         key={m.id} 
                         className={`${styles.mantenimientoItem} ${styles.clickable} ${styles[indicador?.clase || '']}`}
-                        onClick={() => handleVerDetalle(m)}
                       >
                         <div className={styles.mantenimientoHeader}>
                           <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
                           {indicador && <span className={`${styles.indicadorMes} ${styles[indicador.clase]}`}>{indicador.texto}</span>}
-                          <span className={styles.verDetalleBadge}>🔍 Ver detalles</span>
+                          <div className={styles.mantenimientoActionsHeader}>
+                            <button 
+                              className={styles.editarButton} 
+                              onClick={(e) => { e.stopPropagation(); handleEditarClick(m); }}
+                              title="Editar mantenimiento"
+                            >
+                              ✏️ Editar
+                            </button>
+                            <span className={styles.verDetalleBadge} onClick={(e) => { e.stopPropagation(); handleVerDetalle(m); }}>
+                              🔍 Ver detalles
+                            </span>
+                          </div>
                         </div>
                         <div className={styles.mantenimientoInfo}>
                           <span>📅 Completado: {formatDateTime(m.fecha_completado || m.fecha_fin)}</span>
@@ -904,6 +934,14 @@ export default function DetalleEquipo() {
         onClose={() => setShowReprogramarModal(false)}
         onSuccess={handleReprogramarSuccess}
         mantenimiento={mantenimientoAReprogramar}
+      />
+
+      <EditarMantenimientoModal
+        isOpen={showEditarModal}
+        onClose={() => setShowEditarModal(false)}
+        onSuccess={handleEditarSuccess}
+        mantenimiento={mantenimientoAEditar}
+        equipoNombre={equipo?.nombre}
       />
 
       {/* Modal para clave preventiva */}

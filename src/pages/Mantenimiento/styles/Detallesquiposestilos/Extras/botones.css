@@ -28,13 +28,13 @@
   transform: translateY(-2px);
 }
 
-/* Botón reprogramar */
+/* Botón reprogramar - AMARILLO */
 .reprogramarButton {
   padding: 0.4rem 1rem;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
+  background: rgba(255, 179, 64, 0.1);
+  border: 1px solid var(--amber);
   border-radius: var(--r-md);
-  color: var(--text-secondary);
+  color: var(--amber);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -44,8 +44,8 @@
 }
 
 .reprogramarButton:hover {
-  border-color: var(--amber);
-  color: var(--amber);
+  background: var(--amber);
+  color: var(--bg-primary);
   transform: translateY(-1px);
 }
 
@@ -53,7 +53,7 @@
 .eliminarButton {
   padding: 0.4rem 1rem;
   background: rgba(255, 77, 77, 0.1);
-  border: 1px solid rgba(255, 77, 77, 0.3);
+  border: 1px solid var(--red);
   border-radius: var(--r-md);
   color: var(--red);
   font-size: 0.75rem;
@@ -70,10 +70,10 @@
   transform: translateY(-1px);
 }
 
-/* Botón completar */
+/* Botón completar - VERDE */
 .completarButton {
   padding: 0.4rem 1rem;
-  background: var(--green-dim);
+  background: rgba(0, 255, 157, 0.1);
   border: 1px solid var(--green);
   border-radius: var(--r-md);
   color: var(--green);
@@ -92,9 +92,49 @@
   transform: translateY(-1px);
 }
 
+/* Botón editar - AMARILLO CLARO (para mantenimientos completados) */
+.editarButton {
+  padding: 0.3rem 0.8rem;
+  background: rgba(255, 179, 64, 0.1);
+  border: 1px solid var(--amber);
+  border-radius: var(--r-md);
+  color: var(--amber);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.editarButton:hover {
+  background: var(--amber);
+  color: var(--bg-primary);
+  transform: translateY(-1px);
+}
+
+/* Acciones en el header de la tarjeta */
+.mantenimientoActionsHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Responsive para botones */
 @media (max-width: 768px) {
-  .reprogramarButton, .completarButton, .eliminarButton {
+  .reprogramarButton, 
+  .completarButton, 
+  .eliminarButton {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .mantenimientoActionsHeader {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .editarButton {
     width: 100%;
     justify-content: center;
   }
