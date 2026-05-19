@@ -86,12 +86,6 @@ export default function DetalleEquipo() {
     }
   };
 
-    const esHoy = (fecha) => {
-    if (!fecha) return false;
-    const fechaComparar = normalizarFecha(fecha);
-    return fechaComparar.getTime() === hoy.getTime();
-  };
-
   const filtrarMantenimientosCompletados = () => {
     if (!buscarEnCompletados.trim()) return mantenimientosCompletados;
     
