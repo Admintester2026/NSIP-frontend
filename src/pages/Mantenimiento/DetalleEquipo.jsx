@@ -47,14 +47,17 @@ export default function DetalleEquipo() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  // Estados para clave preventiva
+  // Estados para clave preventiva (unificados para completar y reprogramar)
   const [showClaveModal, setShowClaveModal] = useState(false);
-  const [mantenimientoPendienteClave, setMantenimientoPendienteClave] = useState(null);
+  const [claveModalData, setClaveModalData] = useState({ 
+    mantenimiento: null, 
+    accion: 'completar' // 'completar' o 'reprogramar'
+  });
   const [clavePreventiva, setClavePreventiva] = useState('');
   const [claveError, setClaveError] = useState('');
 
-  // Clave especial (temporalmente fija)
-  const CLAVE_PREVENTIVA = 'ADMIN2026';
+  // Clave especial (temporalmente fija, luego se moverá a configuración)
+  const CLAVE_PREVENTIVA = 'C';
 
   // ==========================================
   // FUNCIONES AUXILIARES
@@ -293,13 +296,17 @@ export default function DetalleEquipo() {
     cargarDatos();
   };
 
-  // HANDLER MODIFICADO: Verifica si es preventivo futuro para pedir clave
-  const handleCompletarClick = (mantenimiento) => {
+  // Verificar si requiere clave (preventivo y futuro)
+  const requiereClave = (mantenimiento) => {
     const esPreventivo = mantenimiento.tipo === 'preventivo';
     const esFuturo = new Date(mantenimiento.fecha_inicio) > new Date();
-    
-    if (esPreventivo && esFuturo) {
-      setMantenimientoPendienteClave(mantenimiento);
+    return esPreventivo && esFuturo;
+  };
+
+  // Handler para completar mantenimiento
+  const handleCompletarClick = (mantenimiento) => {
+    if (requiereClave(mantenimiento)) {
+      setClaveModalData({ mantenimiento, accion: 'completar' });
       setShowClaveModal(true);
     } else {
       setMantenimientoACompletar(mantenimiento);
@@ -307,15 +314,33 @@ export default function DetalleEquipo() {
     }
   };
 
-  const verificarClavePreventiva = () => {
+  // Handler para reprogramar mantenimiento
+  const handleReprogramarClick = (mantenimiento) => {
+    if (requiereClave(mantenimiento)) {
+      setClaveModalData({ mantenimiento, accion: 'reprogramar' });
+      setShowClaveModal(true);
+    } else {
+      setMantenimientoAReprogramar(mantenimiento);
+      setShowReprogramarModal(true);
+    }
+  };
+
+  // Verificar clave (unificada para ambas acciones)
+  const verificarClave = () => {
     if (clavePreventiva === CLAVE_PREVENTIVA) {
       setShowClaveModal(false);
       setClavePreventiva('');
       setClaveError('');
-      setMantenimientoACompletar(mantenimientoPendienteClave);
-      setShowCompletarModal(true);
+      
+      if (claveModalData.accion === 'completar') {
+        setMantenimientoACompletar(claveModalData.mantenimiento);
+        setShowCompletarModal(true);
+      } else if (claveModalData.accion === 'reprogramar') {
+        setMantenimientoAReprogramar(claveModalData.mantenimiento);
+        setShowReprogramarModal(true);
+      }
     } else {
-      setClaveError('Clave incorrecta. No puedes adelantar este mantenimiento preventivo.');
+      setClaveError('Clave incorrecta. No puedes realizar esta acción en un mantenimiento preventivo futuro.');
     }
   };
 
@@ -331,11 +356,6 @@ export default function DetalleEquipo() {
   const handleVerDetalle = (mantenimiento) => {
     setMantenimientoSeleccionado(mantenimiento);
     setShowDetalleModal(true);
-  };
-
-  const handleReprogramarClick = (mantenimiento) => {
-    setMantenimientoAReprogramar(mantenimiento);
-    setShowReprogramarModal(true);
   };
 
   const handleReprogramarSuccess = () => {
@@ -908,7 +928,7 @@ export default function DetalleEquipo() {
         mantenimiento={mantenimientoAReprogramar}
       />
 
-      {/* Modal para clave preventiva */}
+      {/* Modal para clave preventiva (unificado para completar y reprogramar) */}
       {showClaveModal && (
         <div className={styles.modalOverlay} onClick={() => setShowClaveModal(false)}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
@@ -918,7 +938,7 @@ export default function DetalleEquipo() {
             </div>
             <div className={styles.confirmModalBody}>
               <p>Este es un mantenimiento <strong>preventivo</strong> programado para el futuro.</p>
-              <p>Para adelantarlo, ingresa la clave de autorización:</p>
+              <p>Para <strong>{claveModalData.accion === 'completar' ? 'completarlo' : 'reprogramarlo'}</strong>, ingresa la clave de autorización:</p>
               {claveError && <p className={styles.claveError}>{claveError}</p>}
               <input
                 type="password"
@@ -927,13 +947,14 @@ export default function DetalleEquipo() {
                 onChange={(e) => setClavePreventiva(e.target.value)}
                 placeholder="Ingrese clave"
                 autoFocus
+                onKeyPress={(e) => e.key === 'Enter' && verificarClave()}
               />
             </div>
             <div className={styles.confirmModalFooter}>
               <button className={styles.cancelConfirmBtn} onClick={() => setShowClaveModal(false)}>
                 Cancelar
               </button>
-              <button className={styles.confirmDeleteBtn} onClick={verificarClavePreventiva}>
+              <button className={styles.confirmDeleteBtn} onClick={verificarClave}>
                 Verificar
               </button>
             </div>
