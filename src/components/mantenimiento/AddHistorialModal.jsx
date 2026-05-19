@@ -11,6 +11,10 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState({
+    campo_modificado: false,
+    descripcion: false
+  });
 
   const campos = [
     { value: 'pieza_reemplazada', label: '🔧 Pieza Reemplazada' },
@@ -26,19 +30,33 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  const validateForm = () => {
+    const errors = [];
+    if (!formData.campo_modificado) errors.push('Selecciona el tipo de cambio');
+    if (!formData.valor_nuevo && !formData.descripcion) {
+      errors.push('Ingresa una descripción o valor nuevo');
+    }
+    
+    if (errors.length > 0) {
+      setError(errors.join('. '));
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setLoading(true);
     setError('');
 
     try {
-      if (!formData.campo_modificado) {
-        throw new Error('Selecciona el tipo de cambio');
-      }
-      if (!formData.valor_nuevo && !formData.descripcion) {
-        throw new Error('Ingresa una descripción o valor nuevo');
-      }
-
       await mantenimientoAPI.registrarCambio(equipoId, formData);
 
       setFormData({
@@ -47,6 +65,7 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
         valor_nuevo: '',
         descripcion: ''
       });
+      setTouched({ campo_modificado: false, descripcion: false });
 
       if (onSuccess) onSuccess();
       onClose();
@@ -73,10 +92,17 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
 
             <div className={styles.formGroup}>
               <label>Tipo de Cambio *</label>
-              <select name="campo_modificado" value={formData.campo_modificado} onChange={handleChange} required>
+              <select 
+                name="campo_modificado" 
+                value={formData.campo_modificado} 
+                onChange={handleChange}
+                onBlur={() => handleBlur('campo_modificado')}
+                className={touched.campo_modificado && !formData.campo_modificado ? styles.inputError : ''}
+              >
                 <option value="">Seleccionar...</option>
                 {campos.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
+              {touched.campo_modificado && !formData.campo_modificado && <span className={styles.errorText}>El tipo de cambio es requerido</span>}
             </div>
 
             <div className={styles.row}>
@@ -108,6 +134,7 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleChange}
+                onBlur={() => handleBlur('descripcion')}
                 rows="3"
                 placeholder="Detalles del cambio realizado..."
               />

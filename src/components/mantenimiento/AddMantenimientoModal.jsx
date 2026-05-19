@@ -14,6 +14,11 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState({
+    titulo: false,
+    fecha_inicio: false,
+    tipo: false
+  });
 
   const tipos = [
     { value: 'preventivo', label: '🔧 Preventivo' },
@@ -42,19 +47,32 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  const validateForm = () => {
+    const errors = [];
+    if (!formData.titulo.trim()) errors.push('El título es requerido');
+    if (!formData.fecha_inicio) errors.push('La fecha de inicio es requerida');
+    if (!formData.tipo) errors.push('El tipo de mantenimiento es requerido');
+    
+    if (errors.length > 0) {
+      setError(errors.join('. '));
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setLoading(true);
     setError('');
 
     try {
-      if (!formData.titulo.trim()) {
-        throw new Error('El título es requerido');
-      }
-      if (!formData.fecha_inicio) {
-        throw new Error('La fecha de inicio es requerida');
-      }
-
       await mantenimientoAPI.createMantenimiento({
         equipo_id: equipoId,
         ...formData
@@ -69,6 +87,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
         prioridad: 'media',
         recurrencia: ''
       });
+      setTouched({ titulo: false, fecha_inicio: false, tipo: false });
 
       if (onSuccess) onSuccess();
       onClose();
@@ -100,9 +119,11 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                 name="titulo"
                 value={formData.titulo}
                 onChange={handleChange}
+                onBlur={() => handleBlur('titulo')}
                 placeholder="Ej: Lubricación de rodamientos"
-                required
+                className={touched.titulo && !formData.titulo.trim() ? styles.inputError : ''}
               />
+              {touched.titulo && !formData.titulo.trim() && <span className={styles.errorText}>El título es requerido</span>}
             </div>
 
             <div className={styles.formGroup}>
@@ -124,8 +145,10 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                   name="fecha_inicio"
                   value={formData.fecha_inicio}
                   onChange={handleChange}
-                  required
+                  onBlur={() => handleBlur('fecha_inicio')}
+                  className={touched.fecha_inicio && !formData.fecha_inicio ? styles.inputError : ''}
                 />
+                {touched.fecha_inicio && !formData.fecha_inicio && <span className={styles.errorText}>La fecha de inicio es requerida</span>}
               </div>
               <div className={styles.formGroup}>
                 <label>Fecha Fin</label>
@@ -140,8 +163,8 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
 
             <div className={styles.row}>
               <div className={styles.formGroup}>
-                <label>Tipo</label>
-                <select name="tipo" value={formData.tipo} onChange={handleChange}>
+                <label>Tipo *</label>
+                <select name="tipo" value={formData.tipo} onChange={handleChange} onBlur={() => handleBlur('tipo')}>
                   {tipos.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>

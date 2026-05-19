@@ -11,6 +11,10 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState({
+    titulo: false,
+    descripcion: false
+  });
 
   const gravedades = [
     { value: 'critica', label: '🔥 Crítica' },
@@ -24,19 +28,31 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  const validateForm = () => {
+    const errors = [];
+    if (!formData.titulo.trim()) errors.push('El título es requerido');
+    if (!formData.descripcion.trim()) errors.push('La descripción es requerida');
+    
+    if (errors.length > 0) {
+      setError(errors.join('. '));
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setLoading(true);
     setError('');
 
     try {
-      if (!formData.titulo.trim()) {
-        throw new Error('El título es requerido');
-      }
-      if (!formData.descripcion.trim()) {
-        throw new Error('La descripción es requerida');
-      }
-
       await mantenimientoAPI.createIncidencia({
         equipo_id: equipoId,
         ...formData
@@ -47,6 +63,7 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
         descripcion: '',
         gravedad: 'media'
       });
+      setTouched({ titulo: false, descripcion: false });
 
       if (onSuccess) onSuccess();
       onClose();
@@ -78,9 +95,11 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
                 name="titulo"
                 value={formData.titulo}
                 onChange={handleChange}
+                onBlur={() => handleBlur('titulo')}
                 placeholder="Ej: Sobrecalentamiento del motor"
-                required
+                className={touched.titulo && !formData.titulo.trim() ? styles.inputError : ''}
               />
+              {touched.titulo && !formData.titulo.trim() && <span className={styles.errorText}>El título es requerido</span>}
             </div>
 
             <div className={styles.formGroup}>
@@ -89,10 +108,12 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleChange}
+                onBlur={() => handleBlur('descripcion')}
                 rows="3"
                 placeholder="Describe detalladamente el problema..."
-                required
+                className={touched.descripcion && !formData.descripcion.trim() ? styles.inputError : ''}
               />
+              {touched.descripcion && !formData.descripcion.trim() && <span className={styles.errorText}>La descripción es requerida</span>}
             </div>
 
             <div className={styles.formGroup}>

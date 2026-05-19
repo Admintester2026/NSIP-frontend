@@ -1,0 +1,69 @@
+/* Extras/ordenamiento.css */
+
+/* ==========================================
+   BOTONES DE ORDENAMIENTO
+   ========================================== */
+.cardHeaderWithButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.orderButton {
+  padding: 0.3rem 0.7rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.orderButton:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ==========================================
+   CONTROLES DE BÚSQUEDA EN COMPLETADOS
+   ========================================== */
+.searchControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  padding: 0.35rem 0.6rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+/* ==========================================
+   ICONO DE HOY
+   ========================================== */
+.hoyIcon {
+  font-size: 0.9rem;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
