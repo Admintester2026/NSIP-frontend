@@ -86,12 +86,9 @@ export default function DetalleEquipo() {
     }
   };
 
-  const esHoy = (fecha) => {
+    const esHoy = (fecha) => {
     if (!fecha) return false;
-    const fechaComparar = new Date(fecha);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    fechaComparar.setHours(0, 0, 0, 0);
+    const fechaComparar = normalizarFecha(fecha);
     return fechaComparar.getTime() === hoy.getTime();
   };
 
@@ -410,17 +407,43 @@ export default function DetalleEquipo() {
     return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  // ==========================================
-  // FILTRADO DE MANTENIMIENTOS
-  // ==========================================
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  
-  const mantenimientosPendientes = mantenimientos.filter(m => m.estado === 'pendiente');
-  const mantenimientosCompletados = mantenimientos.filter(m => m.estado === 'completado');
-  const mantenimientosProximos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) >= hoy);
-  const mantenimientosVencidos = mantenimientosPendientes.filter(m => new Date(m.fecha_inicio) < hoy);
-  const mantenimientosCompletadosFiltrados = filtrarMantenimientosCompletados();
+// ==========================================
+// FILTRADO DE MANTENIMIENTOS
+// ==========================================
+
+    // Función para normalizar fecha (sin hora)
+    const normalizarFecha = (fecha) => {
+      if (!fecha) return null;
+      const date = new Date(fecha);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
+    const hoy = normalizarFecha(new Date());
+
+    const mantenimientosPendientes = mantenimientos.filter(m => m.estado === 'pendiente');
+    const mantenimientosCompletados = mantenimientos.filter(m => m.estado === 'completado');
+
+    // Próximos: fecha >= hoy (incluye el día de hoy)
+    const mantenimientosProximos = mantenimientosPendientes.filter(m => {
+      const fechaMant = normalizarFecha(m.fecha_inicio);
+      return fechaMant && fechaMant >= hoy;
+    });
+
+    // Vencidos: fecha < hoy (solo días anteriores a hoy)
+    const mantenimientosVencidos = mantenimientosPendientes.filter(m => {
+      const fechaMant = normalizarFecha(m.fecha_inicio);
+      return fechaMant && fechaMant < hoy;
+    });
+
+    const mantenimientosCompletadosFiltrados = filtrarMantenimientosCompletados();
+
+    // Función esHoy (después de tener hoy definido)
+    const esHoy = (fecha) => {
+      if (!fecha) return false;
+      const fechaComparar = normalizarFecha(fecha);
+      return fechaComparar && fechaComparar.getTime() === hoy.getTime();
+    };
 
   // ==========================================
   // RENDER

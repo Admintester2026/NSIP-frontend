@@ -53,9 +53,46 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
 
   const validateForm = () => {
     const errors = [];
-    if (!formData.titulo.trim()) errors.push('El título es requerido');
-    if (!formData.fecha_inicio) errors.push('La fecha de inicio es requerida');
-    if (!formData.tipo) errors.push('El tipo de mantenimiento es requerido');
+    
+    // Validar título
+    if (!formData.titulo.trim()) {
+      errors.push('El título es requerido');
+      setTouched(prev => ({ ...prev, titulo: true }));
+    }
+    
+    // Validar fecha de inicio
+    if (!formData.fecha_inicio) {
+      errors.push('La fecha de inicio es requerida');
+      setTouched(prev => ({ ...prev, fecha_inicio: true }));
+    } else {
+      // Validar que la fecha no sea anterior a hoy
+      const fechaSeleccionada = new Date(formData.fecha_inicio);
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      fechaSeleccionada.setHours(0, 0, 0, 0);
+      
+      if (fechaSeleccionada < hoy) {
+        errors.push('No se puede programar un mantenimiento en una fecha pasada');
+      }
+    }
+    
+    // Validar tipo
+    if (!formData.tipo) {
+      errors.push('El tipo de mantenimiento es requerido');
+      setTouched(prev => ({ ...prev, tipo: true }));
+    }
+    
+    // Validar que fecha_fin no sea anterior a fecha_inicio
+    if (formData.fecha_inicio && formData.fecha_fin) {
+      const inicio = new Date(formData.fecha_inicio);
+      const fin = new Date(formData.fecha_fin);
+      inicio.setHours(0, 0, 0, 0);
+      fin.setHours(0, 0, 0, 0);
+      
+      if (fin < inicio) {
+        errors.push('La fecha de fin no puede ser anterior a la fecha de inicio');
+      }
+    }
     
     if (errors.length > 0) {
       setError(errors.join('. '));
@@ -100,6 +137,9 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
 
   if (!isOpen) return null;
 
+  // Obtener fecha mínima (hoy) para el input date
+  const hoy = new Date().toISOString().split('T')[0];
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -122,6 +162,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                 onBlur={() => handleBlur('titulo')}
                 placeholder="Ej: Lubricación de rodamientos"
                 className={touched.titulo && !formData.titulo.trim() ? styles.inputError : ''}
+                required
               />
               {touched.titulo && !formData.titulo.trim() && <span className={styles.errorText}>El título es requerido</span>}
             </div>
@@ -146,6 +187,8 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                   value={formData.fecha_inicio}
                   onChange={handleChange}
                   onBlur={() => handleBlur('fecha_inicio')}
+                  min={hoy}
+                  required
                   className={touched.fecha_inicio && !formData.fecha_inicio ? styles.inputError : ''}
                 />
                 {touched.fecha_inicio && !formData.fecha_inicio && <span className={styles.errorText}>La fecha de inicio es requerida</span>}
@@ -157,6 +200,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                   name="fecha_fin"
                   value={formData.fecha_fin}
                   onChange={handleChange}
+                  min={formData.fecha_inicio || hoy}
                 />
               </div>
             </div>
@@ -164,7 +208,13 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
             <div className={styles.row}>
               <div className={styles.formGroup}>
                 <label>Tipo *</label>
-                <select name="tipo" value={formData.tipo} onChange={handleChange} onBlur={() => handleBlur('tipo')}>
+                <select 
+                  name="tipo" 
+                  value={formData.tipo} 
+                  onChange={handleChange} 
+                  onBlur={() => handleBlur('tipo')}
+                  required
+                >
                   {tipos.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
