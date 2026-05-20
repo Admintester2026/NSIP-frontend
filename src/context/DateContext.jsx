@@ -152,7 +152,7 @@ export const DateProvider = ({ children }) => {
    */
   const validateDateRange = useCallback((fechaInicio, fechaFin) => {
     if (!fechaInicio) return { valid: false, error: 'Fecha de inicio requerida' };
-    if (!fechaFin) return { valid: true, error: null }; // fecha fin es opcional
+    if (!fechaFin) return { valid: true, error: null };
     
     const inicio = stringToLocalDate(fechaInicio);
     const fin = stringToLocalDate(fechaFin);
@@ -187,27 +187,18 @@ export const DateProvider = ({ children }) => {
 
   // Valores expuestos por el contexto
   const value = {
-    // Funciones de conversión
     stringToLocalDate,
     dateToLocalString,
     isoToLocalDate,
-    
-    // Funciones de comparación
     compareDates,
     isToday,
     isFuture,
     isPast,
-    
-    // Utilidades
     getTodayLocal,
     getTodayString,
     formatDateDisplay,
-    
-    // Validaciones
     validateNotPast,
     validateDateRange,
-    
-    // Indicadores
     getMonthIndicator
   };
 
