@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
+import { useDateUtils } from '../../context/DateContext';
 import styles from './AddMantenimientoModal.module.css';
 
 export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equipoId }) {
+  const { validateNotPast, validateDateRange, getTodayString } = useDateUtils();
+  
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
@@ -16,7 +19,9 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
   const [error, setError] = useState('');
   const [touched, setTouched] = useState({
     titulo: false,
+    descripcion: false,
     fecha_inicio: false,
+    fecha_fin: false,
     tipo: false
   });
 
@@ -51,11 +56,6 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
     setTouched(prev => ({ ...prev, [field]: true }));
   };
 
-  // Función para crear fecha local (año, mes, día) SIN zona horaria
-  const crearFechaLocal = (year, month, day) => {
-    return new Date(year, month - 1, day); // month -1 porque JS usa 0-11
-  };
-
   const validateForm = () => {
     const errors = [];
     
@@ -65,40 +65,30 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
       setTouched(prev => ({ ...prev, titulo: true }));
     }
     
+    // Validar descripción (obligatoria)
+    if (!formData.descripcion.trim()) {
+      errors.push('La descripción es requerida');
+      setTouched(prev => ({ ...prev, descripcion: true }));
+    }
+    
     // Validar fecha de inicio
-    if (!formData.fecha_inicio) {
-      errors.push('La fecha de inicio es requerida');
+    const fechaValidation = validateNotPast(formData.fecha_inicio, 'fecha de inicio');
+    if (!fechaValidation.valid) {
+      errors.push(fechaValidation.error);
       setTouched(prev => ({ ...prev, fecha_inicio: true }));
-    } else {
-      // Crear fecha usando año, mes, día (NO string ISO)
-      const [year, month, day] = formData.fecha_inicio.split('-').map(Number);
-      const fechaSeleccionada = crearFechaLocal(year, month, day);
-      
-      // Crear fecha de hoy con año, mes, día
-      const hoy = new Date();
-      const fechaHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      
-      if (fechaSeleccionada < fechaHoy) {
-        errors.push('No se puede programar un mantenimiento en una fecha pasada');
-      }
+    }
+    
+    // Validar rango de fechas
+    const rangeValidation = validateDateRange(formData.fecha_inicio, formData.fecha_fin);
+    if (!rangeValidation.valid) {
+      errors.push(rangeValidation.error);
+      setTouched(prev => ({ ...prev, fecha_fin: true }));
     }
     
     // Validar tipo
     if (!formData.tipo) {
       errors.push('El tipo de mantenimiento es requerido');
       setTouched(prev => ({ ...prev, tipo: true }));
-    }
-    
-    // Validar que fecha_fin no sea anterior a fecha_inicio
-    if (formData.fecha_inicio && formData.fecha_fin) {
-      const [yearIni, monthIni, dayIni] = formData.fecha_inicio.split('-').map(Number);
-      const [yearFin, monthFin, dayFin] = formData.fecha_fin.split('-').map(Number);
-      const inicio = crearFechaLocal(yearIni, monthIni, dayIni);
-      const fin = crearFechaLocal(yearFin, monthFin, dayFin);
-      
-      if (fin < inicio) {
-        errors.push('La fecha de fin no puede ser anterior a la fecha de inicio');
-      }
     }
     
     if (errors.length > 0) {
@@ -131,7 +121,13 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
         prioridad: 'media',
         recurrencia: ''
       });
-      setTouched({ titulo: false, fecha_inicio: false, tipo: false });
+      setTouched({
+        titulo: false,
+        descripcion: false,
+        fecha_inicio: false,
+        fecha_fin: false,
+        tipo: false
+      });
 
       if (onSuccess) onSuccess();
       onClose();
@@ -144,9 +140,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
 
   if (!isOpen) return null;
 
-  // Obtener fecha mínima (hoy) para el input date en formato YYYY-MM-DD
-  const hoy = new Date();
-  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  const hoyStr = getTodayString();
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -176,14 +170,18 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
             </div>
 
             <div className={styles.formGroup}>
-              <label>Descripción</label>
+              <label>Descripción *</label>
               <textarea
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleChange}
+                onBlur={() => handleBlur('descripcion')}
                 rows="3"
                 placeholder="Detalles del mantenimiento..."
+                className={touched.descripcion && !formData.descripcion.trim() ? styles.inputError : ''}
+                required
               />
+              {touched.descripcion && !formData.descripcion.trim() && <span className={styles.errorText}>La descripción es requerida</span>}
             </div>
 
             <div className={styles.row}>
@@ -208,8 +206,12 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                   name="fecha_fin"
                   value={formData.fecha_fin}
                   onChange={handleChange}
+                  onBlur={() => handleBlur('fecha_fin')}
                   min={formData.fecha_inicio || hoyStr}
                 />
+                {touched.fecha_fin && formData.fecha_fin && formData.fecha_fin < formData.fecha_inicio && (
+                  <span className={styles.errorText}>La fecha fin no puede ser anterior a la fecha inicio</span>
+                )}
               </div>
             </div>
 

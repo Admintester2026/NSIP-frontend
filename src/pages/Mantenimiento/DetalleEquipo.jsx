@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
+import { useDateUtils } from '../../context/DateContext';
 import AddEquipmentModal from '../../components/mantenimiento/AddEquipmentModal';
 import AddMantenimientoModal from '../../components/mantenimiento/AddMantenimientoModal';
 import AddHistorialModal from '../../components/mantenimiento/AddHistorialModal';
@@ -13,6 +14,17 @@ import styles from './styles/Detallesquiposestilos/DetalleEquipo.module.css';
 export default function DetalleEquipo() {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  // Usar el contexto de fechas
+  const { 
+    isoToLocalDate, 
+    getTodayLocal, 
+    compareDates,
+    isToday,
+    formatDateDisplay,
+    getMonthIndicator
+  } = useDateUtils();
+  
   const [equipo, setEquipo] = useState(null);
   const [mantenimientos, setMantenimientos] = useState([]);
   const [incidencias, setIncidencias] = useState([]);
@@ -65,37 +77,9 @@ export default function DetalleEquipo() {
   const CLAVE_PREVENTIVA = 'C';
 
   // ==========================================
-  // FUNCIONES AUXILIARES
+  // FUNCIONES AUXILIARES (usando contexto)
   // ==========================================
   
-  // Función para obtener fecha SOLO año-mes-día (sin zona horaria)
-  const obtenerFechaLocal = (fecha) => {
-    if (!fecha) return null;
-    const d = new Date(fecha);
-    // Crear fecha usando año, mes, día (evita problemas de zona horaria)
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  };
-  
-  const obtenerIndicadorMes = (fecha) => {
-    if (!fecha) return null;
-    const fechaMant = obtenerFechaLocal(fecha);
-    const ahora = obtenerFechaLocal(new Date());
-    if (!fechaMant || !ahora) return null;
-    
-    const mesActual = ahora.getMonth();
-    const añoActual = ahora.getFullYear();
-    const mesMant = fechaMant.getMonth();
-    const añoMant = fechaMant.getFullYear();
-    
-    if (añoMant === añoActual && mesMant === mesActual) {
-      return { texto: '📅 Mes actual', clase: 'mesActual' };
-    } else if (añoMant < añoActual || (añoMant === añoActual && mesMant < mesActual)) {
-      return { texto: '📆 Mes pasado', clase: 'mesPasado' };
-    } else {
-      return { texto: '📅 Mes próximo', clase: 'mesProximo' };
-    }
-  };
-
   const filtrarMantenimientosCompletados = () => {
     if (!buscarEnCompletados.trim()) return mantenimientosCompletados;
     
@@ -103,9 +87,9 @@ export default function DetalleEquipo() {
     return mantenimientosCompletados.filter(m => {
       let fecha;
       if (filtroCompletadosPor === 'completado') {
-        fecha = obtenerFechaLocal(m.fecha_completado || m.fecha_fin);
+        fecha = isoToLocalDate(m.fecha_completado || m.fecha_fin);
       } else {
-        fecha = obtenerFechaLocal(m.fecha_inicio);
+        fecha = isoToLocalDate(m.fecha_inicio);
       }
       if (!fecha) return false;
       const fechaStr = `${fecha.getDate().toString().padStart(2,'0')}/${(fecha.getMonth()+1).toString().padStart(2,'0')}/${fecha.getFullYear()}`;
@@ -120,8 +104,8 @@ export default function DetalleEquipo() {
   // Funciones de ordenamiento
   const ordenarProximos = (lista) => {
     return [...lista].sort((a, b) => {
-      const fechaA = obtenerFechaLocal(a.fecha_inicio);
-      const fechaB = obtenerFechaLocal(b.fecha_inicio);
+      const fechaA = isoToLocalDate(a.fecha_inicio);
+      const fechaB = isoToLocalDate(b.fecha_inicio);
       if (!fechaA || !fechaB) return 0;
       return ordenProximos === 'asc' ? fechaA - fechaB : fechaB - fechaA;
     });
@@ -129,8 +113,8 @@ export default function DetalleEquipo() {
 
   const ordenarVencidos = (lista) => {
     return [...lista].sort((a, b) => {
-      const fechaA = obtenerFechaLocal(a.fecha_inicio);
-      const fechaB = obtenerFechaLocal(b.fecha_inicio);
+      const fechaA = isoToLocalDate(a.fecha_inicio);
+      const fechaB = isoToLocalDate(b.fecha_inicio);
       if (!fechaA || !fechaB) return 0;
       return ordenVencidos === 'asc' ? fechaA - fechaB : fechaB - fechaA;
     });
@@ -140,11 +124,11 @@ export default function DetalleEquipo() {
     return [...lista].sort((a, b) => {
       let fechaA, fechaB;
       if (filtroCompletadosPor === 'completado') {
-        fechaA = obtenerFechaLocal(a.fecha_completado || a.fecha_fin);
-        fechaB = obtenerFechaLocal(b.fecha_completado || b.fecha_fin);
+        fechaA = isoToLocalDate(a.fecha_completado || a.fecha_fin);
+        fechaB = isoToLocalDate(b.fecha_completado || b.fecha_fin);
       } else {
-        fechaA = obtenerFechaLocal(a.fecha_inicio);
-        fechaB = obtenerFechaLocal(b.fecha_inicio);
+        fechaA = isoToLocalDate(a.fecha_inicio);
+        fechaB = isoToLocalDate(b.fecha_inicio);
       }
       if (!fechaA || !fechaB) return 0;
       return ordenCompletados === 'asc' ? fechaA - fechaB : fechaB - fechaA;
@@ -280,10 +264,11 @@ export default function DetalleEquipo() {
 
   const requiereClave = (mantenimiento) => {
     const esPreventivo = mantenimiento.tipo === 'preventivo';
-    const fechaMant = obtenerFechaLocal(mantenimiento.fecha_inicio);
-    const hoyLocal = obtenerFechaLocal(new Date());
-    const esFuturo = fechaMant && hoyLocal && fechaMant > hoyLocal;
-    return esPreventivo && esFuturo;
+    if (!esPreventivo) return false;
+    
+    const fechaMant = isoToLocalDate(mantenimiento.fecha_inicio);
+    const hoyLocal = getTodayLocal();
+    return fechaMant && fechaMant > hoyLocal;
   };
 
   const handleCompletarClick = (mantenimiento) => {
@@ -405,9 +390,8 @@ export default function DetalleEquipo() {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'No definida';
-    const date = obtenerFechaLocal(dateString);
-    if (!date || isNaN(date.getTime())) return 'Fecha inválida';
-    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+    const date = isoToLocalDate(dateString);
+    return formatDateDisplay(date);
   };
 
   const formatDateTime = (dateString) => {
@@ -420,31 +404,24 @@ export default function DetalleEquipo() {
   // ==========================================
   // FILTRADO DE MANTENIMIENTOS
   // ==========================================
-  const hoyLocal = obtenerFechaLocal(new Date());
+  const hoyLocal = getTodayLocal();
 
   const mantenimientosPendientes = mantenimientos.filter(m => m.estado === 'pendiente');
   const mantenimientosCompletados = mantenimientos.filter(m => m.estado === 'completado');
 
   // Próximos: fecha >= hoy (incluye el día de hoy)
   const mantenimientosProximos = mantenimientosPendientes.filter(m => {
-    const fechaMant = obtenerFechaLocal(m.fecha_inicio);
-    return fechaMant && fechaMant >= hoyLocal;
+    const fechaMant = isoToLocalDate(m.fecha_inicio);
+    return fechaMant && compareDates(fechaMant, hoyLocal) >= 0;
   });
 
   // Vencidos: fecha < hoy (solo días anteriores a hoy)
   const mantenimientosVencidos = mantenimientosPendientes.filter(m => {
-    const fechaMant = obtenerFechaLocal(m.fecha_inicio);
-    return fechaMant && fechaMant < hoyLocal;
+    const fechaMant = isoToLocalDate(m.fecha_inicio);
+    return fechaMant && compareDates(fechaMant, hoyLocal) < 0;
   });
 
   const mantenimientosCompletadosFiltrados = filtrarMantenimientosCompletados();
-
-  // Función esHoy
-  const esHoy = (fecha) => {
-    if (!fecha) return false;
-    const fechaComparar = obtenerFechaLocal(fecha);
-    return fechaComparar && hoyLocal && fechaComparar.getTime() === hoyLocal.getTime();
-  };
 
   // ==========================================
   // RENDER
@@ -545,7 +522,7 @@ export default function DetalleEquipo() {
         <button className={`${styles.tab} ${activeTab === 'historial' ? styles.active : ''}`} onClick={() => setActiveTab('historial')}>📜 Historial</button>
       </div>
 
-      {/* Contenido de los tabs - (el resto del código se mantiene igual) */}
+      {/* Contenido de los tabs */}
       <div className={styles.tabContent}>
         {/* Tab Mantenimientos */}
         {activeTab === 'mantenimientos' && (
@@ -561,12 +538,13 @@ export default function DetalleEquipo() {
               <div className={styles.mantenimientosListScroll}>
                 {ordenarProximos(mantenimientosProximos).map(m => {
                   const prioridadClass = getPrioridadClass(m.prioridad);
-                  const indicador = obtenerIndicadorMes(m.fecha_inicio);
+                  const indicador = getMonthIndicator(m.fecha_inicio);
+                  const esHoy = isToday(isoToLocalDate(m.fecha_inicio));
                   return (
                     <div key={m.id} className={`${styles.mantenimientoItem} ${prioridadClass} ${styles[indicador?.clase || '']}`}>
                       <div className={styles.mantenimientoHeader}>
                         <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
-                        {esHoy(m.fecha_inicio) && <span className={styles.hoyIcon} title="Programado para hoy">🔔</span>}
+                        {esHoy && <span className={styles.hoyIcon} title="Programado para hoy">🔔</span>}
                         {indicador && <span className={`${styles.indicadorMes} ${styles[indicador.clase]}`}>{indicador.texto}</span>}
                         <span className={`${styles.prioridadBadge} ${prioridadClass}`}>{getPrioridadTexto(m.prioridad)}</span>
                       </div>
@@ -640,7 +618,7 @@ export default function DetalleEquipo() {
               </div>
               <div className={styles.mantenimientosListScroll}>
                 {ordenarCompletados(mantenimientosCompletadosFiltrados).map(m => {
-                  const indicador = obtenerIndicadorMes(m.fecha_completado || m.fecha_fin);
+                  const indicador = getMonthIndicator(m.fecha_completado || m.fecha_fin);
                   return (
                     <div key={m.id} className={`${styles.mantenimientoItem} ${styles.clickable} ${styles[indicador?.clase || '']}`}>
                       <div className={styles.mantenimientoHeader}>
