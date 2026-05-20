@@ -68,10 +68,20 @@ export default function DetalleEquipo() {
   // FUNCIONES AUXILIARES
   // ==========================================
   
+  // Función para obtener fecha SOLO año-mes-día (sin zona horaria)
+  const obtenerFechaLocal = (fecha) => {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    // Crear fecha usando año, mes, día (evita problemas de zona horaria)
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+  
   const obtenerIndicadorMes = (fecha) => {
     if (!fecha) return null;
-    const fechaMant = new Date(fecha);
-    const ahora = new Date();
+    const fechaMant = obtenerFechaLocal(fecha);
+    const ahora = obtenerFechaLocal(new Date());
+    if (!fechaMant || !ahora) return null;
+    
     const mesActual = ahora.getMonth();
     const añoActual = ahora.getFullYear();
     const mesMant = fechaMant.getMonth();
@@ -93,10 +103,11 @@ export default function DetalleEquipo() {
     return mantenimientosCompletados.filter(m => {
       let fecha;
       if (filtroCompletadosPor === 'completado') {
-        fecha = new Date(m.fecha_completado || m.fecha_fin);
+        fecha = obtenerFechaLocal(m.fecha_completado || m.fecha_fin);
       } else {
-        fecha = new Date(m.fecha_inicio);
+        fecha = obtenerFechaLocal(m.fecha_inicio);
       }
+      if (!fecha) return false;
       const fechaStr = `${fecha.getDate().toString().padStart(2,'0')}/${(fecha.getMonth()+1).toString().padStart(2,'0')}/${fecha.getFullYear()}`;
       
       return fechaStr.includes(busqueda) ||
@@ -109,16 +120,18 @@ export default function DetalleEquipo() {
   // Funciones de ordenamiento
   const ordenarProximos = (lista) => {
     return [...lista].sort((a, b) => {
-      const fechaA = new Date(a.fecha_inicio);
-      const fechaB = new Date(b.fecha_inicio);
+      const fechaA = obtenerFechaLocal(a.fecha_inicio);
+      const fechaB = obtenerFechaLocal(b.fecha_inicio);
+      if (!fechaA || !fechaB) return 0;
       return ordenProximos === 'asc' ? fechaA - fechaB : fechaB - fechaA;
     });
   };
 
   const ordenarVencidos = (lista) => {
     return [...lista].sort((a, b) => {
-      const fechaA = new Date(a.fecha_inicio);
-      const fechaB = new Date(b.fecha_inicio);
+      const fechaA = obtenerFechaLocal(a.fecha_inicio);
+      const fechaB = obtenerFechaLocal(b.fecha_inicio);
+      if (!fechaA || !fechaB) return 0;
       return ordenVencidos === 'asc' ? fechaA - fechaB : fechaB - fechaA;
     });
   };
@@ -127,12 +140,13 @@ export default function DetalleEquipo() {
     return [...lista].sort((a, b) => {
       let fechaA, fechaB;
       if (filtroCompletadosPor === 'completado') {
-        fechaA = new Date(a.fecha_completado || a.fecha_fin);
-        fechaB = new Date(b.fecha_completado || b.fecha_fin);
+        fechaA = obtenerFechaLocal(a.fecha_completado || a.fecha_fin);
+        fechaB = obtenerFechaLocal(b.fecha_completado || b.fecha_fin);
       } else {
-        fechaA = new Date(a.fecha_inicio);
-        fechaB = new Date(b.fecha_inicio);
+        fechaA = obtenerFechaLocal(a.fecha_inicio);
+        fechaB = obtenerFechaLocal(b.fecha_inicio);
       }
+      if (!fechaA || !fechaB) return 0;
       return ordenCompletados === 'asc' ? fechaA - fechaB : fechaB - fechaA;
     });
   };
@@ -266,7 +280,9 @@ export default function DetalleEquipo() {
 
   const requiereClave = (mantenimiento) => {
     const esPreventivo = mantenimiento.tipo === 'preventivo';
-    const esFuturo = new Date(mantenimiento.fecha_inicio) > new Date();
+    const fechaMant = obtenerFechaLocal(mantenimiento.fecha_inicio);
+    const hoyLocal = obtenerFechaLocal(new Date());
+    const esFuturo = fechaMant && hoyLocal && fechaMant > hoyLocal;
     return esPreventivo && esFuturo;
   };
 
@@ -389,8 +405,8 @@ export default function DetalleEquipo() {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'No definida';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Fecha inválida';
+    const date = obtenerFechaLocal(dateString);
+    if (!date || isNaN(date.getTime())) return 'Fecha inválida';
     return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
@@ -401,43 +417,34 @@ export default function DetalleEquipo() {
     return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-// ==========================================
-// FILTRADO DE MANTENIMIENTOS
-// ==========================================
+  // ==========================================
+  // FILTRADO DE MANTENIMIENTOS
+  // ==========================================
+  const hoyLocal = obtenerFechaLocal(new Date());
 
-    // Función para normalizar fecha (sin hora)
-    const normalizarFecha = (fecha) => {
-      if (!fecha) return null;
-      const date = new Date(fecha);
-      date.setHours(0, 0, 0, 0);
-      return date;
-    };
+  const mantenimientosPendientes = mantenimientos.filter(m => m.estado === 'pendiente');
+  const mantenimientosCompletados = mantenimientos.filter(m => m.estado === 'completado');
 
-    const hoy = normalizarFecha(new Date());
+  // Próximos: fecha >= hoy (incluye el día de hoy)
+  const mantenimientosProximos = mantenimientosPendientes.filter(m => {
+    const fechaMant = obtenerFechaLocal(m.fecha_inicio);
+    return fechaMant && fechaMant >= hoyLocal;
+  });
 
-    const mantenimientosPendientes = mantenimientos.filter(m => m.estado === 'pendiente');
-    const mantenimientosCompletados = mantenimientos.filter(m => m.estado === 'completado');
+  // Vencidos: fecha < hoy (solo días anteriores a hoy)
+  const mantenimientosVencidos = mantenimientosPendientes.filter(m => {
+    const fechaMant = obtenerFechaLocal(m.fecha_inicio);
+    return fechaMant && fechaMant < hoyLocal;
+  });
 
-    // Próximos: fecha >= hoy (incluye el día de hoy)
-    const mantenimientosProximos = mantenimientosPendientes.filter(m => {
-      const fechaMant = normalizarFecha(m.fecha_inicio);
-      return fechaMant && fechaMant >= hoy;
-    });
+  const mantenimientosCompletadosFiltrados = filtrarMantenimientosCompletados();
 
-    // Vencidos: fecha < hoy (solo días anteriores a hoy)
-    const mantenimientosVencidos = mantenimientosPendientes.filter(m => {
-      const fechaMant = normalizarFecha(m.fecha_inicio);
-      return fechaMant && fechaMant < hoy;
-    });
-
-    const mantenimientosCompletadosFiltrados = filtrarMantenimientosCompletados();
-
-    // Función esHoy (después de tener hoy definido)
-    const esHoy = (fecha) => {
-      if (!fecha) return false;
-      const fechaComparar = normalizarFecha(fecha);
-      return fechaComparar && fechaComparar.getTime() === hoy.getTime();
-    };
+  // Función esHoy
+  const esHoy = (fecha) => {
+    if (!fecha) return false;
+    const fechaComparar = obtenerFechaLocal(fecha);
+    return fechaComparar && hoyLocal && fechaComparar.getTime() === hoyLocal.getTime();
+  };
 
   // ==========================================
   // RENDER
@@ -538,7 +545,7 @@ export default function DetalleEquipo() {
         <button className={`${styles.tab} ${activeTab === 'historial' ? styles.active : ''}`} onClick={() => setActiveTab('historial')}>📜 Historial</button>
       </div>
 
-      {/* Contenido de los tabs */}
+      {/* Contenido de los tabs - (el resto del código se mantiene igual) */}
       <div className={styles.tabContent}>
         {/* Tab Mantenimientos */}
         {activeTab === 'mantenimientos' && (
