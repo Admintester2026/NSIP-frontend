@@ -385,3 +385,32 @@
     min-width: auto;
   }
 }
+
+/* Estilos para inputs de duración */
+.horasInput, .minutosInput {
+  width: 100%;
+  text-align: center;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.row .formGroup {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Estilos de validación */
+.inputError {
+  border-color: var(--red) !important;
+}
+
+.errorText {
+  font-size: 0.7rem;
+  color: var(--red);
+  margin-top: 0.25rem;
+  display: block;
+}

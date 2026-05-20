@@ -7,7 +7,8 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
   const [formData, setFormData] = useState({
     tecnico: '',
     notas_completado: '',
-    duracion: '',
+    duracion_horas: '',
+    duracion_minutos: '',
     materiales_usados: '',
     costo_materiales: '',
     evidencias: []
@@ -15,6 +16,10 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [touched, setTouched] = useState({
+    tecnico: false,
+    notas_completado: false
+  });
   const fileInputRef = useRef(null);
   const [previewUrls, setPreviewUrls] = useState([]);
 
@@ -23,10 +28,13 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
   const handleFilesChange = (e) => {
     const files = Array.from(e.target.files);
     
-    // Validar tipos de archivo
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
     const validFiles = files.filter(file => allowedTypes.includes(file.type));
     
@@ -36,7 +44,6 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
     
     setFormData(prev => ({ ...prev, evidencias: [...prev.evidencias, ...validFiles] }));
     
-    // Crear URLs de preview
     const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
     setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
   };
@@ -62,7 +69,7 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
       
       try {
         setUploadProgress(Math.round((i / formData.evidencias.length) * 100));
-        const response = await fetch('/api/mantenimiento/upload-evidencia', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/upload-evidencia`, {
           method: 'POST',
           body: formDataFile
         });
@@ -76,37 +83,61 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
     return uploadedUrls;
   };
 
+  const validateForm = () => {
+    const errors = [];
+    if (!formData.tecnico.trim()) {
+      errors.push('El nombre del técnico es requerido');
+      setTouched(prev => ({ ...prev, tecnico: true }));
+    }
+    if (!formData.notas_completado.trim()) {
+      errors.push('Las notas de trabajo son requeridas');
+      setTouched(prev => ({ ...prev, notas_completado: true }));
+    }
+    
+    if (errors.length > 0) {
+      setError(errors.join('. '));
+      return false;
+    }
+    return true;
+  };
+
+  // Calcular duración total en minutos
+  const calcularDuracionMinutos = () => {
+    const horas = parseInt(formData.duracion_horas) || 0;
+    const minutos = parseInt(formData.duracion_minutos) || 0;
+    return (horas * 60) + minutos;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setLoading(true);
     setError('');
     setUploadProgress(0);
 
     try {
-      if (!formData.tecnico.trim()) {
-        throw new Error('El nombre del técnico es requerido');
-      }
-      if (!formData.notas_completado.trim()) {
-        throw new Error('Las notas de trabajo son requeridas');
-      }
-
-      // Primero subir evidencias (si hay)
       const evidenciasUrls = await uploadFiles();
+      const duracionTotalMinutos = calcularDuracionMinutos();
 
-      // Completar mantenimiento
-      await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/mantenimientos/${mantenimiento.id}/completar`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        notas_completado: formData.notas_completado,
-        tecnico: formData.tecnico,
-        duracion: formData.duracion,
-        materiales_usados: formData.materiales_usados,
-        costo_materiales: formData.costo_materiales
-    })
-});
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/mantenimientos/${mantenimiento.id}/completar`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notas_completado: formData.notas_completado,
+          tecnico: formData.tecnico,
+          duracion: duracionTotalMinutos > 0 ? duracionTotalMinutos : null,
+          materiales_usados: formData.materiales_usados || null,
+          costo_materiales: formData.costo_materiales ? parseFloat(formData.costo_materiales) : null
+        })
+      });
 
-      // Limpiar previews
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al completar el mantenimiento');
+      }
+
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
       if (onSuccess) onSuccess();
@@ -133,7 +164,6 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
           <div className={styles.modalBody}>
             {error && <div className={styles.errorMessage}>⚠️ {error}</div>}
 
-            {/* Info del mantenimiento */}
             <div className={styles.infoBox}>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Mantenimiento:</span>
@@ -153,10 +183,13 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
                 name="tecnico"
                 value={formData.tecnico}
                 onChange={handleChange}
+                onBlur={() => handleBlur('tecnico')}
                 placeholder="Nombre del técnico que realizó el trabajo"
                 required
                 autoComplete="off"
+                className={touched.tecnico && !formData.tecnico.trim() ? styles.inputError : ''}
               />
+              {touched.tecnico && !formData.tecnico.trim() && <span className={styles.errorText}>El técnico es requerido</span>}
               <small className={styles.fieldHint}>Nombre de la persona que realizó el mantenimiento</small>
             </div>
 
@@ -167,26 +200,49 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
                 name="notas_completado"
                 value={formData.notas_completado}
                 onChange={handleChange}
+                onBlur={() => handleBlur('notas_completado')}
                 rows="4"
                 placeholder="Describa detalladamente lo que se hizo, piezas reemplazadas, ajustes, etc."
                 required
+                className={touched.notas_completado && !formData.notas_completado.trim() ? styles.inputError : ''}
               />
+              {touched.notas_completado && !formData.notas_completado.trim() && <span className={styles.errorText}>Las notas son requeridas</span>}
             </div>
 
-            {/* Duración */}
-            <div className={styles.row}>
-              <div className={styles.formGroup}>
-                <label>⏱️ Duración</label>
-                <input
-                  type="number"
-                  name="duracion"
-                  value={formData.duracion}
-                  onChange={handleChange}
-                  placeholder="Minutos"
-                  step="5"
-                />
-                <small className={styles.fieldHint}>Tiempo total del trabajo (en minutos)</small>
+            {/* Duración - Horas y Minutos */}
+            <div className={styles.formGroup}>
+              <label>⏱️ Duración</label>
+              <div className={styles.row}>
+                <div className={styles.formGroup}>
+                  <input
+                    type="number"
+                    name="duracion_horas"
+                    value={formData.duracion_horas}
+                    onChange={handleChange}
+                    placeholder="Horas"
+                    min="0"
+                    step="1"
+                    className={styles.horasInput}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <input
+                    type="number"
+                    name="duracion_minutos"
+                    value={formData.duracion_minutos}
+                    onChange={handleChange}
+                    placeholder="Minutos"
+                    min="0"
+                    max="59"
+                    step="1"
+                    className={styles.minutosInput}
+                  />
+                </div>
               </div>
+              <small className={styles.fieldHint}>Tiempo total del trabajo (ej: 2 horas 30 minutos)</small>
+            </div>
+
+            <div className={styles.row}>
               <div className={styles.formGroup}>
                 <label>💰 Costo de materiales</label>
                 <input
@@ -196,6 +252,7 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
                   onChange={handleChange}
                   placeholder="$0.00"
                   step="0.01"
+                  min="0"
                 />
               </div>
             </div>
@@ -236,7 +293,6 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
                 </span>
               </div>
               
-              {/* Previews */}
               {previewUrls.length > 0 && (
                 <div className={styles.previewGrid}>
                   {previewUrls.map((url, idx) => (
@@ -259,7 +315,6 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
               )}
             </div>
 
-            {/* Progress bar */}
             {uploadProgress > 0 && uploadProgress < 100 && (
               <div className={styles.progressBar}>
                 <div 
