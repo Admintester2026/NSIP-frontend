@@ -15,13 +15,11 @@ export default function DetalleEquipo() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Usar el contexto de fechas
   const { 
     isoToLocalDate, 
     getTodayLocal, 
     compareDates,
     isToday,
-    formatDateDisplay,
     getMonthIndicator
   } = useDateUtils();
   
@@ -59,7 +57,7 @@ export default function DetalleEquipo() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  // NUEVOS ESTADOS PARA ORDENAMIENTO Y FILTROS
+  // Estados para ordenamiento y filtros
   const [ordenProximos, setOrdenProximos] = useState('asc');
   const [ordenVencidos, setOrdenVencidos] = useState('asc');
   const [ordenCompletados, setOrdenCompletados] = useState('asc');
@@ -77,7 +75,40 @@ export default function DetalleEquipo() {
   const CLAVE_PREVENTIVA = 'C';
 
   // ==========================================
-  // FUNCIONES AUXILIARES (usando contexto)
+  // FUNCIONES DE FORMATO CORREGIDAS
+  // ==========================================
+  
+  // Formatea fecha YYYY-MM-DD a DD/MM/YYYY sin problemas de zona horaria
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No definida';
+    // Usar split para evitar problemas de zona horaria
+    const [year, month, day] = dateString.split('-').map(Number);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return 'Fecha inválida';
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('es-MX', { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+
+  // Formatea fecha con hora (para completados)
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'No definida';
+    // Si viene con hora (ej: 2026-05-20T...), extraer solo la fecha
+    const fechaLimpia = dateString.split('T')[0];
+    const [year, month, day] = fechaLimpia.split('-').map(Number);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return 'Fecha inválida';
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('es-MX', { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric'
+    });
+  };
+
+  // ==========================================
+  // FUNCIONES AUXILIARES
   // ==========================================
   
   const filtrarMantenimientosCompletados = () => {
@@ -346,7 +377,7 @@ export default function DetalleEquipo() {
   };
 
   // ==========================================
-  // FUNCIONES DE ESTILO Y FORMATO
+  // FUNCIONES DE ESTILO
   // ==========================================
   const getEstadoClass = () => {
     switch (equipo?.estado) {
@@ -388,19 +419,6 @@ export default function DetalleEquipo() {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'No definida';
-    const date = isoToLocalDate(dateString);
-    return formatDateDisplay(date);
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return 'No definida';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Fecha inválida';
-    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
   // ==========================================
   // FILTRADO DE MANTENIMIENTOS
   // ==========================================
@@ -409,13 +427,11 @@ export default function DetalleEquipo() {
   const mantenimientosPendientes = mantenimientos.filter(m => m.estado === 'pendiente');
   const mantenimientosCompletados = mantenimientos.filter(m => m.estado === 'completado');
 
-  // Próximos: fecha >= hoy (incluye el día de hoy)
   const mantenimientosProximos = mantenimientosPendientes.filter(m => {
     const fechaMant = isoToLocalDate(m.fecha_inicio);
     return fechaMant && compareDates(fechaMant, hoyLocal) >= 0;
   });
 
-  // Vencidos: fecha < hoy (solo días anteriores a hoy)
   const mantenimientosVencidos = mantenimientosPendientes.filter(m => {
     const fechaMant = isoToLocalDate(m.fecha_inicio);
     return fechaMant && compareDates(fechaMant, hoyLocal) < 0;
@@ -466,7 +482,6 @@ export default function DetalleEquipo() {
         </div>
       )}
 
-      {/* Header con botones */}
       <div className={styles.header}>
         <Link to="/mantenimiento/equipos" className={styles.backLink}>← Volver a Equipos</Link>
         <div className={styles.headerActions}>
@@ -476,7 +491,6 @@ export default function DetalleEquipo() {
         </div>
       </div>
 
-      {/* Hero / Información principal */}
       <div className={styles.heroSection}>
         <div className={styles.fotoContainer}>
           {equipo.foto_url && !imageError ? (
@@ -507,14 +521,12 @@ export default function DetalleEquipo() {
         </div>
       </div>
 
-      {/* Botones de acción rápidos */}
       <div className={styles.actionButtonsBar}>
         <button className={styles.actionBtn} onClick={() => setShowMantModal(true)}>🔧 Programar Mantenimiento</button>
         <button className={styles.actionBtn} onClick={() => setShowHistorialModal(true)}>📝 Registrar Cambio</button>
         <button className={styles.actionBtn} onClick={() => setShowIncidenciaModal(true)}>⚠️ Reportar Incidencia</button>
       </div>
 
-      {/* Tabs de navegación */}
       <div className={styles.tabsContainer}>
         <button className={`${styles.tab} ${activeTab === 'mantenimientos' ? styles.active : ''}`} onClick={() => setActiveTab('mantenimientos')}>🔧 Mantenimientos</button>
         <button className={`${styles.tab} ${activeTab === 'incidencias' ? styles.active : ''}`} onClick={() => setActiveTab('incidencias')}>⚠️ Incidencias</button>
@@ -522,16 +534,14 @@ export default function DetalleEquipo() {
         <button className={`${styles.tab} ${activeTab === 'historial' ? styles.active : ''}`} onClick={() => setActiveTab('historial')}>📜 Historial</button>
       </div>
 
-      {/* Contenido de los tabs */}
       <div className={styles.tabContent}>
         {/* Tab Mantenimientos */}
         {activeTab === 'mantenimientos' && (
           <div className={styles.mantenimientosTab}>
-            {/* Próximos mantenimientos */}
             <div className={styles.card}>
               <div className={styles.cardHeaderWithButton}>
                 <h3 className={styles.cardTitle}>⏰ Próximos Mantenimientos ({mantenimientosProximos.length})</h3>
-                <button className={styles.orderButton} onClick={() => setOrdenProximos(ordenProximos === 'asc' ? 'desc' : 'asc')} title={ordenProximos === 'asc' ? 'Del más cercano al más lejano' : 'Del más lejano al más cercano'}>
+                <button className={styles.orderButton} onClick={() => setOrdenProximos(ordenProximos === 'asc' ? 'desc' : 'asc')}>
                   {ordenProximos === 'asc' ? '📅 ↑' : '📅 ↓'}
                 </button>
               </div>
@@ -565,12 +575,11 @@ export default function DetalleEquipo() {
               </div>
             </div>
 
-            {/* Mantenimientos vencidos */}
             {ordenarVencidos(mantenimientosVencidos).length > 0 && (
               <div className={`${styles.card} ${styles.vencido}`}>
                 <div className={styles.cardHeaderWithButton}>
                   <h3 className={styles.cardTitle}>⚠️ Mantenimientos Atrasados ({mantenimientosVencidos.length})</h3>
-                  <button className={styles.orderButton} onClick={() => setOrdenVencidos(ordenVencidos === 'asc' ? 'desc' : 'asc')} title={ordenVencidos === 'asc' ? 'Más antiguo primero' : 'Más reciente primero'}>
+                  <button className={styles.orderButton} onClick={() => setOrdenVencidos(ordenVencidos === 'asc' ? 'desc' : 'asc')}>
                     {ordenVencidos === 'asc' ? '📅 ↑' : '📅 ↓'}
                   </button>
                 </div>
@@ -598,7 +607,6 @@ export default function DetalleEquipo() {
               </div>
             )}
 
-            {/* Mantenimientos completados con buscador y filtros */}
             <div className={styles.card}>
               <div className={styles.cardHeaderWithSearch}>
                 <h3 className={styles.cardTitle}>✅ Mantenimientos Completados ({mantenimientosCompletados.length})</h3>
@@ -607,7 +615,7 @@ export default function DetalleEquipo() {
                     <option value="completado">Ordenar por fecha completado</option>
                     <option value="programado">Ordenar por fecha programado</option>
                   </select>
-                  <button className={styles.orderButton} onClick={() => setOrdenCompletados(ordenCompletados === 'asc' ? 'desc' : 'asc')} title={ordenCompletados === 'asc' ? 'Más antiguo primero' : 'Más reciente primero'}>
+                  <button className={styles.orderButton} onClick={() => setOrdenCompletados(ordenCompletados === 'asc' ? 'desc' : 'asc')}>
                     {ordenCompletados === 'asc' ? '📅 ↑' : '📅 ↓'}
                   </button>
                   <div className={styles.searchContainer}>
@@ -734,7 +742,6 @@ export default function DetalleEquipo() {
       <DetalleMantenimientoModal isOpen={showDetalleModal} onClose={() => setShowDetalleModal(false)} mantenimiento={mantenimientoSeleccionado} equipoNombre={equipo?.nombre} onEdit={cargarDatos} />
       <ReprogramarModal isOpen={showReprogramarModal} onClose={() => setShowReprogramarModal(false)} onSuccess={handleReprogramarSuccess} mantenimiento={mantenimientoAReprogramar} />
 
-      {/* Modal para clave preventiva */}
       {showClaveModal && (
         <div className={styles.modalOverlay} onClick={() => setShowClaveModal(false)}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
@@ -756,7 +763,6 @@ export default function DetalleEquipo() {
         </div>
       )}
 
-      {/* Modal de confirmación de eliminación del equipo */}
       {showDeleteConfirm && (
         <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
