@@ -51,6 +51,11 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
     setTouched(prev => ({ ...prev, [field]: true }));
   };
 
+  // Función para crear fecha local (año, mes, día) SIN zona horaria
+  const crearFechaLocal = (year, month, day) => {
+    return new Date(year, month - 1, day); // month -1 porque JS usa 0-11
+  };
+
   const validateForm = () => {
     const errors = [];
     
@@ -65,13 +70,15 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
       errors.push('La fecha de inicio es requerida');
       setTouched(prev => ({ ...prev, fecha_inicio: true }));
     } else {
-      // Validar que la fecha no sea anterior a hoy
-      const fechaSeleccionada = new Date(formData.fecha_inicio);
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      fechaSeleccionada.setHours(0, 0, 0, 0);
+      // Crear fecha usando año, mes, día (NO string ISO)
+      const [year, month, day] = formData.fecha_inicio.split('-').map(Number);
+      const fechaSeleccionada = crearFechaLocal(year, month, day);
       
-      if (fechaSeleccionada < hoy) {
+      // Crear fecha de hoy con año, mes, día
+      const hoy = new Date();
+      const fechaHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      
+      if (fechaSeleccionada < fechaHoy) {
         errors.push('No se puede programar un mantenimiento en una fecha pasada');
       }
     }
@@ -84,10 +91,10 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
     
     // Validar que fecha_fin no sea anterior a fecha_inicio
     if (formData.fecha_inicio && formData.fecha_fin) {
-      const inicio = new Date(formData.fecha_inicio);
-      const fin = new Date(formData.fecha_fin);
-      inicio.setHours(0, 0, 0, 0);
-      fin.setHours(0, 0, 0, 0);
+      const [yearIni, monthIni, dayIni] = formData.fecha_inicio.split('-').map(Number);
+      const [yearFin, monthFin, dayFin] = formData.fecha_fin.split('-').map(Number);
+      const inicio = crearFechaLocal(yearIni, monthIni, dayIni);
+      const fin = crearFechaLocal(yearFin, monthFin, dayFin);
       
       if (fin < inicio) {
         errors.push('La fecha de fin no puede ser anterior a la fecha de inicio');
@@ -137,8 +144,9 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
 
   if (!isOpen) return null;
 
-  // Obtener fecha mínima (hoy) para el input date
-  const hoy = new Date().toISOString().split('T')[0];
+  // Obtener fecha mínima (hoy) para el input date en formato YYYY-MM-DD
+  const hoy = new Date();
+  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -187,7 +195,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                   value={formData.fecha_inicio}
                   onChange={handleChange}
                   onBlur={() => handleBlur('fecha_inicio')}
-                  min={hoy}
+                  min={hoyStr}
                   required
                   className={touched.fecha_inicio && !formData.fecha_inicio ? styles.inputError : ''}
                 />
@@ -200,7 +208,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                   name="fecha_fin"
                   value={formData.fecha_fin}
                   onChange={handleChange}
-                  min={formData.fecha_inicio || hoy}
+                  min={formData.fecha_inicio || hoyStr}
                 />
               </div>
             </div>
