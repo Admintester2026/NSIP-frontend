@@ -1,5 +1,5 @@
-// src/components/mantenimiento/AddIncidenciaModal.jsx
-import { useState } from 'react';
+// FRONTEND/src/components/mantenimiento/AddIncidenciaModal.jsx
+import { useState, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './AddIncidenciaModal.module.css';
 
@@ -7,14 +7,18 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
-    gravedad: 'media'
+    gravedad: 'media',
+    evidencias: []
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [touched, setTouched] = useState({
     titulo: false,
     descripcion: false
   });
+  const fileInputRef = useRef(null);
+  const [previewUrls, setPreviewUrls] = useState([]);
 
   const gravedades = [
     { value: 'critica', label: '🔥 Crítica' },
@@ -32,10 +36,66 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
     setTouched(prev => ({ ...prev, [field]: true }));
   };
 
+  const handleFilesChange = (e) => {
+    const files = Array.from(e.target.files);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    const validFiles = files.filter(file => allowedTypes.includes(file.type));
+    
+    if (validFiles.length !== files.length) {
+      setError('Algunos archivos no son válidos. Solo JPG, PNG, GIF y PDF.');
+    }
+    
+    setFormData(prev => ({ ...prev, evidencias: [...prev.evidencias, ...validFiles] }));
+    
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+  };
+
+  const removeFile = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      evidencias: prev.evidencias.filter((_, i) => i !== index)
+    }));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadFiles = async () => {
+    if (formData.evidencias.length === 0) return [];
+    
+    const uploadedUrls = [];
+    for (let i = 0; i < formData.evidencias.length; i++) {
+      const file = formData.evidencias[i];
+      const formDataFile = new FormData();
+      formDataFile.append('archivo', file);
+      formDataFile.append('tipo', 'incidencia');
+      formDataFile.append('equipo_id', equipoId);
+      
+      try {
+        setUploadProgress(Math.round((i / formData.evidencias.length) * 100));
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/upload-evidencia-incidencia`, {
+          method: 'POST',
+          body: formDataFile
+        });
+        const data = await response.json();
+        uploadedUrls.push(data.url);
+      } catch (err) {
+        console.error(`Error subiendo archivo ${i}:`, err);
+      }
+    }
+    setUploadProgress(100);
+    return uploadedUrls;
+  };
+
   const validateForm = () => {
     const errors = [];
-    if (!formData.titulo.trim()) errors.push('El título es requerido');
-    if (!formData.descripcion.trim()) errors.push('La descripción es requerida');
+    if (!formData.titulo.trim()) {
+      errors.push('El título es requerido');
+      setTouched(prev => ({ ...prev, titulo: true }));
+    }
+    if (!formData.descripcion.trim()) {
+      errors.push('La descripción es requerida');
+      setTouched(prev => ({ ...prev, descripcion: true }));
+    }
     
     if (errors.length > 0) {
       setError(errors.join('. '));
@@ -46,24 +106,31 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
     
     setLoading(true);
     setError('');
+    setUploadProgress(0);
 
     try {
+      const evidenciasUrls = await uploadFiles();
+
       await mantenimientoAPI.createIncidencia({
         equipo_id: equipoId,
-        ...formData
+        titulo: formData.titulo,
+        descripcion: formData.descripcion,
+        gravedad: formData.gravedad,
+        evidencias_urls: evidenciasUrls
       });
 
       setFormData({
         titulo: '',
         descripcion: '',
-        gravedad: 'media'
+        gravedad: 'media',
+        evidencias: []
       });
       setTouched({ titulo: false, descripcion: false });
+      setPreviewUrls([]);
 
       if (onSuccess) onSuccess();
       onClose();
@@ -71,6 +138,7 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
       setError(err.message);
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -98,6 +166,7 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
                 onBlur={() => handleBlur('titulo')}
                 placeholder="Ej: Sobrecalentamiento del motor"
                 className={touched.titulo && !formData.titulo.trim() ? styles.inputError : ''}
+                required
               />
               {touched.titulo && !formData.titulo.trim() && <span className={styles.errorText}>El título es requerido</span>}
             </div>
@@ -112,6 +181,7 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
                 rows="3"
                 placeholder="Describe detalladamente el problema..."
                 className={touched.descripcion && !formData.descripcion.trim() ? styles.inputError : ''}
+                required
               />
               {touched.descripcion && !formData.descripcion.trim() && <span className={styles.errorText}>La descripción es requerida</span>}
             </div>
@@ -122,6 +192,46 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
                 {gravedades.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
               </select>
             </div>
+
+            <div className={styles.formGroup}>
+              <label>📸 Evidencias (Fotos / Facturas)</label>
+              <div className={styles.fileInputArea}>
+                <button type="button" className={styles.fileButton} onClick={() => fileInputRef.current?.click()}>
+                  📷 Seleccionar archivos
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,application/pdf"
+                  onChange={handleFilesChange}
+                  multiple
+                  className={styles.hiddenInput}
+                />
+                <span className={styles.fileHint}>JPG, PNG, GIF, PDF (máx. 10MB por archivo)</span>
+              </div>
+              
+              {previewUrls.length > 0 && (
+                <div className={styles.previewGrid}>
+                  {previewUrls.map((url, idx) => (
+                    <div key={idx} className={styles.previewItem}>
+                      {url.match(/\.pdf$/i) ? (
+                        <div className={styles.pdfPreview}>📄 PDF</div>
+                      ) : (
+                        <img src={url} alt={`Evidencia ${idx + 1}`} className={styles.previewImage} />
+                      )}
+                      <button type="button" className={styles.removePreview} onClick={() => removeFile(idx)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
+                <span className={styles.progressText}>Subiendo evidencias... {uploadProgress}%</span>
+              </div>
+            )}
           </div>
 
           <div className={styles.modalFooter}>

@@ -1,10 +1,11 @@
+// FRONTEND/src/components/mantenimiento/AddMantenimientoModal.jsx
 import { useState } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import { useDateUtils } from '../../context/DateContext';
 import styles from './AddMantenimientoModal.module.css';
 
 export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equipoId }) {
-  const { validateNotPast, validateDateRange, getTodayString } = useDateUtils();
+  const { validateNotPast, getTodayString } = useDateUtils();
   
   const [formData, setFormData] = useState({
     titulo: '',
@@ -59,33 +60,36 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
   const validateForm = () => {
     const errors = [];
     
-    // Validar título
     if (!formData.titulo.trim()) {
       errors.push('El título es requerido');
       setTouched(prev => ({ ...prev, titulo: true }));
     }
     
-    // Validar descripción (obligatoria)
     if (!formData.descripcion.trim()) {
       errors.push('La descripción es requerida');
       setTouched(prev => ({ ...prev, descripcion: true }));
     }
     
-    // Validar fecha de inicio
     const fechaValidation = validateNotPast(formData.fecha_inicio, 'fecha de inicio');
     if (!fechaValidation.valid) {
       errors.push(fechaValidation.error);
       setTouched(prev => ({ ...prev, fecha_inicio: true }));
     }
     
-    // Validar rango de fechas
-    const rangeValidation = validateDateRange(formData.fecha_inicio, formData.fecha_fin);
-    if (!rangeValidation.valid) {
-      errors.push(rangeValidation.error);
+    // Fecha fin es OBLIGATORIA ahora
+    if (!formData.fecha_fin) {
+      errors.push('La fecha de fin es requerida');
       setTouched(prev => ({ ...prev, fecha_fin: true }));
+    } else {
+      // Validar que fecha_fin no sea anterior a fecha_inicio
+      const inicio = new Date(formData.fecha_inicio);
+      const fin = new Date(formData.fecha_fin);
+      if (fin < inicio) {
+        errors.push('La fecha de fin no puede ser anterior a la fecha de inicio');
+        setTouched(prev => ({ ...prev, fecha_fin: true }));
+      }
     }
     
-    // Validar tipo
     if (!formData.tipo) {
       errors.push('El tipo de mantenimiento es requerido');
       setTouched(prev => ({ ...prev, tipo: true }));
@@ -100,7 +104,6 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
     
     setLoading(true);
@@ -200,7 +203,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                 {touched.fecha_inicio && !formData.fecha_inicio && <span className={styles.errorText}>La fecha de inicio es requerida</span>}
               </div>
               <div className={styles.formGroup}>
-                <label>Fecha Fin</label>
+                <label>Fecha Fin *</label>
                 <input
                   type="date"
                   name="fecha_fin"
@@ -208,7 +211,10 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
                   onChange={handleChange}
                   onBlur={() => handleBlur('fecha_fin')}
                   min={formData.fecha_inicio || hoyStr}
+                  required
+                  className={touched.fecha_fin && !formData.fecha_fin ? styles.inputError : ''}
                 />
+                {touched.fecha_fin && !formData.fecha_fin && <span className={styles.errorText}>La fecha de fin es requerida</span>}
                 {touched.fecha_fin && formData.fecha_fin && formData.fecha_fin < formData.fecha_inicio && (
                   <span className={styles.errorText}>La fecha fin no puede ser anterior a la fecha inicio</span>
                 )}
@@ -218,13 +224,7 @@ export default function AddMantenimientoModal({ isOpen, onClose, onSuccess, equi
             <div className={styles.row}>
               <div className={styles.formGroup}>
                 <label>Tipo *</label>
-                <select 
-                  name="tipo" 
-                  value={formData.tipo} 
-                  onChange={handleChange} 
-                  onBlur={() => handleBlur('tipo')}
-                  required
-                >
+                <select name="tipo" value={formData.tipo} onChange={handleChange} onBlur={() => handleBlur('tipo')} required>
                   {tipos.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>

@@ -8,6 +8,8 @@ import AddHistorialModal from '../../components/mantenimiento/AddHistorialModal'
 import AddIncidenciaModal from '../../components/mantenimiento/AddIncidenciaModal';
 import CompletarMantenimientoModal from '../../components/mantenimiento/CompletarMantenimientoModal';
 import DetalleMantenimientoModal from '../../components/mantenimiento/DetalleMantenimientoModal';
+import DetalleIncidenciaModal from '../../components/mantenimiento/DetalleIncidenciaModal';
+import DetalleHistorialModal from '../../components/mantenimiento/DetalleHistorialModal';
 import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal';
 import styles from './styles/Detallesquiposestilos/DetalleEquipo.module.css';
 
@@ -49,6 +51,14 @@ export default function DetalleEquipo() {
   // Estados para detalle de mantenimiento
   const [showDetalleModal, setShowDetalleModal] = useState(false);
   const [mantenimientoSeleccionado, setMantenimientoSeleccionado] = useState(null);
+  
+  // Estados para detalle de incidencia
+  const [showDetalleIncidenciaModal, setShowDetalleIncidenciaModal] = useState(false);
+  const [incidenciaSeleccionada, setIncidenciaSeleccionada] = useState(null);
+  
+  // Estados para detalle de historial
+  const [showDetalleHistorialModal, setShowDetalleHistorialModal] = useState(false);
+  const [historialSeleccionado, setHistorialSeleccionado] = useState(null);
 
   // Estados para las mejoras
   const [buscarEnCompletados, setBuscarEnCompletados] = useState('');
@@ -78,10 +88,8 @@ export default function DetalleEquipo() {
   // FUNCIONES DE FORMATO CORREGIDAS
   // ==========================================
   
-  // Formatea fecha YYYY-MM-DD a DD/MM/YYYY sin problemas de zona horaria
   const formatDate = (dateString) => {
     if (!dateString) return 'No definida';
-    // Usar split para evitar problemas de zona horaria
     const [year, month, day] = dateString.split('-').map(Number);
     if (isNaN(year) || isNaN(month) || isNaN(day)) return 'Fecha inválida';
     const date = new Date(year, month - 1, day);
@@ -92,10 +100,8 @@ export default function DetalleEquipo() {
     });
   };
 
-  // Formatea fecha con hora (para completados)
   const formatDateTime = (dateString) => {
     if (!dateString) return 'No definida';
-    // Si viene con hora (ej: 2026-05-20T...), extraer solo la fecha
     const fechaLimpia = dateString.split('T')[0];
     const [year, month, day] = fechaLimpia.split('-').map(Number);
     if (isNaN(year) || isNaN(month) || isNaN(day)) return 'Fecha inválida';
@@ -132,7 +138,6 @@ export default function DetalleEquipo() {
     });
   };
 
-  // Funciones de ordenamiento
   const ordenarProximos = (lista) => {
     return [...lista].sort((a, b) => {
       const fechaA = isoToLocalDate(a.fecha_inicio);
@@ -164,6 +169,25 @@ export default function DetalleEquipo() {
       if (!fechaA || !fechaB) return 0;
       return ordenCompletados === 'asc' ? fechaA - fechaB : fechaB - fechaA;
     });
+  };
+
+  // ==========================================
+  // HANDLERS PARA VER DETALLES
+  // ==========================================
+  
+  const handleVerDetalleMantenimiento = (mantenimiento) => {
+    setMantenimientoSeleccionado(mantenimiento);
+    setShowDetalleModal(true);
+  };
+
+  const handleVerDetalleIncidencia = (incidencia) => {
+    setIncidenciaSeleccionada(incidencia);
+    setShowDetalleIncidenciaModal(true);
+  };
+
+  const handleVerDetalleHistorial = (historialItem) => {
+    setHistorialSeleccionado(historialItem);
+    setShowDetalleHistorialModal(true);
   };
 
   // ==========================================
@@ -266,7 +290,7 @@ export default function DetalleEquipo() {
   }, [cargarDatos]);
 
   // ==========================================
-  // HANDLERS
+  // HANDLERS DE ACCIONES
   // ==========================================
   const handleEditSuccess = () => {
     setShowEditModal(false);
@@ -296,7 +320,6 @@ export default function DetalleEquipo() {
   const requiereClave = (mantenimiento) => {
     const esPreventivo = mantenimiento.tipo === 'preventivo';
     if (!esPreventivo) return false;
-    
     const fechaMant = isoToLocalDate(mantenimiento.fecha_inicio);
     const hoyLocal = getTodayLocal();
     return fechaMant && fechaMant > hoyLocal;
@@ -346,11 +369,6 @@ export default function DetalleEquipo() {
     setAlertMessage('✅ Mantenimiento completado exitosamente');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
-  };
-
-  const handleVerDetalle = (mantenimiento) => {
-    setMantenimientoSeleccionado(mantenimiento);
-    setShowDetalleModal(true);
   };
 
   const handleReprogramarSuccess = () => {
@@ -628,11 +646,11 @@ export default function DetalleEquipo() {
                 {ordenarCompletados(mantenimientosCompletadosFiltrados).map(m => {
                   const indicador = getMonthIndicator(m.fecha_completado || m.fecha_fin);
                   return (
-                    <div key={m.id} className={`${styles.mantenimientoItem} ${styles.clickable} ${styles[indicador?.clase || '']}`}>
+                    <div key={m.id} className={`${styles.mantenimientoItem} ${styles.clickable} ${styles[indicador?.clase || '']}`} onClick={() => handleVerDetalleMantenimiento(m)}>
                       <div className={styles.mantenimientoHeader}>
                         <span className={styles.mantenimientoTitulo}>{m.titulo}</span>
                         {indicador && <span className={`${styles.indicadorMes} ${styles[indicador.clase]}`}>{indicador.texto}</span>}
-                        <span className={styles.verDetalleBadge} onClick={(e) => { e.stopPropagation(); handleVerDetalle(m); }}>🔍 Ver detalles</span>
+                        <span className={styles.verDetalleBadge}>🔍 Ver detalles</span>
                       </div>
                       <div className={styles.mantenimientoInfo}>
                         <span>📅 Completado: {formatDateTime(m.fecha_completado || m.fecha_fin)}</span>
@@ -656,7 +674,7 @@ export default function DetalleEquipo() {
           </div>
         )}
 
-        {/* Tab Incidencias */}
+        {/* Tab Incidencias - AHORA CON VER DETALLES */}
         {activeTab === 'incidencias' && (
           <div className={styles.incidenciasTab}>
             <div className={styles.card}>
@@ -664,7 +682,7 @@ export default function DetalleEquipo() {
               {incidencias.length > 0 ? (
                 <div className={styles.incidenciasList}>
                   {incidencias.map(i => (
-                    <div key={i.id} className={styles.incidenciaItem}>
+                    <div key={i.id} className={`${styles.incidenciaItem} ${styles.clickable}`} onClick={() => handleVerDetalleIncidencia(i)}>
                       <div className={styles.incidenciaHeader}>
                         <span className={styles.incidenciaTitulo}>{i.titulo}</span>
                         <span className={`${styles.estadoIncidencia} ${i.estado === 'resuelto' ? styles.resuelto : styles.pendiente}`}>
@@ -678,6 +696,9 @@ export default function DetalleEquipo() {
                         {i.fecha_solucion && <span>🔧 Solucionado: {formatDate(i.fecha_solucion)}</span>}
                       </div>
                       {i.solucion && <p className={styles.solucionText}>💡 Solución: {i.solucion}</p>}
+                      <div className={styles.verDetalleContainer}>
+                        <span className={styles.verDetalleBadge}>🔍 Ver detalles</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -703,7 +724,7 @@ export default function DetalleEquipo() {
           </div>
         )}
 
-        {/* Tab Historial */}
+        {/* Tab Historial - AHORA CON VER DETALLES */}
         {activeTab === 'historial' && (
           <div className={styles.historialTab}>
             <div className={styles.card}>
@@ -711,7 +732,7 @@ export default function DetalleEquipo() {
               {historial.length > 0 ? (
                 <div className={styles.historialList}>
                   {historial.map(h => (
-                    <div key={h.id} className={styles.historialItem}>
+                    <div key={h.id} className={`${styles.historialItem} ${styles.clickable}`} onClick={() => handleVerDetalleHistorial(h)}>
                       <div className={styles.historialHeader}>
                         <span className={styles.historialFecha}>{formatDate(h.fecha)}</span>
                         <span className={styles.historialUsuario}>👤 {h.usuario || 'sistema'}</span>
@@ -721,6 +742,9 @@ export default function DetalleEquipo() {
                         {h.valor_anterior && <span className={styles.valorAnterior}>Antes: {h.valor_anterior}</span>}
                         {h.valor_nuevo && <span className={styles.valorNuevo}>Después: {h.valor_nuevo}</span>}
                         {h.descripcion && <p className={styles.historialDesc}>{h.descripcion}</p>}
+                      </div>
+                      <div className={styles.verDetalleContainer}>
+                        <span className={styles.verDetalleBadge}>🔍 Ver detalles</span>
                       </div>
                     </div>
                   ))}
@@ -738,10 +762,18 @@ export default function DetalleEquipo() {
       <AddMantenimientoModal isOpen={showMantModal} onClose={() => setShowMantModal(false)} onSuccess={cargarDatos} equipoId={equipo.id} />
       <AddHistorialModal isOpen={showHistorialModal} onClose={() => setShowHistorialModal(false)} onSuccess={cargarDatos} equipoId={equipo.id} />
       <AddIncidenciaModal isOpen={showIncidenciaModal} onClose={() => setShowIncidenciaModal(false)} onSuccess={cargarDatos} equipoId={equipo.id} />
+      
       <CompletarMantenimientoModal isOpen={showCompletarModal} onClose={() => setShowCompletarModal(false)} onSuccess={handleCompletarSuccess} mantenimiento={mantenimientoACompletar} equipoNombre={equipo?.nombre} />
+      
       <DetalleMantenimientoModal isOpen={showDetalleModal} onClose={() => setShowDetalleModal(false)} mantenimiento={mantenimientoSeleccionado} equipoNombre={equipo?.nombre} onEdit={cargarDatos} />
+      
+      <DetalleIncidenciaModal isOpen={showDetalleIncidenciaModal} onClose={() => setShowDetalleIncidenciaModal(false)} incidencia={incidenciaSeleccionada} equipoNombre={equipo?.nombre} />
+      
+      <DetalleHistorialModal isOpen={showDetalleHistorialModal} onClose={() => setShowDetalleHistorialModal(false)} historialItem={historialSeleccionado} equipoNombre={equipo?.nombre} />
+      
       <ReprogramarModal isOpen={showReprogramarModal} onClose={() => setShowReprogramarModal(false)} onSuccess={handleReprogramarSuccess} mantenimiento={mantenimientoAReprogramar} />
 
+      {/* Modal para clave preventiva */}
       {showClaveModal && (
         <div className={styles.modalOverlay} onClick={() => setShowClaveModal(false)}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
@@ -763,6 +795,7 @@ export default function DetalleEquipo() {
         </div>
       )}
 
+      {/* Modal de confirmación de eliminación del equipo */}
       {showDeleteConfirm && (
         <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
