@@ -1,4 +1,3 @@
-// src/context/DateContext.jsx
 import React, { createContext, useContext, useCallback } from 'react';
 
 // Crear el contexto
@@ -39,10 +38,22 @@ export const DateProvider = ({ children }) => {
 
   /**
    * Convierte una fecha ISO (de la BD) a objeto Date local
+   * CORREGIDO: No usa new Date(isoString) para evitar problemas de zona horaria
    */
   const isoToLocalDate = useCallback((isoString) => {
     if (!isoString) return null;
+    // Si viene en formato YYYY-MM-DD, usarlo directamente
+    if (typeof isoString === 'string' && isoString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = isoString.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    // Si ya es un objeto Date, normalizarlo
+    if (isoString instanceof Date) {
+      return new Date(isoString.getFullYear(), isoString.getMonth(), isoString.getDate());
+    }
+    // Fallback: intentar con string (para fechas con hora)
     const date = new Date(isoString);
+    if (isNaN(date.getTime())) return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }, []);
 
