@@ -59,36 +59,37 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const uploadFiles = async () => {
-    if (formData.evidencias.length === 0) return [];
+ // En la función uploadFiles
+const uploadFiles = async () => {
+  if (formData.evidencias.length === 0) return [];
+  
+  const API_BASE = import.meta.env.VITE_API_URL;
+  const uploadedUrls = [];
+  
+  for (let i = 0; i < formData.evidencias.length; i++) {
+    const file = formData.evidencias[i];
+    const formDataFile = new FormData();
+    formDataFile.append('archivo', file);
+    formDataFile.append('tipo', 'incidencia'); // ← CORRECTO: 'incidencia'
+    formDataFile.append('entidad_id', equipoId);
     
-    const API_BASE = import.meta.env.VITE_API_URL;
-    const uploadedUrls = [];
-    
-    for (let i = 0; i < formData.evidencias.length; i++) {
-      const file = formData.evidencias[i];
-      const formDataFile = new FormData();
-      formDataFile.append('archivo', file);
-      formDataFile.append('tipo', 'incidencia');
-      formDataFile.append('entidad_id', equipoId);
-      
-      try {
-        setUploadProgress(Math.round((i / formData.evidencias.length) * 100));
-        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
-          method: 'POST',
-          body: formDataFile
-        });
-        const data = await response.json();
-        if (data.ok) {
-          uploadedUrls.push(data.url);
-        }
-      } catch (err) {
-        console.error(`Error subiendo archivo ${i}:`, err);
+    try {
+      setUploadProgress(Math.round((i / formData.evidencias.length) * 100));
+      const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+        method: 'POST',
+        body: formDataFile
+      });
+      const data = await response.json();
+      if (data.ok) {
+        uploadedUrls.push(data.url);
       }
+    } catch (err) {
+      console.error(`Error subiendo archivo ${i}:`, err);
     }
-    setUploadProgress(100);
-    return uploadedUrls;
-  };
+  }
+  setUploadProgress(100);
+  return uploadedUrls;
+};
 
   const validateForm = () => {
     const errors = [];

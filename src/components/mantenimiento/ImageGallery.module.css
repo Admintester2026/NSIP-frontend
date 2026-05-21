@@ -1,0 +1,356 @@
+/* ImageGallery.module.css */
+
+.galleryContainer {
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.galleryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.galleryTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.galleryCount {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Carrusel principal */
+.carouselContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.navButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: #000;
+}
+
+.mainImageContainer {
+  flex: 1;
+  aspect-ratio: 16 / 9;
+  background: var(--bg-surface);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-dim);
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--bg-surface);
+}
+
+.mainVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pdfPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 3rem;
+  color: var(--red);
+}
+
+.viewPdfBtn {
+  padding: 0.25rem 0.75rem;
+  background: var(--green-dim);
+  border: none;
+  border-radius: var(--r-md);
+  color: var(--green);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+/* Miniaturas */
+.thumbnailContainer {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.thumbnail:hover {
+  transform: scale(1.05);
+}
+
+.activeThumbnail {
+  border-color: var(--green);
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.videoThumbnail, .pdfThumbnail {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  font-size: 1.5rem;
+}
+
+/* Modal ampliado */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modalContent {
+  position: relative;
+  width: 90vw;
+  max-width: 1200px;
+  height: 90vh;
+  background: var(--bg-surface);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modalClose:hover {
+  background: var(--red);
+  transform: scale(1.1);
+}
+
+.modalCarousel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: #000;
+}
+
+.modalNavPrev, .modalNavNext {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.modalNavPrev:hover, .modalNavNext:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.modalNavPrev {
+  left: 1rem;
+}
+
+.modalNavNext {
+  right: 1rem;
+}
+
+.modalImageContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.modalImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.modalVideo {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.modalPdf {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.modalThumbnails {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border-dim);
+}
+
+.modalThumbnail {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.activeModalThumbnail {
+  border-color: var(--green);
+}
+
+.modalThumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modalInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border-dim);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.modalFilename {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyMessage {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 1rem;
+}
+
+/* Scrollbar */
+.thumbnailContainer::-webkit-scrollbar,
+.modalThumbnails::-webkit-scrollbar {
+  height: 4px;
+}
+
+.thumbnailContainer::-webkit-scrollbar-track,
+.modalThumbnails::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+}
+
+.thumbnailContainer::-webkit-scrollbar-thumb,
+.modalThumbnails::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+
+  .modalNavPrev, .modalNavNext {
+    width: 35px;
+    height: 35px;
+    font-size: 1.2rem;
+  }
+
+  .modalInfo {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .modalFilename {
+    max-width: 100%;
+  }
+}

@@ -1,5 +1,6 @@
 // FRONTEND/src/components/mantenimiento/DetalleIncidenciaModal.jsx
 import { useState, useEffect } from 'react';
+import ImageGallery from './ImageGallery';
 import styles from './DetalleIncidenciaModal.module.css';
 
 const getApiBase = () => {
@@ -26,7 +27,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
-      // Nueva ruta: /evidencias/incidencia/:id
       const response = await fetch(`${API_BASE}/mantenimiento/evidencias/incidencia/${incidencia.id}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
@@ -45,11 +45,8 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Fecha inválida';
     return date.toLocaleDateString('es-MX', { 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: '2-digit', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
     });
   };
 
@@ -108,98 +105,57 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         </div>
 
         <div className={styles.modalBody}>
+          {/* Información básica */}
           <div className={styles.infoSection}>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Título:</span>
-              <span className={styles.infoValue}>{incidencia.titulo}</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Equipo:</span>
-              <span className={styles.infoValue}>{equipoNombre}</span>
-            </div>
+            <div className={styles.infoRow}><span className={styles.infoLabel}>Título:</span><span className={styles.infoValue}>{incidencia.titulo}</span></div>
+            <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Gravedad:</span>
-              <span className={`${styles.gravedadBadge} ${getGravedadClass(incidencia.gravedad)}`}>
-                {getGravedadTexto(incidencia.gravedad)}
-              </span>
+              <span className={`${styles.gravedadBadge} ${getGravedadClass(incidencia.gravedad)}`}>{getGravedadTexto(incidencia.gravedad)}</span>
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Estado:</span>
-              <span className={`${styles.estadoBadge} ${getEstadoClass(incidencia.estado)}`}>
-                {getEstadoTexto(incidencia.estado)}
-              </span>
+              <span className={`${styles.estadoBadge} ${getEstadoClass(incidencia.estado)}`}>{getEstadoTexto(incidencia.estado)}</span>
             </div>
-            {incidencia.reportado_por && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Reportado por:</span>
-                <span className={styles.infoValue}>{incidencia.reportado_por}</span>
-              </div>
-            )}
+            {incidencia.reportado_por && <div className={styles.infoRow}><span className={styles.infoLabel}>Reportado por:</span><span className={styles.infoValue}>{incidencia.reportado_por}</span></div>}
           </div>
 
+          {/* Fechas */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Reportado:</span>
-              <span className={styles.infoValue}>{formatDate(incidencia.fecha_reporte)}</span>
-            </div>
-            {incidencia.fecha_solucion && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Solucionado:</span>
-                <span className={styles.infoValue}>{formatDate(incidencia.fecha_solucion)}</span>
-              </div>
-            )}
+            <div className={styles.infoRow}><span className={styles.infoLabel}>Reportado:</span><span className={styles.infoValue}>{formatDate(incidencia.fecha_reporte)}</span></div>
+            {incidencia.fecha_solucion && <div className={styles.infoRow}><span className={styles.infoLabel}>Solucionado:</span><span className={styles.infoValue}>{formatDate(incidencia.fecha_solucion)}</span></div>}
           </div>
 
+          {/* Descripción */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📝 Descripción del problema</h4>
-            <div className={styles.descripcionBox}>
-              {incidencia.descripcion}
-            </div>
+            <div className={styles.descripcionBox}>{incidencia.descripcion}</div>
           </div>
 
+          {/* Solución */}
           {incidencia.solucion && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>💡 Solución aplicada</h4>
-              <div className={styles.solucionBox}>
-                {incidencia.solucion}
-              </div>
+              <div className={styles.solucionBox}>{incidencia.solucion}</div>
             </div>
           )}
 
+          {/* Costo estimado */}
           {incidencia.costo_estimado && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>💰 Costo estimado</h4>
-              <div className={styles.infoRow}>
-                <span className={styles.infoValue}>${Number(incidencia.costo_estimado).toFixed(2)}</span>
-              </div>
+              <div className={styles.infoRow}><span className={styles.infoValue}>${Number(incidencia.costo_estimado).toFixed(2)}</span></div>
             </div>
           )}
 
+          {/* Evidencias - CON GALERÍA DE IMÁGENES */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📸 Evidencias / Documentos</h4>
             {loadingEvidencias ? (
               <p className={styles.loadingText}>Cargando evidencias...</p>
             ) : evidencias.length > 0 ? (
-              <div className={styles.evidenciasGrid}>
-                {evidencias.map((ev, idx) => (
-                  <div key={idx} className={styles.evidenciaItem}>
-                    {ev.url?.match(/\.pdf$/i) ? (
-                      <div className={styles.pdfPreview}>
-                        <span>📄</span>
-                        <span>PDF</span>
-                      </div>
-                    ) : ev.url?.match(/\.(mp4|webm)$/i) ? (
-                      <video src={ev.url} className={styles.evidenciaVideo} controls />
-                    ) : (
-                      <img src={ev.url} alt={`Evidencia ${idx + 1}`} className={styles.evidenciaImg} />
-                    )}
-                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className={styles.evidenciaLink}>
-                      Ver completo
-                    </a>
-                  </div>
-                ))}
-              </div>
+              <ImageGallery images={evidencias} title="Evidencias de la incidencia" />
             ) : (
               <p className={styles.emptyMessage}>No hay evidencias adjuntas</p>
             )}
