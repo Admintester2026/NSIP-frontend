@@ -26,7 +26,8 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     setLoadingFacturas(true);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias-historial/${historialItem.id}`);
+      // Nueva ruta: /evidencias/historial/:id
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/historial/${historialItem.id}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
@@ -92,7 +93,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
         </div>
 
         <div className={styles.modalBody}>
-          {/* Información básica */}
           <div className={styles.infoSection}>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Tipo de cambio:</span>
@@ -110,7 +110,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             )}
           </div>
 
-          {/* Fecha */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📅 Fecha del cambio</h4>
             <div className={styles.infoRow}>
@@ -118,7 +117,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             </div>
           </div>
 
-          {/* Valores anterior y nuevo */}
           {(historialItem.valor_anterior || historialItem.valor_nuevo) && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>🔄 Valores del cambio</h4>
@@ -137,7 +135,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             </div>
           )}
 
-          {/* Descripción */}
           {historialItem.descripcion && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>📝 Descripción</h4>
@@ -147,7 +144,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             </div>
           )}
 
-          {/* Facturas / Comprobantes */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>🧾 Facturas / Comprobantes</h4>
             {loadingFacturas ? (

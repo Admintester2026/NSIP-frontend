@@ -26,7 +26,8 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias-incidencia/${incidencia.id}`);
+      // Nueva ruta: /evidencias/incidencia/:id
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/incidencia/${incidencia.id}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
@@ -107,7 +108,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         </div>
 
         <div className={styles.modalBody}>
-          {/* Información básica */}
           <div className={styles.infoSection}>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Título:</span>
@@ -137,7 +137,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             )}
           </div>
 
-          {/* Fechas */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
             <div className={styles.infoRow}>
@@ -152,7 +151,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             )}
           </div>
 
-          {/* Descripción */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📝 Descripción del problema</h4>
             <div className={styles.descripcionBox}>
@@ -160,7 +158,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             </div>
           </div>
 
-          {/* Solución */}
           {incidencia.solucion && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>💡 Solución aplicada</h4>
@@ -170,7 +167,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             </div>
           )}
 
-          {/* Costo estimado */}
           {incidencia.costo_estimado && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>💰 Costo estimado</h4>
@@ -180,7 +176,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             </div>
           )}
 
-          {/* Evidencias */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📸 Evidencias / Documentos</h4>
             {loadingEvidencias ? (

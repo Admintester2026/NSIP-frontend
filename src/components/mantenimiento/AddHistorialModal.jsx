@@ -66,22 +66,26 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
   const uploadFiles = async () => {
     if (formData.facturas.length === 0) return [];
     
+    const API_BASE = import.meta.env.VITE_API_URL;
     const uploadedUrls = [];
+    
     for (let i = 0; i < formData.facturas.length; i++) {
       const file = formData.facturas[i];
       const formDataFile = new FormData();
       formDataFile.append('archivo', file);
-      formDataFile.append('tipo', 'historial');
-      formDataFile.append('equipo_id', equipoId);
+      formDataFile.append('tipo', 'factura');
+      formDataFile.append('entidad_id', equipoId);
       
       try {
         setUploadProgress(Math.round((i / formData.facturas.length) * 100));
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/upload-evidencia-historial`, {
+        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
           method: 'POST',
           body: formDataFile
         });
         const data = await response.json();
-        uploadedUrls.push(data.url);
+        if (data.ok) {
+          uploadedUrls.push(data.url);
+        }
       } catch (err) {
         console.error(`Error subiendo archivo ${i}:`, err);
       }

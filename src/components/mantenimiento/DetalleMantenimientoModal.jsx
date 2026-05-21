@@ -90,22 +90,22 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   }, [isOpen, mantenimiento?.id]);
 
   const cargarEvidencias = async () => {
-    if (!mantenimiento?.id) return;
-    setLoadingEvidencias(true);
-    try {
-      const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/${mantenimiento.id}`);
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        if (data.ok) setEvidencias(data.datos || []);
-      }
-    } catch (err) {
-      console.error('Error cargando evidencias:', err);
-    } finally {
-      setLoadingEvidencias(false);
+  setLoadingEvidencias(true);
+  try {
+    const API_BASE = getApiBase();
+    // Nueva ruta: /evidencias/mantenimiento/:id
+    const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${mantenimiento.id}`);
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      if (data.ok) setEvidencias(data.datos || []);
     }
-  };
+  } catch (err) {
+    console.error('Error cargando evidencias:', err);
+  } finally {
+    setLoadingEvidencias(false);
+  }
+};
 
   const cargarVersiones = async () => {
     if (!mantenimiento?.id) return;

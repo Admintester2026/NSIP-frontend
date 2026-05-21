@@ -62,22 +62,26 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
   const uploadFiles = async () => {
     if (formData.evidencias.length === 0) return [];
     
+    const API_BASE = import.meta.env.VITE_API_URL;
     const uploadedUrls = [];
+    
     for (let i = 0; i < formData.evidencias.length; i++) {
       const file = formData.evidencias[i];
       const formDataFile = new FormData();
       formDataFile.append('archivo', file);
       formDataFile.append('tipo', 'evidencia');
-      formDataFile.append('mantenimiento_id', mantenimiento.id);
+      formDataFile.append('entidad_id', mantenimiento.id);
       
       try {
         setUploadProgress(Math.round((i / formData.evidencias.length) * 100));
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/upload-evidencia`, {
+        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
           method: 'POST',
           body: formDataFile
         });
         const data = await response.json();
-        uploadedUrls.push(data.url);
+        if (data.ok) {
+          uploadedUrls.push(data.url);
+        }
       } catch (err) {
         console.error(`Error subiendo archivo ${i}:`, err);
       }
@@ -98,7 +102,6 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
       setTouched(prev => ({ ...prev, notas_completado: true }));
     }
     
-    // Validar duración (al menos horas o minutos)
     const tieneHoras = formData.duracion_horas && parseInt(formData.duracion_horas) > 0;
     const tieneMinutos = formData.duracion_minutos && parseInt(formData.duracion_minutos) > 0;
     if (!tieneHoras && !tieneMinutos) {
@@ -106,7 +109,6 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
       setTouched(prev => ({ ...prev, duracion_horas: true, duracion_minutos: true }));
     }
     
-    // Validar costo de materiales
     if (!formData.costo_materiales || parseFloat(formData.costo_materiales) <= 0) {
       errors.push('El costo de materiales es requerido y debe ser mayor a 0');
       setTouched(prev => ({ ...prev, costo_materiales: true }));
@@ -146,7 +148,8 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
           tecnico: formData.tecnico,
           duracion: duracionTotalMinutos,
           materiales_usados: formData.materiales_usados || null,
-          costo_materiales: parseFloat(formData.costo_materiales)
+          costo_materiales: parseFloat(formData.costo_materiales),
+          evidencias_urls: evidenciasUrls
         })
       });
 
