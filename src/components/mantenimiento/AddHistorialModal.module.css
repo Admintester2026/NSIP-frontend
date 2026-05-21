@@ -172,3 +172,160 @@
     gap: 0.5rem;
   }
 }
+/* ==========================================
+   ESTILOS PARA SUBIDA DE ARCHIVOS
+   ========================================== */
+
+.fileInputArea {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.fileButton {
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fileButton:hover {
+  border-color: var(--green);
+  color: var(--green);
+  transform: translateY(-1px);
+}
+
+.fileHint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* Preview grid */
+.previewGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  border: 1px dashed var(--border-dim);
+}
+
+.previewItem {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-surface);
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.previewVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdfPreview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-raised);
+  color: var(--red);
+  font-size: 2rem;
+}
+
+.pdfPreview span:first-child {
+  font-size: 2rem;
+}
+
+.pdfPreview span:last-child {
+  font-size: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.removePreview {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  color: white;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.removePreview:hover {
+  background: var(--red);
+  transform: scale(1.1);
+}
+
+/* Progress bar */
+.progressBar {
+  background: var(--bg-raised);
+  border-radius: var(--r-md);
+  height: 30px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progressFill {
+  background: var(--green);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  color: #000;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Input error styles */
+.inputError {
+  border-color: var(--red) !important;
+}
+
+.errorText {
+  font-size: 0.7rem;
+  color: var(--red);
+  margin-top: 0.25rem;
+  display: block;
+}

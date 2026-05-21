@@ -226,7 +226,7 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
                   multiple
                   className={styles.hiddenInput}
                 />
-                <span className={styles.fileHint}>JPG, PNG, GIF, PDF (máx. 10MB por archivo)</span>
+                <span className={styles.fileHint}>JPG, PNG, GIF, PDF (máx. 50MB por archivo)</span>
               </div>
               
               {previewUrls.length > 0 && (
