@@ -63,37 +63,37 @@ export default function AddHistorialModal({ isOpen, onClose, onSuccess, equipoId
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // En la función uploadFiles
-const uploadFiles = async () => {
-  if (formData.facturas.length === 0) return [];
-  
-  const API_BASE = import.meta.env.VITE_API_URL;
-  const uploadedUrls = [];
-  
-  for (let i = 0; i < formData.facturas.length; i++) {
-    const file = formData.facturas[i];
-    const formDataFile = new FormData();
-    formDataFile.append('archivo', file);
-    formDataFile.append('tipo', 'factura'); // ← CORRECTO: 'factura'
-    formDataFile.append('entidad_id', equipoId);
+  // Función para subir facturas con el ID del historial (después de crear)
+  const uploadFiles = async (historialId) => {
+    if (formData.facturas.length === 0) return [];
     
-    try {
-      setUploadProgress(Math.round((i / formData.facturas.length) * 100));
-      const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
-        method: 'POST',
-        body: formDataFile
-      });
-      const data = await response.json();
-      if (data.ok) {
-        uploadedUrls.push(data.url);
+    const API_BASE = import.meta.env.VITE_API_URL;
+    const uploadedUrls = [];
+    
+    for (let i = 0; i < formData.facturas.length; i++) {
+      const file = formData.facturas[i];
+      const formDataFile = new FormData();
+      formDataFile.append('archivo', file);
+      formDataFile.append('tipo', 'factura');
+      formDataFile.append('entidad_id', historialId); // ← AHORA USA EL ID REAL DEL HISTORIAL
+      
+      try {
+        setUploadProgress(Math.round(((i + 1) / formData.facturas.length) * 50));
+        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+          method: 'POST',
+          body: formDataFile
+        });
+        const data = await response.json();
+        if (data.ok) {
+          uploadedUrls.push(data.url);
+          console.log('✅ Factura subida con ID:', historialId, data.url);
+        }
+      } catch (err) {
+        console.error(`Error subiendo archivo ${i}:`, err);
       }
-    } catch (err) {
-      console.error(`Error subiendo archivo ${i}:`, err);
     }
-  }
-  setUploadProgress(100);
-  return uploadedUrls;
-};
+    return uploadedUrls;
+  };
 
   const validateForm = () => {
     const errors = [];
@@ -118,16 +118,35 @@ const uploadFiles = async () => {
     
     setLoading(true);
     setError('');
-    setUploadProgress(0);
+    setUploadProgress(10);
 
     try {
-      const facturasUrls = await uploadFiles();
-
-      await mantenimientoAPI.registrarCambio(equipoId, {
-        ...formData,
-        facturas_urls: facturasUrls
+      // PASO 1: Crear el registro de historial primero
+      setUploadProgress(20);
+      const response = await mantenimientoAPI.registrarCambio(equipoId, {
+        campo_modificado: formData.campo_modificado,
+        valor_anterior: formData.valor_anterior,
+        valor_nuevo: formData.valor_nuevo,
+        descripcion: formData.descripcion
       });
+      
+      // Obtener el ID del historial recién creado
+      const historialId = response.id;
+      console.log('📝 Historial creado con ID:', historialId);
+      
+      // PASO 2: Subir las facturas usando el ID real
+      setUploadProgress(30);
+      const facturasUrls = await uploadFiles(historialId);
+      
+      // PASO 3: Actualizar el historial con las URLs de facturas (opcional)
+      if (facturasUrls.length > 0) {
+        setUploadProgress(90);
+        console.log('📎 Facturas subidas:', facturasUrls.length);
+      }
+      
+      setUploadProgress(100);
 
+      // Limpiar formulario
       setFormData({
         campo_modificado: '',
         valor_anterior: '',
@@ -141,10 +160,11 @@ const uploadFiles = async () => {
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setError(err.message);
+      console.error('Error:', err);
+      setError(err.message || 'Error al registrar el cambio');
     } finally {
       setLoading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -246,10 +266,12 @@ const uploadFiles = async () => {
               )}
             </div>
 
-            {uploadProgress > 0 && uploadProgress < 100 && (
+            {uploadProgress > 0 && (
               <div className={styles.progressBar}>
                 <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
-                <span className={styles.progressText}>Subiendo archivos... {uploadProgress}%</span>
+                <span className={styles.progressText}>
+                  {uploadProgress < 30 ? 'Creando registro...' : uploadProgress < 90 ? 'Subiendo archivos...' : 'Finalizando...'} {uploadProgress}%
+                </span>
               </div>
             )}
           </div>

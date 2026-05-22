@@ -42,7 +42,8 @@ export const mantenimientoAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(equipoData)
     });
-    return handleResponse(response);
+    const result = await handleResponse(response);
+    return result; // Devuelve { ok: true, id: xxx }
   },
 
   updateEquipo: async (id, equipoData) => {
@@ -110,7 +111,8 @@ export const mantenimientoAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(mantenimientoData)
     });
-    return handleResponse(response);
+    const result = await handleResponse(response);
+    return result; // Devuelve { ok: true, id: xxx }
   },
 
   updateMantenimientoEstado: async (id, estado, notas = null) => {
@@ -168,7 +170,7 @@ export const mantenimientoAPI = {
   },
 
   // ==========================================
-  // INCIDENCIAS / DAÑOS
+  // INCIDENCIAS / DAÑOS (CORREGIDO)
   // ==========================================
   
   getIncidenciasByEquipo: async (equipoId) => {
@@ -178,12 +180,30 @@ export const mantenimientoAPI = {
     return data.datos || [];
   },
 
+  // CREAR INCIDENCIA - DEVUELVE EL ID
   createIncidencia: async (incidenciaData) => {
     const url = `${API_BASE}/mantenimiento/incidencias`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(incidenciaData)
+    });
+    const result = await handleResponse(response);
+    // Asegurar que devolvemos un objeto con id
+    return {
+      ok: result.ok,
+      id: result.id,
+      message: result.message
+    };
+  },
+
+  // ACTUALIZAR EVIDENCIAS DE INCIDENCIA
+  updateIncidenciaEvidencias: async (id, evidenciasUrls) => {
+    const url = `${API_BASE}/mantenimiento/incidencias/${id}/evidencias`;
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ evidencias_urls: evidenciasUrls })
     });
     return handleResponse(response);
   },
@@ -232,7 +252,7 @@ export const mantenimientoAPI = {
   },
 
   // ==========================================
-  // HISTORIAL DE CAMBIOS
+  // HISTORIAL DE CAMBIOS (CORREGIDO)
   // ==========================================
   
   getHistorialEquipo: async (equipoId) => {
@@ -242,6 +262,7 @@ export const mantenimientoAPI = {
     return data.datos || [];
   },
 
+  // REGISTRAR CAMBIO - DEVUELVE EL ID
   registrarCambio: async (equipoId, cambioData) => {
     const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
     const response = await fetch(url, {
@@ -249,6 +270,53 @@ export const mantenimientoAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cambioData)
     });
+    const result = await handleResponse(response);
+    // Asegurar que devolvemos un objeto con id
+    return {
+      ok: result.ok,
+      id: result.id,
+      message: result.message
+    };
+  },
+
+  // ACTUALIZAR FACTURAS DE HISTORIAL
+  updateHistorialFacturas: async (id, facturasUrls) => {
+    const url = `${API_BASE}/mantenimiento/historial/${id}/facturas`;
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facturas_urls: facturasUrls })
+    });
     return handleResponse(response);
+  },
+
+  // ==========================================
+  // SUBIDA DE ARCHIVOS (UTILIDAD)
+  // ==========================================
+  
+  uploadFile: async (file, tipo, entidadId) => {
+    const formData = new FormData();
+    formData.append('archivo', file);
+    formData.append('tipo', tipo);
+    formData.append('entidad_id', entidadId);
+    
+    const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    const result = await handleResponse(response);
+    return result.url;
+  },
+
+  uploadMultipleFiles: async (files, tipo, entidadId, onProgress) => {
+    const uploadedUrls = [];
+    for (let i = 0; i < files.length; i++) {
+      if (onProgress) {
+        onProgress(Math.round(((i + 1) / files.length) * 100));
+      }
+      const url = await mantenimientoAPI.uploadFile(files[i], tipo, entidadId);
+      uploadedUrls.push(url);
+    }
+    return uploadedUrls;
   }
 };

@@ -59,37 +59,37 @@ export default function AddIncidenciaModal({ isOpen, onClose, onSuccess, equipoI
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
- // En la función uploadFiles
-const uploadFiles = async () => {
-  if (formData.evidencias.length === 0) return [];
-  
-  const API_BASE = import.meta.env.VITE_API_URL;
-  const uploadedUrls = [];
-  
-  for (let i = 0; i < formData.evidencias.length; i++) {
-    const file = formData.evidencias[i];
-    const formDataFile = new FormData();
-    formDataFile.append('archivo', file);
-    formDataFile.append('tipo', 'incidencia'); // ← CORRECTO: 'incidencia'
-    formDataFile.append('entidad_id', equipoId);
+  // Función para subir archivos con el ID correcto (después de crear la incidencia)
+  const uploadFiles = async (incidenciaId) => {
+    if (formData.evidencias.length === 0) return [];
     
-    try {
-      setUploadProgress(Math.round((i / formData.evidencias.length) * 100));
-      const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
-        method: 'POST',
-        body: formDataFile
-      });
-      const data = await response.json();
-      if (data.ok) {
-        uploadedUrls.push(data.url);
+    const API_BASE = import.meta.env.VITE_API_URL;
+    const uploadedUrls = [];
+    
+    for (let i = 0; i < formData.evidencias.length; i++) {
+      const file = formData.evidencias[i];
+      const formDataFile = new FormData();
+      formDataFile.append('archivo', file);
+      formDataFile.append('tipo', 'incidencia');
+      formDataFile.append('entidad_id', incidenciaId); // ← AHORA USA EL ID REAL DE LA INCIDENCIA
+      
+      try {
+        setUploadProgress(Math.round(((i + 1) / formData.evidencias.length) * 50)); // 50% para subidas
+        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+          method: 'POST',
+          body: formDataFile
+        });
+        const data = await response.json();
+        if (data.ok) {
+          uploadedUrls.push(data.url);
+          console.log('✅ Archivo subido con ID:', incidenciaId, data.url);
+        }
+      } catch (err) {
+        console.error(`Error subiendo archivo ${i}:`, err);
       }
-    } catch (err) {
-      console.error(`Error subiendo archivo ${i}:`, err);
     }
-  }
-  setUploadProgress(100);
-  return uploadedUrls;
-};
+    return uploadedUrls;
+  };
 
   const validateForm = () => {
     const errors = [];
@@ -115,19 +115,37 @@ const uploadFiles = async () => {
     
     setLoading(true);
     setError('');
-    setUploadProgress(0);
+    setUploadProgress(10);
 
     try {
-      const evidenciasUrls = await uploadFiles();
-
-      await mantenimientoAPI.createIncidencia({
+      // PASO 1: Crear la incidencia primero (sin evidencias)
+      setUploadProgress(20);
+      const response = await mantenimientoAPI.createIncidencia({
         equipo_id: equipoId,
         titulo: formData.titulo,
         descripcion: formData.descripcion,
-        gravedad: formData.gravedad,
-        evidencias_urls: evidenciasUrls
+        gravedad: formData.gravedad
       });
+      
+      // Obtener el ID de la incidencia recién creada
+      const incidenciaId = response.id;
+      console.log('📝 Incidencia creada con ID:', incidenciaId);
+      
+      // PASO 2: Subir las evidencias usando el ID real
+      setUploadProgress(30);
+      const evidenciasUrls = await uploadFiles(incidenciaId);
+      
+      // PASO 3: Actualizar la incidencia con las URLs de evidencias (opcional)
+      if (evidenciasUrls.length > 0) {
+        setUploadProgress(90);
+        // Si tu API soporta actualizar evidencias, hazlo aquí
+        // await mantenimientoAPI.updateIncidenciaEvidencias(incidenciaId, { evidencias_urls: evidenciasUrls });
+        console.log('📸 Evidencias subidas:', evidenciasUrls.length);
+      }
+      
+      setUploadProgress(100);
 
+      // Limpiar formulario
       setFormData({
         titulo: '',
         descripcion: '',
@@ -140,10 +158,11 @@ const uploadFiles = async () => {
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setError(err.message);
+      console.error('Error:', err);
+      setError(err.message || 'Error al crear la incidencia');
     } finally {
       setLoading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -199,7 +218,7 @@ const uploadFiles = async () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>📸 Evidencias (Fotos / Facturas)</label>
+              <label>📸 Evidencias (Fotos / Documentos)</label>
               <div className={styles.fileInputArea}>
                 <button type="button" className={styles.fileButton} onClick={() => fileInputRef.current?.click()}>
                   📷 Seleccionar archivos
@@ -231,10 +250,12 @@ const uploadFiles = async () => {
               )}
             </div>
 
-            {uploadProgress > 0 && uploadProgress < 100 && (
+            {uploadProgress > 0 && (
               <div className={styles.progressBar}>
                 <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
-                <span className={styles.progressText}>Subiendo evidencias... {uploadProgress}%</span>
+                <span className={styles.progressText}>
+                  {uploadProgress < 30 ? 'Creando incidencia...' : uploadProgress < 90 ? 'Subiendo evidencias...' : 'Finalizando...'} {uploadProgress}%
+                </span>
               </div>
             )}
           </div>

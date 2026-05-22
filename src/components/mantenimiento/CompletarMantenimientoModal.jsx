@@ -59,37 +59,37 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // En la función uploadFiles, cambiar el tipo
-const uploadFiles = async () => {
-  if (formData.evidencias.length === 0) return [];
-  
-  const API_BASE = import.meta.env.VITE_API_URL;
-  const uploadedUrls = [];
-  
-  for (let i = 0; i < formData.evidencias.length; i++) {
-    const file = formData.evidencias[i];
-    const formDataFile = new FormData();
-    formDataFile.append('archivo', file);
-    formDataFile.append('tipo', 'evidencia'); // ← CORRECTO: 'evidencia'
-    formDataFile.append('entidad_id', mantenimiento.id);
+  // Subir evidencias con el ID del mantenimiento (YA EXISTE)
+  const uploadFiles = async () => {
+    if (formData.evidencias.length === 0) return [];
     
-    try {
-      setUploadProgress(Math.round((i / formData.evidencias.length) * 100));
-      const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
-        method: 'POST',
-        body: formDataFile
-      });
-      const data = await response.json();
-      if (data.ok) {
-        uploadedUrls.push(data.url);
+    const API_BASE = import.meta.env.VITE_API_URL;
+    const uploadedUrls = [];
+    
+    for (let i = 0; i < formData.evidencias.length; i++) {
+      const file = formData.evidencias[i];
+      const formDataFile = new FormData();
+      formDataFile.append('archivo', file);
+      formDataFile.append('tipo', 'evidencia');
+      formDataFile.append('entidad_id', mantenimiento.id); // ← EL ID DEL MANTENIMIENTO YA EXISTE
+      
+      try {
+        setUploadProgress(Math.round(((i + 1) / formData.evidencias.length) * 50));
+        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+          method: 'POST',
+          body: formDataFile
+        });
+        const data = await response.json();
+        if (data.ok) {
+          uploadedUrls.push(data.url);
+          console.log('✅ Evidencia subida para mantenimiento:', mantenimiento.id, data.url);
+        }
+      } catch (err) {
+        console.error(`Error subiendo archivo ${i}:`, err);
       }
-    } catch (err) {
-      console.error(`Error subiendo archivo ${i}:`, err);
     }
-  }
-  setUploadProgress(100);
-  return uploadedUrls;
-};
+    return uploadedUrls;
+  };
 
   const validateForm = () => {
     const errors = [];
@@ -135,12 +135,15 @@ const uploadFiles = async () => {
     
     setLoading(true);
     setError('');
-    setUploadProgress(0);
+    setUploadProgress(10);
 
     try {
+      // Subir evidencias primero
+      setUploadProgress(20);
       const evidenciasUrls = await uploadFiles();
       const duracionTotalMinutos = calcularDuracionMinutos();
-
+      
+      setUploadProgress(80);
       const response = await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/mantenimientos/${mantenimiento.id}/completar`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -159,6 +162,7 @@ const uploadFiles = async () => {
         throw new Error(errorData.error || 'Error al completar el mantenimiento');
       }
 
+      setUploadProgress(100);
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
       if (onSuccess) onSuccess();
@@ -167,7 +171,7 @@ const uploadFiles = async () => {
       setError(err.message);
     } finally {
       setLoading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 500);
     }
   };
 
@@ -193,6 +197,10 @@ const uploadFiles = async () => {
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Equipo:</span>
                 <span className={styles.infoValue}>{equipoNombre}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>ID:</span>
+                <span className={styles.infoValue}>{mantenimiento?.id}</span>
               </div>
             </div>
 
@@ -307,7 +315,7 @@ const uploadFiles = async () => {
                   multiple
                   className={styles.hiddenInput}
                 />
-                <span className={styles.fileHint}>JPG, PNG, GIF, MP4 (máx. 10MB por archivo)</span>
+                <span className={styles.fileHint}>JPG, PNG, GIF, MP4 (máx. 50MB por archivo)</span>
               </div>
               
               {previewUrls.length > 0 && (
@@ -326,10 +334,12 @@ const uploadFiles = async () => {
               )}
             </div>
 
-            {uploadProgress > 0 && uploadProgress < 100 && (
+            {uploadProgress > 0 && (
               <div className={styles.progressBar}>
                 <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
-                <span className={styles.progressText}>Subiendo evidencias... {uploadProgress}%</span>
+                <span className={styles.progressText}>
+                  {uploadProgress < 50 ? 'Subiendo evidencias...' : 'Completando mantenimiento...'} {uploadProgress}%
+                </span>
               </div>
             )}
           </div>
