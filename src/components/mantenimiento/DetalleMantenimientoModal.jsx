@@ -79,22 +79,29 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     }
   }, [isOpen, mantenimiento?.id]);
 
-  const cargarEvidencias = async () => {
-    setLoadingEvidencias(true);
-    try {
-      const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${mantenimiento.id}`);
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        if (data.ok) setEvidencias(data.datos || []);
+ const cargarEvidencias = async () => {
+  setLoadingEvidencias(true);
+  try {
+    const API_BASE = getApiBase();
+    console.log('🔍 Cargando evidencias para mantenimiento:', mantenimiento.id);
+    console.log('🔍 API_BASE:', API_BASE);
+    
+    const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${mantenimiento.id}`);
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('📸 Respuesta del servidor:', data);
+      if (data.ok) {
+        console.log('✅ Evidencias encontradas:', data.datos);
+        setEvidencias(data.datos || []);
       }
-    } catch (err) {
-      console.error('Error cargando evidencias:', err);
-    } finally {
-      setLoadingEvidencias(false);
     }
-  };
+  } catch (err) {
+    console.error('Error cargando evidencias:', err);
+  } finally {
+    setLoadingEvidencias(false);
+  }
+};
 
   const cargarVersiones = async () => {
     if (!mantenimiento?.id) return;
