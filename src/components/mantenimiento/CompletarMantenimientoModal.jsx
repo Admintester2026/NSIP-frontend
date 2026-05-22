@@ -59,37 +59,41 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Subir evidencias con el ID del mantenimiento (YA EXISTE)
-  const uploadFiles = async () => {
-    if (formData.evidencias.length === 0) return [];
+  // Subir evidencias con el ID del mantenimiento 
+const uploadFiles = async () => {
+  if (formData.evidencias.length === 0) return [];
+  
+  const API_BASE = import.meta.env.VITE_API_URL;
+  const uploadedUrls = [];
+  
+  for (let i = 0; i < formData.evidencias.length; i++) {
+    const file = formData.evidencias[i];
+    const formDataFile = new FormData();
+    formDataFile.append('archivo', file);
+    formDataFile.append('tipo', 'evidencia');
+    formDataFile.append('entidad_id', mantenimiento.id); 
     
-    const API_BASE = import.meta.env.VITE_API_URL;
-    const uploadedUrls = [];
+    console.log('📤 Subiendo evidencia para mantenimiento ID:', mantenimiento.id);
     
-    for (let i = 0; i < formData.evidencias.length; i++) {
-      const file = formData.evidencias[i];
-      const formDataFile = new FormData();
-      formDataFile.append('archivo', file);
-      formDataFile.append('tipo', 'evidencia');
-      formDataFile.append('entidad_id', mantenimiento.id); // ← EL ID DEL MANTENIMIENTO YA EXISTE
-      
-      try {
-        setUploadProgress(Math.round(((i + 1) / formData.evidencias.length) * 50));
-        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
-          method: 'POST',
-          body: formDataFile
-        });
-        const data = await response.json();
-        if (data.ok) {
-          uploadedUrls.push(data.url);
-          console.log('✅ Evidencia subida para mantenimiento:', mantenimiento.id, data.url);
-        }
-      } catch (err) {
-        console.error(`Error subiendo archivo ${i}:`, err);
+    try {
+      setUploadProgress(Math.round(((i + 1) / formData.evidencias.length) * 50));
+      const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+        method: 'POST',
+        body: formDataFile
+      });
+      const data = await response.json();
+      if (data.ok) {
+        uploadedUrls.push(data.url);
+        console.log('✅ Evidencia subida:', data.url);
+        console.log('   Archivo guardado como:', data.filename);
       }
+    } catch (err) {
+      console.error(`Error subiendo archivo ${i}:`, err);
     }
-    return uploadedUrls;
-  };
+  }
+  setUploadProgress(100);
+  return uploadedUrls;
+};
 
   const validateForm = () => {
     const errors = [];
