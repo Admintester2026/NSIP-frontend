@@ -1,5 +1,5 @@
 // FRONTEND/src/components/mantenimiento/ImageGallery.jsx
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import styles from './ImageGallery.module.css';
 
 export default function ImageGallery({ images, title = 'Galería' }) {
@@ -7,8 +7,10 @@ export default function ImageGallery({ images, title = 'Galería' }) {
   const [showModal, setShowModal] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [isZooming, setIsZooming] = useState(false);
-  const [imageErrors, setImageErrors] = useState({});
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageContainerRef = useRef(null);
 
   if (!images || images.length === 0) {
     return <p className={styles.emptyMessage}>No hay imágenes disponibles</p>;
@@ -24,38 +26,78 @@ export default function ImageGallery({ images, title = 'Galería' }) {
 
   const openModal = (index) => {
     setModalIndex(index);
-    setZoomLevel(1);
+    resetZoomAndPosition();
     setShowModal(true);
   };
 
   const handleModalPrev = () => {
     setModalIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-    setZoomLevel(1);
+    resetZoomAndPosition();
   };
 
   const handleModalNext = () => {
     setModalIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    resetZoomAndPosition();
+  };
+
+  const resetZoomAndPosition = () => {
     setZoomLevel(1);
+    setPosition({ x: 0, y: 0 });
   };
 
   const zoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.25, 3));
+    setZoomLevel(prev => Math.min(prev + 0.3, 3));
   };
 
   const zoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
+    setZoomLevel(prev => {
+      const newZoom = Math.max(prev - 0.3, 1);
+      if (newZoom === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return newZoom;
+    });
   };
 
-  const resetZoom = () => {
-    setZoomLevel(1);
+  const handleMouseDown = (e) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+      e.preventDefault();
+    }
   };
 
-  const handleImageClick = (e) => {
-    if (isZooming) {
-      resetZoom();
-      setIsZooming(false);
-    } else {
-      setIsZooming(true);
+  const handleMouseMove = (e) => {
+    if (isDragging && zoomLevel > 1) {
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
+      
+      // Limitar movimiento
+      const maxX = (zoomLevel - 1) * 250;
+      const maxY = (zoomLevel - 1) * 250;
+      
+      setPosition({
+        x: Math.min(Math.max(newX, -maxX), maxX),
+        y: Math.min(Math.max(newY, -maxY), maxY)
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e) => {
+    if (showModal) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        zoomIn();
+      } else {
+        zoomOut();
+      }
     }
   };
 
@@ -80,10 +122,8 @@ export default function ImageGallery({ images, title = 'Galería' }) {
     });
   };
 
-  // Extraer fecha del nombre del archivo si no viene en el objeto
   const getImageDate = (image) => {
     if (image.fecha) return formatDate(image.fecha);
-    // Intentar extraer timestamp del nombre del archivo
     const match = image.filename?.match(/(\d{13})/);
     if (match) {
       const timestamp = parseInt(match[1]);
@@ -92,16 +132,6 @@ export default function ImageGallery({ images, title = 'Galería' }) {
       }
     }
     return 'Fecha no disponible';
-  };
-
-  const handleImageError = (url, index) => {
-    console.error(`❌ Error cargando imagen: ${url}`);
-    setImageErrors(prev => ({ ...prev, [index]: true }));
-  };
-
-  const handleImageLoad = (url, index) => {
-    console.log(`✅ Imagen cargada correctamente: ${url}`);
-    setImageErrors(prev => ({ ...prev, [index]: false }));
   };
 
   return (
@@ -133,14 +163,7 @@ export default function ImageGallery({ images, title = 'Galería' }) {
                 src={images[currentIndex].url} 
                 alt={`Imagen ${currentIndex + 1}`} 
                 className={styles.mainImage}
-                onError={() => handleImageError(images[currentIndex].url, currentIndex)}
-                onLoad={() => handleImageLoad(images[currentIndex].url, currentIndex)}
               />
-            )}
-            {imageErrors[currentIndex] && (
-              <div className={styles.errorOverlay}>
-                <span>⚠️ No se pudo cargar la imagen</span>
-              </div>
             )}
             <div className={styles.imageDateBadge}>
               📅 {getImageDate(images[currentIndex])}
@@ -172,7 +195,6 @@ export default function ImageGallery({ images, title = 'Galería' }) {
                   src={img.url} 
                   alt={`Miniatura ${idx + 1}`} 
                   className={styles.thumbnailImage}
-                  onError={() => console.error(`Error en miniatura ${idx}`)}
                 />
               )}
             </div>
@@ -180,21 +202,25 @@ export default function ImageGallery({ images, title = 'Galería' }) {
         </div>
       </div>
 
-      {/* Modal ampliado CON ZOOM */}
+      {/* Modal ampliado MEJORADO */}
       {showModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+        <div 
+          className={styles.modalOverlay} 
+          onClick={() => setShowModal(false)}
+          onWheel={handleWheel}
+        >
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <button className={styles.modalClose} onClick={() => setShowModal(false)}>✕</button>
             
-            {/* Botones de zoom */}
+            {/* Controles de zoom */}
             <div className={styles.zoomControls}>
-              <button className={styles.zoomButton} onClick={zoomOut} title="Alejar (-)">
+              <button className={styles.zoomButton} onClick={zoomOut} title="Alejar (-) / Rueda mouse">
                 <span>−</span>
               </button>
-              <button className={styles.zoomButton} onClick={resetZoom} title="Restablecer zoom">
+              <button className={styles.zoomButton} onClick={resetZoomAndPosition} title="Restablecer zoom">
                 <span>{Math.round(zoomLevel * 100)}%</span>
               </button>
-              <button className={styles.zoomButton} onClick={zoomIn} title="Acercar (+)">
+              <button className={styles.zoomButton} onClick={zoomIn} title="Acercar (+) / Rueda mouse">
                 <span>+</span>
               </button>
             </div>
@@ -202,7 +228,15 @@ export default function ImageGallery({ images, title = 'Galería' }) {
             <div className={styles.modalCarousel}>
               <button className={styles.modalNavPrev} onClick={handleModalPrev}>‹</button>
               
-              <div className={styles.modalImageContainer}>
+              <div 
+                className={styles.modalImageContainer}
+                ref={imageContainerRef}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
+              >
                 {isVideo(images[modalIndex]?.url) ? (
                   <video 
                     src={images[modalIndex].url} 
@@ -213,20 +247,17 @@ export default function ImageGallery({ images, title = 'Galería' }) {
                 ) : isPDF(images[modalIndex]?.url) ? (
                   <iframe src={images[modalIndex].url} className={styles.modalPdf} title="PDF" />
                 ) : (
-                  <div 
-                    className={styles.zoomableImageContainer}
-                    onClick={handleImageClick}
-                    style={{ cursor: zoomLevel > 1 ? 'zoom-out' : 'zoom-in' }}
-                  >
+                  <div className={styles.zoomableWrapper}>
                     <img 
                       src={images[modalIndex].url} 
                       alt={`Imagen ${modalIndex + 1}`} 
                       className={styles.modalImage}
                       style={{ 
-                        transform: `scale(${zoomLevel})`,
-                        transition: 'transform 0.2s ease'
+                        transform: `scale(${zoomLevel}) translate(${position.x / zoomLevel}px, ${position.y / zoomLevel}px)`,
+                        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+                        cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
                       }}
-                      onError={(e) => console.error(`Error en modal: ${images[modalIndex].url}`)}
+                      draggable={false}
                     />
                   </div>
                 )}
@@ -235,7 +266,7 @@ export default function ImageGallery({ images, title = 'Galería' }) {
               <button className={styles.modalNavNext} onClick={handleModalNext}>›</button>
             </div>
 
-            {/* Fecha en el modal */}
+            {/* Información del modal */}
             <div className={styles.modalInfo}>
               <div className={styles.modalInfoLeft}>
                 <span className={styles.modalDate}>
@@ -246,6 +277,9 @@ export default function ImageGallery({ images, title = 'Galería' }) {
                 <span>{modalIndex + 1} de {images.length}</span>
               </div>
               <div className={styles.modalInfoRight}>
+                {zoomLevel > 1 && (
+                  <span className={styles.zoomHint}>🔍 Arrastra para mover | Rueda para zoom</span>
+                )}
                 {images[modalIndex]?.filename && (
                   <span className={styles.modalFilename} title={images[modalIndex].filename}>
                     📄 {images[modalIndex].filename.length > 30 
@@ -263,7 +297,7 @@ export default function ImageGallery({ images, title = 'Galería' }) {
                   className={`${styles.modalThumbnail} ${idx === modalIndex ? styles.activeModalThumbnail : ''}`}
                   onClick={() => {
                     setModalIndex(idx);
-                    setZoomLevel(1);
+                    resetZoomAndPosition();
                   }}
                 >
                   {isVideo(img.url) ? (
@@ -275,7 +309,6 @@ export default function ImageGallery({ images, title = 'Galería' }) {
                       src={img.url} 
                       alt="" 
                       className={styles.modalThumbnailImage}
-                      onError={() => console.error(`Error miniatura modal`)}
                     />
                   )}
                 </div>
