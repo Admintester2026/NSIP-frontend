@@ -4,14 +4,15 @@ import { mantenimientoAPI } from '../../api/mantenimiento';
 import ImageGallery from './ImageGallery';
 import styles from './DetalleMantenimientoModal.module.css';
 
+// Función para obtener la base del backend (SIN /api al final)
+const getBackendBase = () => {
+  // Siempre usar la IP local del backend
+  // Cambia esta IP si tu backend cambia
+  return 'http://192.168.3.65:3000';
+};
+
 const getApiBase = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  if (typeof window !== 'undefined' && window.VITE_API_URL) {
-    return window.VITE_API_URL;
-  }
-  return '';
+  return `${getBackendBase()}/api`;
 };
 
 export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimiento, equipoNombre, onEdit }) {
@@ -79,29 +80,35 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     }
   }, [isOpen, mantenimiento?.id]);
 
- const cargarEvidencias = async () => {
-  setLoadingEvidencias(true);
-  try {
-    const API_BASE = getApiBase();
-    console.log('🔍 Cargando evidencias para mantenimiento:', mantenimiento.id);
-    console.log('🔍 API_BASE:', API_BASE);
-    
-    const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${mantenimiento.id}`);
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      console.log('📸 Respuesta del servidor:', data);
-      if (data.ok) {
-        console.log('✅ Evidencias encontradas:', data.datos);
-        setEvidencias(data.datos || []);
+  const cargarEvidencias = async () => {
+    setLoadingEvidencias(true);
+    try {
+      const API_BASE = getApiBase();
+      console.log('🔍 Cargando evidencias para mantenimiento:', mantenimiento.id);
+      
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${mantenimiento.id}`);
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        console.log('📸 Respuesta del servidor:', data);
+        if (data.ok) {
+          // Obtener la base del backend (sin /api)
+          const backendBase = getBackendBase();
+          // Convertir URLs relativas a absolutas
+          const evidenciasConUrlAbsoluta = (data.datos || []).map(ev => ({
+            ...ev,
+            url: ev.url.startsWith('http') ? ev.url : `${backendBase}${ev.url}`
+          }));
+          console.log('✅ URLs convertidas:', evidenciasConUrlAbsoluta);
+          setEvidencias(evidenciasConUrlAbsoluta);
+        }
       }
+    } catch (err) {
+      console.error('Error cargando evidencias:', err);
+    } finally {
+      setLoadingEvidencias(false);
     }
-  } catch (err) {
-    console.error('Error cargando evidencias:', err);
-  } finally {
-    setLoadingEvidencias(false);
-  }
-};
+  };
 
   const cargarVersiones = async () => {
     if (!mantenimiento?.id) return;
@@ -278,7 +285,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
           </div>
 
           <div className={styles.modalBody}>
-            {/* Información básica */}
             <div className={styles.infoSection}>
               <div className={styles.infoRow}><span className={styles.infoLabel}>Título:</span><span className={styles.infoValue}>{mantenimiento.titulo}</span></div>
               <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
@@ -293,7 +299,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               </div>
             </div>
 
-            {/* Fechas */}
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
               <div className={styles.infoRow}><span className={styles.infoLabel}>Programado:</span><span className={styles.infoValue}>{formatDate(mantenimiento.fecha_inicio)}</span></div>
@@ -302,7 +307,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               {vistaPreviaVersion?.fecha_modificacion && <div className={styles.infoRow}><span className={styles.infoLabel}>Modificado:</span><span className={styles.infoValue}>{formatDate(vistaPreviaVersion.fecha_modificacion)}</span></div>}
             </div>
 
-            {/* Ejecución */}
             <div className={styles.infoSection}>
               <div className={styles.sectionHeader}>
                 <h4 className={styles.sectionSubtitle}>👤 Ejecución</h4>
@@ -332,7 +336,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               )}
             </div>
 
-            {/* Materiales y costo */}
             {(mostrarDatos?.materiales_usados || mostrarDatos?.costo_materiales) && (
               <div className={styles.infoSection}>
                 <h4 className={styles.sectionSubtitle}>🔧 Materiales y Costos</h4>
@@ -341,7 +344,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               </div>
             )}
 
-            {/* Notas */}
             {mostrarDatos?.notas_completado && (
               <div className={styles.infoSection}>
                 <h4 className={styles.sectionSubtitle}>📝 Notas del trabajo</h4>
@@ -349,7 +351,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               </div>
             )}
 
-            {/* Evidencias - CON GALERÍA DE IMÁGENES */}
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>📸 Evidencias</h4>
               {loadingEvidencias ? (

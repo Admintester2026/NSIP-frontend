@@ -3,14 +3,13 @@ import { useState, useEffect } from 'react';
 import ImageGallery from './ImageGallery';
 import styles from './DetalleIncidenciaModal.module.css';
 
+// Función para obtener la base del backend (SIN /api al final)
+const getBackendBase = () => {
+  return 'http://192.168.3.65:3000';
+};
+
 const getApiBase = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  if (typeof window !== 'undefined' && window.VITE_API_URL) {
-    return window.VITE_API_URL;
-  }
-  return '';
+  return `${getBackendBase()}/api`;
 };
 
 export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, equipoNombre }) {
@@ -27,11 +26,24 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
+      console.log('🔍 Cargando evidencias para incidencia:', incidencia.id);
+      
       const response = await fetch(`${API_BASE}/mantenimiento/evidencias/incidencia/${incidencia.id}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
-        if (data.ok) setEvidencias(data.datos || []);
+        console.log('📸 Respuesta del servidor:', data);
+        if (data.ok) {
+          // Obtener la base del backend (sin /api)
+          const backendBase = getBackendBase();
+          // Convertir URLs relativas a absolutas
+          const evidenciasConUrlAbsoluta = (data.datos || []).map(ev => ({
+            ...ev,
+            url: ev.url.startsWith('http') ? ev.url : `${backendBase}${ev.url}`
+          }));
+          console.log('✅ URLs convertidas:', evidenciasConUrlAbsoluta);
+          setEvidencias(evidenciasConUrlAbsoluta);
+        }
       }
     } catch (err) {
       console.error('Error cargando evidencias:', err);
@@ -105,7 +117,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         </div>
 
         <div className={styles.modalBody}>
-          {/* Información básica */}
           <div className={styles.infoSection}>
             <div className={styles.infoRow}><span className={styles.infoLabel}>Título:</span><span className={styles.infoValue}>{incidencia.titulo}</span></div>
             <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
@@ -120,20 +131,17 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             {incidencia.reportado_por && <div className={styles.infoRow}><span className={styles.infoLabel}>Reportado por:</span><span className={styles.infoValue}>{incidencia.reportado_por}</span></div>}
           </div>
 
-          {/* Fechas */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
             <div className={styles.infoRow}><span className={styles.infoLabel}>Reportado:</span><span className={styles.infoValue}>{formatDate(incidencia.fecha_reporte)}</span></div>
             {incidencia.fecha_solucion && <div className={styles.infoRow}><span className={styles.infoLabel}>Solucionado:</span><span className={styles.infoValue}>{formatDate(incidencia.fecha_solucion)}</span></div>}
           </div>
 
-          {/* Descripción */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📝 Descripción del problema</h4>
             <div className={styles.descripcionBox}>{incidencia.descripcion}</div>
           </div>
 
-          {/* Solución */}
           {incidencia.solucion && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>💡 Solución aplicada</h4>
@@ -141,7 +149,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             </div>
           )}
 
-          {/* Costo estimado */}
           {incidencia.costo_estimado && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>💰 Costo estimado</h4>
@@ -149,7 +156,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             </div>
           )}
 
-          {/* Evidencias - CON GALERÍA DE IMÁGENES */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📸 Evidencias / Documentos</h4>
             {loadingEvidencias ? (

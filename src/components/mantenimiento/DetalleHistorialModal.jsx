@@ -3,14 +3,13 @@ import { useState, useEffect } from 'react';
 import ImageGallery from './ImageGallery';
 import styles from './DetalleHistorialModal.module.css';
 
+// Función para obtener la base del backend (SIN /api al final)
+const getBackendBase = () => {
+  return 'http://192.168.3.65:3000';
+};
+
 const getApiBase = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  if (typeof window !== 'undefined' && window.VITE_API_URL) {
-    return window.VITE_API_URL;
-  }
-  return '';
+  return `${getBackendBase()}/api`;
 };
 
 export default function DetalleHistorialModal({ isOpen, onClose, historialItem, equipoNombre }) {
@@ -27,11 +26,24 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     setLoadingFacturas(true);
     try {
       const API_BASE = getApiBase();
+      console.log('🔍 Cargando facturas para historial:', historialItem.id);
+      
       const response = await fetch(`${API_BASE}/mantenimiento/evidencias/historial/${historialItem.id}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
-        if (data.ok) setFacturas(data.datos || []);
+        console.log('📸 Respuesta del servidor:', data);
+        if (data.ok) {
+          // Obtener la base del backend (sin /api)
+          const backendBase = getBackendBase();
+          // Convertir URLs relativas a absolutas
+          const facturasConUrlAbsoluta = (data.datos || []).map(fact => ({
+            ...fact,
+            url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
+          }));
+          console.log('✅ URLs convertidas:', facturasConUrlAbsoluta);
+          setFacturas(facturasConUrlAbsoluta);
+        }
       }
     } catch (err) {
       console.error('Error cargando facturas:', err);
@@ -90,20 +102,17 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
         </div>
 
         <div className={styles.modalBody}>
-          {/* Información básica */}
           <div className={styles.infoSection}>
             <div className={styles.infoRow}><span className={styles.infoLabel}>Tipo de cambio:</span><span className={styles.infoValue}>{getCampoModificadoTexto(historialItem.campo_modificado)}</span></div>
             <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
             {historialItem.usuario && <div className={styles.infoRow}><span className={styles.infoLabel}>Registrado por:</span><span className={styles.infoValue}>{historialItem.usuario}</span></div>}
           </div>
 
-          {/* Fecha */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>📅 Fecha del cambio</h4>
             <div className={styles.infoRow}><span className={styles.infoValue}>{formatDate(historialItem.fecha)}</span></div>
           </div>
 
-          {/* Valores del cambio */}
           {(historialItem.valor_anterior || historialItem.valor_nuevo) && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>🔄 Valores del cambio</h4>
@@ -112,7 +121,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             </div>
           )}
 
-          {/* Descripción */}
           {historialItem.descripcion && (
             <div className={styles.infoSection}>
               <h4 className={styles.sectionSubtitle}>📝 Descripción</h4>
@@ -120,7 +128,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             </div>
           )}
 
-          {/* Facturas - CON GALERÍA DE IMÁGENES */}
           <div className={styles.infoSection}>
             <h4 className={styles.sectionSubtitle}>🧾 Facturas / Comprobantes</h4>
             {loadingFacturas ? (
