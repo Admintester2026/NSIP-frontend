@@ -1,6 +1,16 @@
-import { useState, useEffect } from 'react';
+// FRONTEND/src/components/mantenimiento/EditarMantenimientoModal.jsx
+import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './EditarMantenimientoModal.module.css';
+
+// Función para obtener la base del backend
+const getBackendBase = () => {
+  return 'http://192.168.3.65:3000';
+};
+
+const getApiBase = () => {
+  return `${getBackendBase()}/api`;
+};
 
 export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, mantenimiento, equipoNombre }) {
   const [formData, setFormData] = useState({
@@ -16,6 +26,13 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
   const [versiones, setVersiones] = useState([]);
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  
+  // Estados para nuevas evidencias
+  const [nuevasEvidencias, setNuevasEvidencias] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [subiendoEvidencias, setSubiendoEvidencias] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && mantenimiento) {
@@ -28,6 +45,10 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
         observaciones: ''
       });
       cargarHistorial();
+      // Resetear nuevas evidencias
+      setNuevasEvidencias([]);
+      setPreviewUrls([]);
+      setUploadProgress(0);
     }
   }, [isOpen, mantenimiento]);
 
@@ -48,6 +69,59 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFilesChange = (e) => {
+    const files = Array.from(e.target.files);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
+    const validFiles = files.filter(file => allowedTypes.includes(file.type));
+    
+    if (validFiles.length !== files.length) {
+      setError('Algunos archivos no son válidos. Solo JPG, PNG, GIF y MP4.');
+    }
+    
+    setNuevasEvidencias(prev => [...prev, ...validFiles]);
+    
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+  };
+
+  const removeNewFile = (index) => {
+    setNuevasEvidencias(prev => prev.filter((_, i) => i !== index));
+    URL.revokeObjectURL(previewUrls[index]);
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Subir nuevas evidencias al backend
+  const uploadNewEvidencias = async () => {
+    if (nuevasEvidencias.length === 0) return [];
+    
+    const API_BASE = getApiBase();
+    const uploadedUrls = [];
+    
+    for (let i = 0; i < nuevasEvidencias.length; i++) {
+      const file = nuevasEvidencias[i];
+      const formDataFile = new FormData();
+      formDataFile.append('archivo', file);
+      formDataFile.append('tipo', 'evidencia');
+      formDataFile.append('entidad_id', mantenimiento.id);
+      
+      try {
+        setUploadProgress(Math.round(((i + 1) / nuevasEvidencias.length) * 100));
+        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+          method: 'POST',
+          body: formDataFile
+        });
+        const data = await response.json();
+        if (data.ok) {
+          uploadedUrls.push(data.url);
+          console.log('✅ Nueva evidencia subida:', data.url);
+        }
+      } catch (err) {
+        console.error(`Error subiendo archivo ${i}:`, err);
+      }
+    }
+    return uploadedUrls;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -61,21 +135,36 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
         throw new Error('Las notas de trabajo son requeridas');
       }
 
+      // Subir nuevas evidencias si hay
+      let nuevasUrls = [];
+      if (nuevasEvidencias.length > 0) {
+        setSubiendoEvidencias(true);
+        nuevasUrls = await uploadNewEvidencias();
+        console.log(`📸 Subidas ${nuevasUrls.length} nuevas evidencias`);
+      }
+
+      // Actualizar el mantenimiento (solo los datos editables, las evidencias ya están en el sistema de archivos)
       await mantenimientoAPI.editarMantenimientoCompletado(mantenimiento.id, {
         notas_completado: formData.notas_completado,
         tecnico: formData.tecnico,
         duracion: formData.duracion,
         materiales_usados: formData.materiales_usados,
         costo_materiales: formData.costo_materiales,
-        observaciones: formData.observaciones
+        observaciones: formData.observaciones,
+        nuevas_evidencias_urls: nuevasUrls  // Opcional: guardar referencia si tienes tabla de evidencias
       });
 
+      // Limpiar previews
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setSubiendoEvidencias(false);
+      setUploadProgress(0);
     }
   };
 
@@ -168,6 +257,47 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
               />
             </div>
 
+            {/* Sección para añadir nuevas evidencias */}
+            <div className={styles.formGroup}>
+              <label>📸 Añadir más evidencias (Fotos / Videos)</label>
+              <div className={styles.fileInputArea}>
+                <button type="button" className={styles.fileButton} onClick={() => fileInputRef.current?.click()}>
+                  📷 Seleccionar archivos adicionales
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,video/mp4"
+                  onChange={handleFilesChange}
+                  multiple
+                  className={styles.hiddenInput}
+                />
+                <span className={styles.fileHint}>Añade más imágenes o videos (no se borrarán los existentes)</span>
+              </div>
+              
+              {previewUrls.length > 0 && (
+                <div className={styles.previewGrid}>
+                  {previewUrls.map((url, idx) => (
+                    <div key={idx} className={styles.previewItem}>
+                      {url.match(/\.(mp4|webm)$/i) ? (
+                        <video src={url} className={styles.previewVideo} controls />
+                      ) : (
+                        <img src={url} alt={`Nueva evidencia ${idx + 1}`} className={styles.previewImage} />
+                      )}
+                      <button type="button" className={styles.removePreview} onClick={() => removeNewFile(idx)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {uploadProgress > 0 && (
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
+                <span className={styles.progressText}>Subiendo nuevas evidencias... {uploadProgress}%</span>
+              </div>
+            )}
+
             {/* Historial de versiones */}
             <button 
               type="button" 
@@ -216,8 +346,8 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
             <button type="button" className={styles.cancelButton} onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className={styles.submitButton} disabled={loading}>
-              {loading ? 'Guardando...' : '💾 Guardar cambios'}
+            <button type="submit" className={styles.submitButton} disabled={loading || subiendoEvidencias}>
+              {loading ? 'Guardando...' : subiendoEvidencias ? 'Subiendo evidencias...' : '💾 Guardar cambios'}
             </button>
           </div>
         </form>

@@ -354,3 +354,138 @@
     max-width: 100%;
   }
 }
+
+/* Badge de fecha en la imagen principal */
+.imageDateBadge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 20px;
+  z-index: 5;
+  font-weight: normal;
+  pointer-events: none;
+}
+
+/* Controles de zoom */
+.zoomControls {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.zoomButton {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 30px;
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.zoomButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.zoomButton span {
+  font-size: 1.1rem;
+}
+
+/* Contenedor para imagen con zoom */
+.zoomableImageContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  cursor: pointer;
+}
+
+/* Información del modal mejorada */
+.modalInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
+  color: #ccc;
+  gap: 1rem;
+}
+
+.modalInfoLeft {
+  flex: 1;
+  text-align: left;
+}
+
+.modalInfoCenter {
+  flex: 1;
+  text-align: center;
+}
+
+.modalInfoRight {
+  flex: 1;
+  text-align: right;
+}
+
+.modalDate {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  color: #00ff9d;
+}
+
+.modalFilename {
+  font-size: 0.7rem;
+  color: #888;
+  max-width: 250px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Error overlay */
+.errorOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+  font-size: 0.8rem;
+  gap: 0.5rem;
+}
+
+.errorOverlay small {
+  font-size: 0.6rem;
+  color: #666;
+  word-break: break-all;
+  padding: 0 1rem;
+  text-align: center;
+}
