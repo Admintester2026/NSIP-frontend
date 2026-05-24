@@ -1,6 +1,7 @@
 // FRONTEND/src/components/mantenimiento/DetalleHistorialModal.jsx
 import { useState, useEffect } from 'react';
 import ImageGallery from './ImageGallery';
+import EditarHistorialModal from './EditarHistorialModal';
 import styles from './DetalleHistorialModal.module.css';
 
 // Función para obtener la base del backend (SIN /api al final)
@@ -12,9 +13,11 @@ const getApiBase = () => {
   return `${getBackendBase()}/api`;
 };
 
-export default function DetalleHistorialModal({ isOpen, onClose, historialItem, equipoNombre }) {
+export default function DetalleHistorialModal({ isOpen, onClose, historialItem, equipoNombre, onSuccess }) {
   const [facturas, setFacturas] = useState([]);
   const [loadingFacturas, setLoadingFacturas] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [recargando, setRecargando] = useState(false);
 
   useEffect(() => {
     if (isOpen && historialItem?.id) {
@@ -34,9 +37,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
         const data = await response.json();
         console.log('📸 Respuesta del servidor:', data);
         if (data.ok) {
-          // Obtener la base del backend (sin /api)
           const backendBase = getBackendBase();
-          // Convertir URLs relativas a absolutas
           const facturasConUrlAbsoluta = (data.datos || []).map(fact => ({
             ...fact,
             url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
@@ -50,6 +51,13 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     } finally {
       setLoadingFacturas(false);
     }
+  };
+
+  const handleEditSuccess = async () => {
+    setRecargando(true);
+    await cargarFacturas();
+    setRecargando(false);
+    if (onSuccess) onSuccess();
   };
 
   const formatDate = (dateString) => {
@@ -77,6 +85,22 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
 
   if (!isOpen) return null;
 
+  if (recargando) {
+    return (
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h2>Actualizando...</h2>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
+          </div>
+          <div className={styles.modalBody}>
+            <p className={styles.loadingText}>Actualizando información...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!historialItem) {
     return (
       <div className={styles.modalOverlay} onClick={onClose}>
@@ -94,56 +118,104 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   }
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2>📜 Detalle de Cambio Registrado</h2>
-          <button className={styles.modalClose} onClick={onClose}>✕</button>
-        </div>
-
-        <div className={styles.modalBody}>
-          <div className={styles.infoSection}>
-            <div className={styles.infoRow}><span className={styles.infoLabel}>Tipo de cambio:</span><span className={styles.infoValue}>{getCampoModificadoTexto(historialItem.campo_modificado)}</span></div>
-            <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
-            {historialItem.usuario && <div className={styles.infoRow}><span className={styles.infoLabel}>Registrado por:</span><span className={styles.infoValue}>{historialItem.usuario}</span></div>}
+    <>
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h2>📜 Detalle de Cambio Registrado</h2>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
           </div>
 
-          <div className={styles.infoSection}>
-            <h4 className={styles.sectionSubtitle}>📅 Fecha del cambio</h4>
-            <div className={styles.infoRow}><span className={styles.infoValue}>{formatDate(historialItem.fecha)}</span></div>
-          </div>
-
-          {(historialItem.valor_anterior || historialItem.valor_nuevo) && (
+          <div className={styles.modalBody}>
             <div className={styles.infoSection}>
-              <h4 className={styles.sectionSubtitle}>🔄 Valores del cambio</h4>
-              {historialItem.valor_anterior && <div className={styles.infoRow}><span className={styles.infoLabel}>Valor anterior:</span><span className={styles.valorAnterior}>{historialItem.valor_anterior}</span></div>}
-              {historialItem.valor_nuevo && <div className={styles.infoRow}><span className={styles.infoLabel}>Valor nuevo:</span><span className={styles.valorNuevo}>{historialItem.valor_nuevo}</span></div>}
+              <div className={styles.sectionHeader}>
+                <h4 className={styles.sectionSubtitle}>📋 Información del cambio</h4>
+                <button 
+                  className={styles.editarButton} 
+                  onClick={() => setShowEditModal(true)}
+                  title="Editar registro"
+                >
+                  ✏️ Editar
+                </button>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>ID:</span>
+                <span className={styles.infoValue}>#{historialItem.id}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Tipo de cambio:</span>
+                <span className={styles.infoValue}>{getCampoModificadoTexto(historialItem.campo_modificado)}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Equipo:</span>
+                <span className={styles.infoValue}>{equipoNombre}</span>
+              </div>
+              {historialItem.usuario && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Registrado por:</span>
+                  <span className={styles.infoValue}>{historialItem.usuario}</span>
+                </div>
+              )}
             </div>
-          )}
 
-          {historialItem.descripcion && (
             <div className={styles.infoSection}>
-              <h4 className={styles.sectionSubtitle}>📝 Descripción</h4>
-              <div className={styles.descripcionBox}>{historialItem.descripcion}</div>
+              <h4 className={styles.sectionSubtitle}>📅 Fecha del cambio</h4>
+              <div className={styles.infoRow}>
+                <span className={styles.infoValue}>{formatDate(historialItem.fecha)}</span>
+              </div>
             </div>
-          )}
 
-          <div className={styles.infoSection}>
-            <h4 className={styles.sectionSubtitle}>🧾 Facturas / Comprobantes</h4>
-            {loadingFacturas ? (
-              <p className={styles.loadingText}>Cargando documentos...</p>
-            ) : facturas.length > 0 ? (
-              <ImageGallery images={facturas} title="Facturas y comprobantes" />
-            ) : (
-              <p className={styles.emptyMessage}>No hay facturas o comprobantes adjuntos</p>
+            {(historialItem.valor_anterior || historialItem.valor_nuevo) && (
+              <div className={styles.infoSection}>
+                <h4 className={styles.sectionSubtitle}>🔄 Valores del cambio</h4>
+                {historialItem.valor_anterior && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Valor anterior:</span>
+                    <span className={styles.valorAnterior}>{historialItem.valor_anterior}</span>
+                  </div>
+                )}
+                {historialItem.valor_nuevo && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Valor nuevo:</span>
+                    <span className={styles.valorNuevo}>{historialItem.valor_nuevo}</span>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
-        </div>
 
-        <div className={styles.modalFooter}>
-          <button className={styles.closeButton} onClick={onClose}>Cerrar</button>
+            {historialItem.descripcion && (
+              <div className={styles.infoSection}>
+                <h4 className={styles.sectionSubtitle}>📝 Descripción</h4>
+                <div className={styles.descripcionBox}>{historialItem.descripcion}</div>
+              </div>
+            )}
+
+            <div className={styles.infoSection}>
+              <h4 className={styles.sectionSubtitle}>🧾 Facturas / Comprobantes</h4>
+              {loadingFacturas ? (
+                <p className={styles.loadingText}>Cargando documentos...</p>
+              ) : facturas.length > 0 ? (
+                <ImageGallery images={facturas} title="Facturas y comprobantes" />
+              ) : (
+                <p className={styles.emptyMessage}>No hay facturas o comprobantes adjuntos</p>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button className={styles.closeButton} onClick={onClose}>Cerrar</button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Modal de edición */}
+      <EditarHistorialModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleEditSuccess}
+        historialItem={historialItem}
+        equipoNombre={equipoNombre}
+      />
+    </>
   );
 }

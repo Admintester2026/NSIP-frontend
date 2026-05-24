@@ -279,3 +279,45 @@
     justify-content: center;
   }
 }
+/* Añadir al final de DetalleIncidenciaModal.module.css */
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.editarButton {
+  padding: 0.3rem 0.85rem;
+  background: rgba(255, 179, 64, 0.1);
+  border: 1px solid var(--amber);
+  border-radius: var(--r-md);
+  color: var(--amber);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.editarButton:hover {
+  background: var(--amber);
+  color: var(--bg-primary);
+  transform: translateY(-1px);
+}
+
+/* Estados adicionales */
+.estadoEnProceso {
+  background: rgba(0, 150, 255, 0.15);
+  color: #0096ff;
+}
+
+.estadoCerrado {
+  background: rgba(128, 128, 128, 0.15);
+  color: #aaa;
+}

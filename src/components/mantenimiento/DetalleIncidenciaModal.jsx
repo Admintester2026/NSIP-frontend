@@ -1,6 +1,7 @@
 // FRONTEND/src/components/mantenimiento/DetalleIncidenciaModal.jsx
 import { useState, useEffect } from 'react';
 import ImageGallery from './ImageGallery';
+import EditarIncidenciaModal from './EditarIncidenciaModal';
 import styles from './DetalleIncidenciaModal.module.css';
 
 // Función para obtener la base del backend (SIN /api al final)
@@ -12,9 +13,11 @@ const getApiBase = () => {
   return `${getBackendBase()}/api`;
 };
 
-export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, equipoNombre }) {
+export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, equipoNombre, onSuccess }) {
   const [evidencias, setEvidencias] = useState([]);
   const [loadingEvidencias, setLoadingEvidencias] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [recargando, setRecargando] = useState(false);
 
   useEffect(() => {
     if (isOpen && incidencia?.id) {
@@ -34,9 +37,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         const data = await response.json();
         console.log('📸 Respuesta del servidor:', data);
         if (data.ok) {
-          // Obtener la base del backend (sin /api)
           const backendBase = getBackendBase();
-          // Convertir URLs relativas a absolutas
           const evidenciasConUrlAbsoluta = (data.datos || []).map(ev => ({
             ...ev,
             url: ev.url.startsWith('http') ? ev.url : `${backendBase}${ev.url}`
@@ -50,6 +51,13 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     } finally {
       setLoadingEvidencias(false);
     }
+  };
+
+  const handleEditSuccess = async () => {
+    setRecargando(true);
+    await cargarEvidencias();
+    setRecargando(false);
+    if (onSuccess) onSuccess();
   };
 
   const formatDate = (dateString) => {
@@ -83,14 +91,40 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   };
 
   const getEstadoClass = (estado) => {
-    return estado === 'resuelto' ? styles.estadoResuelto : styles.estadoPendiente;
+    switch (estado) {
+      case 'resuelto': return styles.estadoResuelto;
+      case 'en_proceso': return styles.estadoEnProceso;
+      case 'cerrado': return styles.estadoCerrado;
+      default: return styles.estadoPendiente;
+    }
   };
 
   const getEstadoTexto = (estado) => {
-    return estado === 'resuelto' ? '✅ Resuelto' : '🟡 Pendiente';
+    switch (estado) {
+      case 'resuelto': return '✅ Resuelto';
+      case 'en_proceso': return '🔧 En proceso';
+      case 'cerrado': return '🔒 Cerrado';
+      default: return '🟡 Reportado';
+    }
   };
 
   if (!isOpen) return null;
+
+  if (recargando) {
+    return (
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h2>Actualizando...</h2>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
+          </div>
+          <div className={styles.modalBody}>
+            <p className={styles.loadingText}>Actualizando información...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!incidencia) {
     return (
@@ -109,69 +143,119 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   }
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2>⚠️ Detalle de Incidencia</h2>
-          <button className={styles.modalClose} onClick={onClose}>✕</button>
-        </div>
-
-        <div className={styles.modalBody}>
-          <div className={styles.infoSection}>
-            <div className={styles.infoRow}><span className={styles.infoLabel}>Título:</span><span className={styles.infoValue}>{incidencia.titulo}</span></div>
-            <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Gravedad:</span>
-              <span className={`${styles.gravedadBadge} ${getGravedadClass(incidencia.gravedad)}`}>{getGravedadTexto(incidencia.gravedad)}</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Estado:</span>
-              <span className={`${styles.estadoBadge} ${getEstadoClass(incidencia.estado)}`}>{getEstadoTexto(incidencia.estado)}</span>
-            </div>
-            {incidencia.reportado_por && <div className={styles.infoRow}><span className={styles.infoLabel}>Reportado por:</span><span className={styles.infoValue}>{incidencia.reportado_por}</span></div>}
+    <>
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h2>⚠️ Detalle de Incidencia</h2>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
           </div>
 
-          <div className={styles.infoSection}>
-            <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
-            <div className={styles.infoRow}><span className={styles.infoLabel}>Reportado:</span><span className={styles.infoValue}>{formatDate(incidencia.fecha_reporte)}</span></div>
-            {incidencia.fecha_solucion && <div className={styles.infoRow}><span className={styles.infoLabel}>Solucionado:</span><span className={styles.infoValue}>{formatDate(incidencia.fecha_solucion)}</span></div>}
-          </div>
-
-          <div className={styles.infoSection}>
-            <h4 className={styles.sectionSubtitle}>📝 Descripción del problema</h4>
-            <div className={styles.descripcionBox}>{incidencia.descripcion}</div>
-          </div>
-
-          {incidencia.solucion && (
+          <div className={styles.modalBody}>
             <div className={styles.infoSection}>
-              <h4 className={styles.sectionSubtitle}>💡 Solución aplicada</h4>
-              <div className={styles.solucionBox}>{incidencia.solucion}</div>
+              <div className={styles.sectionHeader}>
+                <h4 className={styles.sectionSubtitle}>📋 Información general</h4>
+                <button 
+                  className={styles.editarButton} 
+                  onClick={() => setShowEditModal(true)}
+                  title="Editar incidencia"
+                >
+                  ✏️ Editar
+                </button>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>ID:</span>
+                <span className={styles.infoValue}>#{incidencia.id}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Título:</span>
+                <span className={styles.infoValue}>{incidencia.titulo}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Equipo:</span>
+                <span className={styles.infoValue}>{equipoNombre}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Gravedad:</span>
+                <span className={`${styles.gravedadBadge} ${getGravedadClass(incidencia.gravedad)}`}>
+                  {getGravedadTexto(incidencia.gravedad)}
+                </span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Estado:</span>
+                <span className={`${styles.estadoBadge} ${getEstadoClass(incidencia.estado)}`}>
+                  {getEstadoTexto(incidencia.estado)}
+                </span>
+              </div>
+              {incidencia.reportado_por && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Reportado por:</span>
+                  <span className={styles.infoValue}>{incidencia.reportado_por}</span>
+                </div>
+              )}
             </div>
-          )}
 
-          {incidencia.costo_estimado && (
             <div className={styles.infoSection}>
-              <h4 className={styles.sectionSubtitle}>💰 Costo estimado</h4>
-              <div className={styles.infoRow}><span className={styles.infoValue}>${Number(incidencia.costo_estimado).toFixed(2)}</span></div>
+              <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Reportado:</span>
+                <span className={styles.infoValue}>{formatDate(incidencia.fecha_reporte)}</span>
+              </div>
+              {incidencia.fecha_solucion && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Solucionado:</span>
+                  <span className={styles.infoValue}>{formatDate(incidencia.fecha_solucion)}</span>
+                </div>
+              )}
             </div>
-          )}
 
-          <div className={styles.infoSection}>
-            <h4 className={styles.sectionSubtitle}>📸 Evidencias / Documentos</h4>
-            {loadingEvidencias ? (
-              <p className={styles.loadingText}>Cargando evidencias...</p>
-            ) : evidencias.length > 0 ? (
-              <ImageGallery images={evidencias} title="Evidencias de la incidencia" />
-            ) : (
-              <p className={styles.emptyMessage}>No hay evidencias adjuntas</p>
+            <div className={styles.infoSection}>
+              <h4 className={styles.sectionSubtitle}>📝 Descripción del problema</h4>
+              <div className={styles.descripcionBox}>{incidencia.descripcion}</div>
+            </div>
+
+            {incidencia.solucion && (
+              <div className={styles.infoSection}>
+                <h4 className={styles.sectionSubtitle}>💡 Solución aplicada</h4>
+                <div className={styles.solucionBox}>{incidencia.solucion}</div>
+              </div>
             )}
-          </div>
-        </div>
 
-        <div className={styles.modalFooter}>
-          <button className={styles.closeButton} onClick={onClose}>Cerrar</button>
+            {incidencia.costo_estimado && (
+              <div className={styles.infoSection}>
+                <h4 className={styles.sectionSubtitle}>💰 Costo estimado</h4>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoValue}>${Number(incidencia.costo_estimado).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+
+            <div className={styles.infoSection}>
+              <h4 className={styles.sectionSubtitle}>📸 Evidencias / Documentos</h4>
+              {loadingEvidencias ? (
+                <p className={styles.loadingText}>Cargando evidencias...</p>
+              ) : evidencias.length > 0 ? (
+                <ImageGallery images={evidencias} title="Evidencias de la incidencia" />
+              ) : (
+                <p className={styles.emptyMessage}>No hay evidencias adjuntas</p>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button className={styles.closeButton} onClick={onClose}>Cerrar</button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Modal de edición */}
+      <EditarIncidenciaModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleEditSuccess}
+        incidencia={incidencia}
+        equipoNombre={equipoNombre}
+      />
+    </>
   );
 }
