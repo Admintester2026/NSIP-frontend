@@ -1,4 +1,4 @@
-/* EditarMantenimientoModal.module.css */
+/* EditarMantenimientoModal.module.css - COMPLETO */
 
 .modalOverlay {
   position: fixed;
@@ -266,48 +266,9 @@
   padding: 1rem;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .modal {
-    width: 95%;
-    max-height: 95vh;
-    margin: 1rem;
-  }
-
-  .modalHeader, .modalBody, .modalFooter {
-    padding: 1rem;
-  }
-
-  .row {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .infoRow {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .infoLabel {
-    min-width: auto;
-  }
-
-  .versionHeader {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-/* Agrega estos estilos al final de EditarMantenimientoModal.module.css */
+/* ============================================ */
+/* ESTILOS PARA SUBIDA DE ARCHIVOS - IMPORTANTE */
+/* ============================================ */
 
 .fileInputArea {
   display: flex;
@@ -318,7 +279,7 @@
 }
 
 .fileButton {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
   border-radius: var(--r-md);
@@ -326,11 +287,15 @@
   cursor: pointer;
   font-size: 0.85rem;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .fileButton:hover {
   border-color: var(--green);
   color: var(--green);
+  transform: translateY(-1px);
 }
 
 .fileHint {
@@ -390,6 +355,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .removePreview:hover {
@@ -421,4 +387,56 @@
   color: #000;
   font-weight: 600;
   white-space: nowrap;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    max-height: 95vh;
+    margin: 1rem;
+  }
+
+  .modalHeader, .modalBody, .modalFooter {
+    padding: 1rem;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .infoRow {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .infoLabel {
+    min-width: auto;
+  }
+
+  .versionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fileInputArea {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fileButton {
+    width: 100%;
+    justify-content: center;
+  }
 }
