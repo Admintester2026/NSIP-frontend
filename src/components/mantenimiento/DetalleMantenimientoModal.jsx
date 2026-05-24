@@ -250,7 +250,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
                   <h4 className={styles.sectionSubtitle}>👤 Ejecución</h4>
                   {!esVistaPrevia && (
                     <button className={styles.editarButton} onClick={() => setShowEditModal(true)}>
-                      ✏️ Editar (incluir imágenes)
+                      ✏️ Editar
                     </button>
                   )}
                 </div>
