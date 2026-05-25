@@ -199,45 +199,35 @@ export default function DetalleEquipo() {
   // ==========================================
   
   const handleIncidenciaEditSuccess = async () => {
-  // Recargar todos los datos del equipo
-  await cargarDatos();
-  
-  // CERRAR EL MODAL automáticamente
-  setShowDetalleIncidenciaModal(false);
-  
-  // Limpiar la incidencia seleccionada
-  setIncidenciaSeleccionada(null);
-  
-  // Mostrar mensaje de éxito
-  setAlertMessage('✅ Incidencia actualizada exitosamente');
-  setShowAlert(true);
-  setTimeout(() => setShowAlert(false), 3000);
-};
-
-const handleHistorialEditSuccess = async () => {
-  // Recargar todos los datos del equipo
-  await cargarDatos();
-  
-  // CERRAR EL MODAL automáticamente
-  setShowDetalleHistorialModal(false);
-  
-  // Limpiar el historial seleccionado
-  setHistorialSeleccionado(null);
-  
-  // Mostrar mensaje de éxito
-  setAlertMessage('✅ Cambio actualizado exitosamente');
-  setShowAlert(true);
-  setTimeout(() => setShowAlert(false), 3000);
-};
+    // Recargar todos los datos del equipo
+    await cargarDatos();
+    
+    // CERRAR EL MODAL automáticamente
+    setShowDetalleIncidenciaModal(false);
+    
+    // Limpiar la incidencia seleccionada
+    setIncidenciaSeleccionada(null);
+    
+    // Mostrar mensaje de éxito
+    setAlertMessage('✅ Incidencia actualizada exitosamente');
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
 
   const handleHistorialEditSuccess = async () => {
     // Recargar todos los datos del equipo
     await cargarDatos();
-    // Actualizar el historial seleccionado con los datos frescos
-    if (historialSeleccionado) {
-      const historialActualizado = historial.find(h => h.id === historialSeleccionado.id);
-      setHistorialSeleccionado(historialActualizado || historialSeleccionado);
-    }
+    
+    // CERRAR EL MODAL automáticamente
+    setShowDetalleHistorialModal(false);
+    
+    // Limpiar el historial seleccionado
+    setHistorialSeleccionado(null);
+    
+    // Mostrar mensaje de éxito
+    setAlertMessage('✅ Cambio actualizado exitosamente');
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
   };
 
   // ==========================================
