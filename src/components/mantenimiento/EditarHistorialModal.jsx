@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './EditarHistorialModal.module.css';
 
-// Función para obtener la base del backend
 const getBackendBase = () => {
   return 'http://192.168.3.65:3000';
 };
@@ -41,26 +40,8 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
     { value: 'factura', label: '🧾 Factura / Comprobante' }
   ];
 
-  // LOG: Cuando se abre el modal
-  useEffect(() => {
-    if (isOpen) {
-      console.log('🟣🟣🟣 EDITAR HISTORIAL - MODAL ABIERTO 🟣🟣🟣');
-      console.log('📌 historialItem recibido:', historialItem);
-      console.log('📌 historialItem.id:', historialItem?.id);
-      console.log('📌 equipoNombre:', equipoNombre);
-    }
-  }, [isOpen]);
-
   useEffect(() => {
     if (isOpen && historialItem) {
-      console.log('📝📝📝 EDITAR HISTORIAL - INICIALIZANDO FORMULARIO 📝📝📝');
-      console.log('📌 Datos originales:', {
-        campo_modificado: historialItem.campo_modificado,
-        valor_anterior: historialItem.valor_anterior,
-        valor_nuevo: historialItem.valor_nuevo,
-        descripcion: historialItem.descripcion
-      });
-      
       setFormData({
         campo_modificado: historialItem.campo_modificado || '',
         valor_anterior: historialItem.valor_anterior || '',
@@ -75,13 +56,11 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
   }, [isOpen, historialItem]);
 
   const cargarHistorial = async () => {
-    console.log('📜📜📜 CARGANDO HISTORIAL DE VERSIONES 📜📜📜');
     setCargandoHistorial(true);
     try {
       setVersiones([]);
-      console.log('✅ Historial de versiones cargado (vacío por ahora)');
     } catch (err) {
-      console.error('❌ Error cargando historial:', err);
+      console.error('Error cargando historial:', err);
     } finally {
       setCargandoHistorial(false);
     }
@@ -89,13 +68,11 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`📝 Campo cambiado: ${name} = ${value}`);
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFilesChange = (e) => {
     const files = Array.from(e.target.files);
-    console.log('📎 Archivos seleccionados para facturas:', files.length);
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
     const validFiles = files.filter(file => allowedTypes.includes(file.type));
     
@@ -110,7 +87,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
   };
 
   const removeNewFile = (index) => {
-    console.log(`🗑️ Eliminando archivo preview ${index}`);
     setNuevasFacturas(prev => prev.filter((_, i) => i !== index));
     URL.revokeObjectURL(previewUrls[index]);
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
@@ -119,7 +95,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
   const uploadNewFacturas = async () => {
     if (nuevasFacturas.length === 0) return [];
     
-    console.log('📤 Subiendo nuevas facturas, cantidad:', nuevasFacturas.length);
     const API_BASE = getApiBase();
     const uploadedUrls = [];
     
@@ -139,31 +114,16 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
         const data = await response.json();
         if (data.ok) {
           uploadedUrls.push(data.url);
-          console.log(`✅ Factura ${i+1} subida:`, data.url);
-        } else {
-          console.error(`❌ Error subiendo factura ${i+1}:`, data);
         }
       } catch (err) {
-        console.error(`❌ Error subiendo archivo ${i}:`, err);
+        console.error(`Error subiendo archivo ${i}:`, err);
       }
     }
-    console.log(`📎 Total facturas subidas: ${uploadedUrls.length}`);
     return uploadedUrls;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    console.log('🚀🚀🚀 EDITAR HISTORIAL - HANDLE SUBMIT 🚀🚀🚀');
-    console.log('📌 historialItem.id:', historialItem?.id);
-    console.log('📌 Datos del formulario:', {
-      campo_modificado: formData.campo_modificado,
-      valor_anterior: formData.valor_anterior,
-      valor_nuevo: formData.valor_nuevo,
-      descripcion: formData.descripcion
-    });
-    console.log('📌 nuevasFacturas.length:', nuevasFacturas.length);
-    
     setLoading(true);
     setError('');
 
@@ -176,34 +136,23 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
       if (nuevasFacturas.length > 0) {
         setSubiendoFacturas(true);
         nuevasUrls = await uploadNewFacturas();
-        console.log(`📎 Subidas ${nuevasUrls.length} nuevas facturas`);
       }
 
-      console.log('📡 Enviando actualización a updateHistorial...');
-      const updateResult = await mantenimientoAPI.updateHistorial(historialItem.id, {
+      await mantenimientoAPI.updateHistorial(historialItem.id, {
         campo_modificado: formData.campo_modificado,
         valor_anterior: formData.valor_anterior,
         valor_nuevo: formData.valor_nuevo,
         descripcion: formData.descripcion,
         nuevas_facturas_urls: nuevasUrls
       });
-      console.log('📡 Respuesta de updateHistorial:', updateResult);
 
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      console.log('📞 Llamando a onSuccess...');
       if (onSuccess) {
         await onSuccess();
-        console.log('✅ onSuccess completado');
-      } else {
-        console.log('⚠️ onSuccess no está definido');
       }
-      
-      console.log('🔚 Cerrando modal de edición');
       onClose();
-      console.log('✅ Modal cerrado correctamente');
     } catch (err) {
-      console.error('❌ Error en handleSubmit:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -211,13 +160,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
       setUploadProgress(0);
     }
   };
-
-  // LOG: Cuando el modal se cierra
-  useEffect(() => {
-    if (!isOpen) {
-      console.log('🔴🔴🔴 EDITAR HISTORIAL - MODAL CERRADO 🔴🔴🔴');
-    }
-  }, [isOpen]);
 
   if (!isOpen) return null;
 

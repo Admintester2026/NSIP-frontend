@@ -5,7 +5,6 @@ import ImageGallery from './ImageGallery';
 import EditarHistorialModal from './EditarHistorialModal';
 import styles from './DetalleHistorialModal.module.css';
 
-// Función para obtener la base del backend
 const getBackendBase = () => {
   return 'http://192.168.3.65:3000';
 };
@@ -26,50 +25,9 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const [historialActual, setHistorialActual] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Cargar el historial actualizado desde el backend
-  const cargarHistorialActualizado = async () => {
-    if (!historialItem?.id && !historialActual?.id) return null;
-    const idActual = historialItem?.id || historialActual?.id;
-    const equipoIdActual = equipoId || historialItem?.equipo_id;
-    
-    if (!idActual || !equipoIdActual) return null;
-    
-    try {
-      const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
-      const data = await response.json();
-      if (data.ok && data.datos) {
-        const encontrado = data.datos.find(h => h.id === idActual);
-        if (encontrado) {
-          setHistorialActual(encontrado);
-          setRefreshKey(prev => prev + 1);
-          return encontrado;
-        }
-      }
-      return historialActual || historialItem;
-    } catch (err) {
-      console.error('Error cargando historial actualizado:', err);
-      return historialActual || historialItem;
-    }
-  };
-
-  const recargarDatosHistorial = async () => {
-    if (!historialItem?.id && !historialActual?.id) return;
-    
-    setRecargando(true);
-    try {
-      await cargarHistorialActualizado();
-      await cargarVersiones();
-      await cargarFacturas();
-    } catch (err) {
-      console.error('Error recargando datos:', err);
-    } finally {
-      setRecargando(false);
-    }
-  };
-
   useEffect(() => {
     if (isOpen && historialItem?.id) {
+      console.log('🎬 DetalleHistorialModal - Abriendo con historial:', historialItem.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setHistorialActual(historialItem);
@@ -81,6 +39,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   useEffect(() => {
     if (historialItem) {
       setHistorialActual(historialItem);
+      setRefreshKey(prev => prev + 1);
     }
   }, [historialItem]);
 
@@ -117,12 +76,10 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     
     setCargandoVersiones(true);
     try {
-      // Intentar obtener versiones del historial desde el backend
-      // Por ahora, generamos versiones simuladas basadas en los datos actuales
       const versionesSimuladas = [];
+      const datos = historialActual || historialItem;
       
-      if (historialActual || historialItem) {
-        const datos = historialActual || historialItem;
+      if (datos?.campo_modificado) {
         versionesSimuladas.push({
           version: 1,
           campo_modificado: datos.campo_modificado,
@@ -152,14 +109,13 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   };
 
   const handleEditSuccess = async () => {
-    // Recargar el historial actualizado desde el backend
-    const historialActualizado = await cargarHistorialActualizado();
-    if (historialActualizado) {
-      setHistorialActual(historialActualizado);
+    console.log('🔵 DetalleHistorialModal - EditSuccess, recargando...');
+    if (onEdit) {
+      await onEdit();
     }
-    await recargarDatosHistorial();
-    // Notificar al padre que recargue los datos
-    if (onEdit) onEdit();
+    await cargarFacturas();
+    await cargarVersiones();
+    setRefreshKey(prev => prev + 1);
   };
 
   const formatDate = (dateString) => {
@@ -368,7 +324,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
         </div>
       </div>
 
-      {/* Modal de edición */}
       <EditarHistorialModal
         key={refreshKey}
         isOpen={showEditModal}

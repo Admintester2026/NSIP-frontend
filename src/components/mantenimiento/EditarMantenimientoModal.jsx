@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './EditarMantenimientoModal.module.css';
 
-// Función para obtener la base del backend
 const getBackendBase = () => {
   return 'http://192.168.3.65:3000';
 };
@@ -110,7 +109,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
         const data = await response.json();
         if (data.ok) {
           uploadedUrls.push(data.url);
-          console.log('✅ Nueva evidencia subida:', data.url);
         }
       } catch (err) {
         console.error(`Error subiendo archivo ${i}:`, err);
@@ -136,7 +134,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
       if (nuevasEvidencias.length > 0) {
         setSubiendoEvidencias(true);
         nuevasUrls = await uploadNewEvidencias();
-        console.log(`📸 Subidas ${nuevasUrls.length} nuevas evidencias`);
       }
 
       await mantenimientoAPI.editarMantenimientoCompletado(mantenimiento.id, {
@@ -314,18 +311,10 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
                         <span className={styles.versionUser}>👤 {v.modificado_por || 'sistema'}</span>
                       </div>
                       <div className={styles.versionContent}>
-                        {v.notas_completado && (
-                          <p><strong>Notas:</strong> {v.notas_completado}</p>
-                        )}
-                        {v.materiales_usados && (
-                          <p><strong>Materiales:</strong> {v.materiales_usados}</p>
-                        )}
-                        {v.costo_materiales && (
-                          <p><strong>Costo:</strong> ${Number(v.costo_materiales).toFixed(2)}</p>
-                        )}
-                        {v.duracion && (
-                          <p><strong>Duración:</strong> {v.duracion} minutos</p>
-                        )}
+                        {v.notas_completado && <p><strong>Notas:</strong> {v.notas_completado}</p>}
+                        {v.materiales_usados && <p><strong>Materiales:</strong> {v.materiales_usados}</p>}
+                        {v.costo_materiales && <p><strong>Costo:</strong> ${Number(v.costo_materiales).toFixed(2)}</p>}
+                        {v.duracion && <p><strong>Duración:</strong> {v.duracion} minutos</p>}
                       </div>
                     </div>
                   ))
