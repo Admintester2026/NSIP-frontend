@@ -172,7 +172,7 @@ export default function DetalleEquipo() {
   };
 
   // ==========================================
-  // HANDLERS PARA VER DETALLES
+  // HANDLERS PARA VER DETALLES - CORREGIDOS
   // ==========================================
   
   const handleVerDetalleMantenimiento = (mantenimiento) => {
@@ -181,13 +181,42 @@ export default function DetalleEquipo() {
   };
 
   const handleVerDetalleIncidencia = (incidencia) => {
-    setIncidenciaSeleccionada(incidencia);
+    // Buscar la incidencia más actualizada en la lista
+    const incidenciaActualizada = incidencias.find(i => i.id === incidencia.id);
+    setIncidenciaSeleccionada(incidenciaActualizada || incidencia);
     setShowDetalleIncidenciaModal(true);
   };
 
   const handleVerDetalleHistorial = (historialItem) => {
-    setHistorialSeleccionado(historialItem);
+    // Buscar el historial más actualizado en la lista
+    const historialActualizado = historial.find(h => h.id === historialItem.id);
+    setHistorialSeleccionado(historialActualizado || historialItem);
     setShowDetalleHistorialModal(true);
+  };
+
+  // ==========================================
+  // FUNCIONES PARA RECARGAR DESPUÉS DE EDITAR
+  // ==========================================
+  
+  const handleIncidenciaEditSuccess = async () => {
+    // Recargar todos los datos del equipo
+    await cargarDatos();
+    // Actualizar la incidencia seleccionada con los datos frescos
+    if (incidenciaSeleccionada) {
+      const incidenciaActualizada = incidencias.find(i => i.id === incidenciaSeleccionada.id);
+      setIncidenciaSeleccionada(incidenciaActualizada || incidenciaSeleccionada);
+    }
+    // No cerramos el modal automáticamente, el modal se cierra solo
+  };
+
+  const handleHistorialEditSuccess = async () => {
+    // Recargar todos los datos del equipo
+    await cargarDatos();
+    // Actualizar el historial seleccionado con los datos frescos
+    if (historialSeleccionado) {
+      const historialActualizado = historial.find(h => h.id === historialSeleccionado.id);
+      setHistorialSeleccionado(historialActualizado || historialSeleccionado);
+    }
   };
 
   // ==========================================
@@ -674,7 +703,7 @@ export default function DetalleEquipo() {
           </div>
         )}
 
-        {/* Tab Incidencias - AHORA CON VER DETALLES */}
+        {/* Tab Incidencias */}
         {activeTab === 'incidencias' && (
           <div className={styles.incidenciasTab}>
             <div className={styles.card}>
@@ -724,7 +753,7 @@ export default function DetalleEquipo() {
           </div>
         )}
 
-        {/* Tab Historial - AHORA CON VER DETALLES */}
+        {/* Tab Historial */}
         {activeTab === 'historial' && (
           <div className={styles.historialTab}>
             <div className={styles.card}>
@@ -767,9 +796,23 @@ export default function DetalleEquipo() {
       
       <DetalleMantenimientoModal isOpen={showDetalleModal} onClose={() => setShowDetalleModal(false)} mantenimiento={mantenimientoSeleccionado} equipoNombre={equipo?.nombre} onEdit={cargarDatos} />
       
-      <DetalleIncidenciaModal isOpen={showDetalleIncidenciaModal} onClose={() => setShowDetalleIncidenciaModal(false)} incidencia={incidenciaSeleccionada} equipoNombre={equipo?.nombre} />
+      {/* MODAL DE INCIDENCIA CORREGIDO */}
+      <DetalleIncidenciaModal 
+        isOpen={showDetalleIncidenciaModal} 
+        onClose={() => setShowDetalleIncidenciaModal(false)} 
+        incidencia={incidenciaSeleccionada} 
+        equipoNombre={equipo?.nombre} 
+        onEdit={handleIncidenciaEditSuccess}
+      />
       
-      <DetalleHistorialModal isOpen={showDetalleHistorialModal} onClose={() => setShowDetalleHistorialModal(false)} historialItem={historialSeleccionado} equipoNombre={equipo?.nombre} />
+      {/* MODAL DE HISTORIAL CORREGIDO */}
+      <DetalleHistorialModal 
+        isOpen={showDetalleHistorialModal} 
+        onClose={() => setShowDetalleHistorialModal(false)} 
+        historialItem={historialSeleccionado} 
+        equipoNombre={equipo?.nombre} 
+        onEdit={handleHistorialEditSuccess}
+      />
       
       <ReprogramarModal isOpen={showReprogramarModal} onClose={() => setShowReprogramarModal(false)} onSuccess={handleReprogramarSuccess} mantenimiento={mantenimientoAReprogramar} />
 
