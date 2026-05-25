@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './EditarIncidenciaModal.module.css';
 
-// Función para obtener la base del backend
 const getBackendBase = () => {
   return 'http://192.168.3.65:3000';
 };
@@ -27,7 +26,6 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   
-  // Estados para nuevas evidencias
   const [nuevasEvidencias, setNuevasEvidencias] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -50,6 +48,10 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
 
   useEffect(() => {
     if (isOpen && incidencia) {
+      console.log('📝📝📝 EDITAR INCIDENCIA - MODAL ABIERTO 📝📝📝');
+      console.log('📌 incidencia a editar:', incidencia);
+      console.log('📌 incidencia.id:', incidencia?.id);
+      
       setFormData({
         titulo: incidencia.titulo || '',
         descripcion: incidencia.descripcion || '',
@@ -69,6 +71,7 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
     setCargandoHistorial(true);
     try {
       const data = await mantenimientoAPI.getHistorialVersionesIncidencia(incidencia.id);
+      console.log('📜 Historial de versiones cargado:', data);
       setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando historial:', err);
@@ -85,6 +88,7 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
 
   const handleFilesChange = (e) => {
     const files = Array.from(e.target.files);
+    console.log('📸 Archivos seleccionados:', files.length);
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
     const validFiles = files.filter(file => allowedTypes.includes(file.type));
     
@@ -107,6 +111,7 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
   const uploadNewEvidencias = async () => {
     if (nuevasEvidencias.length === 0) return [];
     
+    console.log('📤 Subiendo nuevas evidencias, cantidad:', nuevasEvidencias.length);
     const API_BASE = getApiBase();
     const uploadedUrls = [];
     
@@ -126,7 +131,7 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
         const data = await response.json();
         if (data.ok) {
           uploadedUrls.push(data.url);
-          console.log('✅ Nueva evidencia subida:', data.url);
+          console.log(`✅ Archivo ${i+1} subido:`, data.url);
         }
       } catch (err) {
         console.error(`Error subiendo archivo ${i}:`, err);
@@ -137,6 +142,10 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🚀🚀🚀 EDITAR INCIDENCIA - HANDLE SUBMIT 🚀🚀🚀');
+    console.log('📌 Datos del formulario:', formData);
+    console.log('📌 Incidencia ID:', incidencia.id);
+    
     setLoading(true);
     setError('');
 
@@ -155,7 +164,8 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
         console.log(`📸 Subidas ${nuevasUrls.length} nuevas evidencias`);
       }
 
-      await mantenimientoAPI.updateIncidencia(incidencia.id, {
+      console.log('📡 Enviando actualización a la API...');
+      const updateResult = await mantenimientoAPI.updateIncidencia(incidencia.id, {
         titulo: formData.titulo,
         descripcion: formData.descripcion,
         gravedad: formData.gravedad,
@@ -164,15 +174,20 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
         estado: formData.estado,
         nuevas_evidencias_urls: nuevasUrls
       });
+      console.log('📡 Respuesta de updateIncidencia:', updateResult);
 
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      // Llamar a onSuccess ANTES de cerrar para que el padre recargue los datos
+      console.log('📞 Llamando a onSuccess...');
       if (onSuccess) {
         await onSuccess();
+        console.log('✅ onSuccess completado');
       }
+      
+      console.log('🔚 Cerrando modal de edición');
       onClose();
     } catch (err) {
+      console.error('❌ Error en handleSubmit:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -273,7 +288,7 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
             </div>
 
             <div className={styles.formGroup}>
-              <label>📸 Añadir más evidencias (Fotos / Documentos)</label>
+              <label>📸 Añadir más evidencias</label>
               <div className={styles.fileInputArea}>
                 <button type="button" className={styles.fileButton} onClick={() => fileInputRef.current?.click()}>
                   📷 Seleccionar archivos adicionales
@@ -286,7 +301,7 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
                   multiple
                   className={styles.hiddenInput}
                 />
-                <span className={styles.fileHint}>Añade más imágenes o documentos (no se borrarán los existentes)</span>
+                <span className={styles.fileHint}>Añade más imágenes o documentos</span>
               </div>
               
               {previewUrls.length > 0 && (

@@ -26,6 +26,13 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
   const fileInputRef = useRef(null);
   const [previewUrls, setPreviewUrls] = useState([]);
 
+  // LOG: Cuando se abre el modal
+  if (isOpen) {
+    console.log('🟡🟡🟡 COMPLETAR MANTENIMIENTO - MODAL ABIERTO 🟡🟡🟡');
+    console.log('📌 mantenimiento a completar:', mantenimiento);
+    console.log('📌 mantenimiento.id:', mantenimiento?.id);
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -37,6 +44,7 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
 
   const handleFilesChange = (e) => {
     const files = Array.from(e.target.files);
+    console.log('📸 Archivos seleccionados para evidencias:', files.length);
     
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
     const validFiles = files.filter(file => allowedTypes.includes(file.type));
@@ -59,10 +67,10 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Subir evidencias con el ID del mantenimiento
   const uploadFiles = async () => {
     if (formData.evidencias.length === 0) return [];
     
+    console.log('📤 Subiendo evidencias, cantidad:', formData.evidencias.length);
     const API_BASE = import.meta.env.VITE_API_URL;
     const uploadedUrls = [];
     
@@ -73,7 +81,7 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
       formDataFile.append('tipo', 'evidencia');
       formDataFile.append('entidad_id', mantenimiento.id); 
       
-      console.log('📤 Subiendo evidencia para mantenimiento ID:', mantenimiento.id);
+      console.log(`📤 Subiendo evidencia ${i+1} para mantenimiento ID:`, mantenimiento.id);
       
       try {
         setUploadProgress(Math.round(((i + 1) / formData.evidencias.length) * 50));
@@ -84,8 +92,7 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
         const data = await response.json();
         if (data.ok) {
           uploadedUrls.push(data.url);
-          console.log('✅ Evidencia subida:', data.url);
-          console.log('   Archivo guardado como:', data.filename);
+          console.log(`✅ Evidencia ${i+1} subida:`, data.url);
         }
       } catch (err) {
         console.error(`Error subiendo archivo ${i}:`, err);
@@ -135,6 +142,16 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('🚀🚀🚀 COMPLETAR MANTENIMIENTO - HANDLE SUBMIT 🚀🚀🚀');
+    console.log('📌 Mantenimiento ID:', mantenimiento.id);
+    console.log('📌 Datos del formulario:', {
+      tecnico: formData.tecnico,
+      notas_completado: formData.notas_completado,
+      duracion_horas: formData.duracion_horas,
+      duracion_minutos: formData.duracion_minutos,
+      costo_materiales: formData.costo_materiales
+    });
+    
     if (!validateForm()) return;
     
     setLoading(true);
@@ -142,13 +159,18 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
     setUploadProgress(10);
 
     try {
-      // Subir evidencias primero
       setUploadProgress(20);
+      console.log('📤 Subiendo evidencias...');
       const evidenciasUrls = await uploadFiles();
       const duracionTotalMinutos = calcularDuracionMinutos();
+      console.log('📌 Evidencias subidas:', evidenciasUrls.length);
+      console.log('📌 Duración total:', duracionTotalMinutos, 'minutos');
       
       setUploadProgress(80);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/mantenimiento/mantenimientos/${mantenimiento.id}/completar`, {
+      const url = `${import.meta.env.VITE_API_URL}/mantenimiento/mantenimientos/${mantenimiento.id}/completar`;
+      console.log('📡 Enviando request a:', url);
+      
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -161,20 +183,26 @@ export default function CompletarMantenimientoModal({ isOpen, onClose, onSuccess
         })
       });
 
+      const responseData = await response.json();
+      console.log('📡 Respuesta del servidor:', responseData);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al completar el mantenimiento');
+        throw new Error(responseData.error || 'Error al completar el mantenimiento');
       }
 
       setUploadProgress(100);
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      // Notificar éxito y cerrar modal
+      console.log('📞 Llamando a onSuccess...');
       if (onSuccess) {
-        await onSuccess(); // Esperar a que el padre recargue los datos
+        await onSuccess();
+        console.log('✅ onSuccess completado');
       }
+      
+      console.log('🔚 Cerrando modal');
       onClose();
     } catch (err) {
+      console.error('❌ Error en handleSubmit:', err);
       setError(err.message);
     } finally {
       setLoading(false);

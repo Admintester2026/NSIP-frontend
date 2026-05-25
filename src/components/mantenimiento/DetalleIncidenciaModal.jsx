@@ -5,7 +5,6 @@ import ImageGallery from './ImageGallery';
 import EditarIncidenciaModal from './EditarIncidenciaModal';
 import styles from './DetalleIncidenciaModal.module.css';
 
-// Función para obtener la base del backend
 const getBackendBase = () => {
   return 'http://192.168.3.65:3000';
 };
@@ -24,45 +23,77 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [incidenciaActual, setIncidenciaActual] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // Forzar re-render
 
-  // Cargar la incidencia actualizada desde el backend
+  // LOG: Cuando se abre el modal
+  useEffect(() => {
+    console.log('🔴🔴🔴 DETALLE INCIDENCIA - MODAL ABIERTO 🔴🔴🔴');
+    console.log('📌 incidencia recibida (prop):', incidencia);
+    console.log('📌 incidencia.id:', incidencia?.id);
+  }, [isOpen]);
+
+  // LOG: Cuando cambia la incidencia
+  useEffect(() => {
+    console.log('🟡🟡🟡 DETALLE INCIDENCIA - incidencia PROP CAMBIÓ 🟡🟡🟡');
+    console.log('📌 nueva incidencia:', incidencia);
+  }, [incidencia]);
+
+  // LOG: Cuando cambia incidenciaActual
+  useEffect(() => {
+    console.log('🟢🟢🟢 DETALLE INCIDENCIA - incidenciaActual CAMBIÓ 🟢🟢🟢');
+    console.log('📌 incidenciaActual:', incidenciaActual);
+  }, [incidenciaActual]);
+
   const cargarIncidenciaActualizada = async () => {
-    if (!incidencia?.id && !incidenciaActual?.id) return null;
-    const idActual = incidencia?.id || incidenciaActual?.id;
+    const idActual = incidencia?.id;
+    console.log('🔍🔍🔍 CARGANDO INCIDENCIA ACTUALIZADA 🔍🔍🔍');
+    console.log('📌 ID a buscar:', idActual);
+    
     if (!idActual) return null;
     
     try {
       const API_BASE = getApiBase();
-      // Obtener todas las incidencias del equipo y filtrar
-      const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${idActual}`);
+      const url = `${API_BASE}/mantenimiento/incidencias/equipo/${idActual}`;
+      console.log('📡 Fetching URL:', url);
+      
+      const response = await fetch(url);
       const data = await response.json();
+      console.log('📡 Respuesta completa:', data);
+      
       if (data.ok && data.datos && data.datos.length > 0) {
         const incidenciaEncontrada = data.datos.find(i => i.id === idActual);
+        console.log('📌 Incidencia encontrada en la lista:', incidenciaEncontrada);
+        
         if (incidenciaEncontrada) {
+          console.log('✅ Actualizando incidenciaActual con:', incidenciaEncontrada);
           setIncidenciaActual(incidenciaEncontrada);
-          setRefreshKey(prev => prev + 1); // Forzar re-render
           return incidenciaEncontrada;
         }
       }
-      return incidenciaActual || incidencia;
+      console.log('⚠️ No se encontró la incidencia, usando la original');
+      return incidencia;
     } catch (err) {
-      console.error('Error cargando incidencia actualizada:', err);
-      return incidenciaActual || incidencia;
+      console.error('❌ Error cargando incidencia actualizada:', err);
+      return incidencia;
     }
   };
 
   const recargarDatosIncidencia = async () => {
-    if (!incidencia?.id && !incidenciaActual?.id) return;
-    const idActual = incidencia?.id || incidenciaActual?.id;
-    
+    console.log('🔄🔄🔄 RECARGANDO DATOS DE INCIDENCIA 🔄🔄🔄');
     setRecargando(true);
     try {
-      await cargarIncidenciaActualizada();
+      console.log('📌 Paso 1: Cargar incidencia actualizada');
+      const incidenciaActualizada = await cargarIncidenciaActualizada();
+      console.log('📌 incidenciaActualizada obtenida:', incidenciaActualizada);
+      
+      console.log('📌 Paso 2: Cargar versiones');
       await cargarVersiones();
+      
+      console.log('📌 Paso 3: Cargar evidencias');
       await cargarEvidencias();
+      
+      console.log('✅ Recarga completada');
     } catch (err) {
-      console.error('Error recargando datos:', err);
+      console.error('❌ Error recargando datos:', err);
     } finally {
       setRecargando(false);
     }
@@ -70,6 +101,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
 
   useEffect(() => {
     if (isOpen && incidencia?.id) {
+      console.log('🎬🎬🎬 useEffect INIT - Modal abierto con incidencia ID:', incidencia.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setIncidenciaActual(incidencia);
@@ -80,32 +112,40 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
 
   useEffect(() => {
     if (incidencia) {
+      console.log('📌 Actualizando incidenciaActual porque cambió la prop incidencia');
       setIncidenciaActual(incidencia);
     }
   }, [incidencia]);
 
   const cargarEvidencias = async () => {
     const idActual = incidencia?.id || incidenciaActual?.id;
+    console.log('📸📸📸 CARGANDO EVIDENCIAS para incidencia ID:', idActual);
+    
     if (!idActual) return;
     
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/incidencia/${idActual}`);
+      const url = `${API_BASE}/mantenimiento/evidencias/incidencia/${idActual}`;
+      console.log('📡 Fetching evidencias desde:', url);
+      
+      const response = await fetch(url);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
+        console.log('📡 Respuesta evidencias:', data);
         if (data.ok) {
           const backendBase = getBackendBase();
           const evidenciasConUrlAbsoluta = (data.datos || []).map(ev => ({
             ...ev,
             url: ev.url.startsWith('http') ? ev.url : `${backendBase}${ev.url}`
           }));
+          console.log('✅ Evidencias cargadas:', evidenciasConUrlAbsoluta.length);
           setEvidencias(evidenciasConUrlAbsoluta);
         }
       }
     } catch (err) {
-      console.error('Error cargando evidencias:', err);
+      console.error('❌ Error cargando evidencias:', err);
     } finally {
       setLoadingEvidencias(false);
     }
@@ -113,57 +153,53 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
 
   const cargarVersiones = async () => {
     const idActual = incidencia?.id || incidenciaActual?.id;
+    console.log('📜📜📜 CARGANDO VERSIONES para incidencia ID:', idActual);
+    
     if (!idActual) return;
     
     setCargandoVersiones(true);
     try {
       const data = await mantenimientoAPI.getHistorialVersionesIncidencia(idActual);
-      console.log('📜 Versiones de incidencia:', data);
+      console.log('📜 Versiones obtenidas:', data);
+      console.log('📜 Cantidad de versiones:', data?.length || 0);
       setVersiones(data || []);
     } catch (err) {
-      console.error('Error cargando versiones:', err);
-      if (incidenciaActual || incidencia) {
-        const datos = incidenciaActual || incidencia;
-        setVersiones([{
-          version: 1,
-          titulo: datos.titulo,
-          descripcion: datos.descripcion,
-          gravedad: datos.gravedad,
-          solucion: datos.solucion,
-          costo_estimado: datos.costo_estimado,
-          estado: datos.estado,
-          reportado_por: datos.reportado_por,
-          fecha_reporte: datos.fecha_reporte,
-          fecha_solucion: datos.fecha_solucion,
-          fecha_modificacion: datos.fecha_reporte,
-          modificado_por: datos.reportado_por || 'sistema'
-        }]);
-      }
+      console.error('❌ Error cargando versiones:', err);
     } finally {
       setCargandoVersiones(false);
     }
   };
 
   const verVersionAnterior = (version) => {
+    console.log('👁️ Viendo versión anterior:', version);
     setVistaPreviaVersion(version);
     setMostrarSidebar(false);
   };
 
   const cerrarVistaPrevia = () => {
+    console.log('👁️ Cerrando vista previa');
     setVistaPreviaVersion(null);
   };
 
   const handleEditSuccess = async () => {
-    // Recargar la incidencia actualizada desde el backend
+    console.log('🔵🔵🔵 HANDLE EDIT SUCCESS - INICIANDO 🔵🔵🔵');
+    console.log('📌 incidencia actual antes de recargar:', incidenciaActual);
+    
     const incidenciaActualizada = await cargarIncidenciaActualizada();
+    console.log('📌 incidenciaActualizada después de cargar:', incidenciaActualizada);
+    
     if (incidenciaActualizada) {
       setIncidenciaActual(incidenciaActualizada);
+      console.log('✅ incidenciaActual actualizada');
     }
+    
     await recargarDatosIncidencia();
-    // Notificar al padre que recargue los datos
+    console.log('📌 onEdit será llamado');
     if (onEdit) onEdit();
+    console.log('🔵🔵🔵 HANDLE EDIT SUCCESS - FINALIZADO 🔵🔵🔵');
   };
 
+  // Resto del componente (render) igual...
   const formatDate = (dateString) => {
     if (!dateString) return 'No definida';
     const date = new Date(dateString);
@@ -256,6 +292,8 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const datosMostrar = incidenciaActual || incidencia;
   const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
+
+  console.log('🎨🎨🎨 RENDERIZANDO MODAL con datosMostrar:', datosMostrar);
 
   return (
     <>
@@ -422,9 +460,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         </div>
       </div>
 
-      {/* Modal de edición */}
       <EditarIncidenciaModal
-        key={refreshKey}
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
