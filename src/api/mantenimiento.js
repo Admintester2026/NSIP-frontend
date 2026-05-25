@@ -43,7 +43,7 @@ export const mantenimientoAPI = {
       body: JSON.stringify(equipoData)
     });
     const result = await handleResponse(response);
-    return result; // Devuelve { ok: true, id: xxx }
+    return result;
   },
 
   updateEquipo: async (id, equipoData) => {
@@ -112,7 +112,7 @@ export const mantenimientoAPI = {
       body: JSON.stringify(mantenimientoData)
     });
     const result = await handleResponse(response);
-    return result; // Devuelve { ok: true, id: xxx }
+    return result;
   },
 
   updateMantenimientoEstado: async (id, estado, notas = null) => {
@@ -125,7 +125,6 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  // Actualizar mantenimiento (reprogramar)
   updateMantenimiento: async (id, data) => {
     const url = `${API_BASE}/mantenimiento/mantenimientos/${id}`;
     const response = await fetch(url, {
@@ -136,14 +135,12 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  // Eliminar mantenimiento pendiente
   deleteMantenimiento: async (id) => {
     const url = `${API_BASE}/mantenimiento/mantenimientos/${id}`;
     const response = await fetch(url, { method: 'DELETE' });
     return handleResponse(response);
   },
 
-  // Editar mantenimiento completado (con historial)
   editarMantenimientoCompletado: async (id, data) => {
     const url = `${API_BASE}/mantenimiento/mantenimientos/${id}/editar`;
     const response = await fetch(url, {
@@ -161,7 +158,6 @@ export const mantenimientoAPI = {
     return handleResponse(response);
   },
 
-  // Obtener historial de versiones de un mantenimiento
   getHistorialVersiones: async (id) => {
     const url = `${API_BASE}/mantenimiento/mantenimientos/${id}/historial-versiones`;
     const response = await fetch(url);
@@ -170,7 +166,7 @@ export const mantenimientoAPI = {
   },
 
   // ==========================================
-  // INCIDENCIAS / DAÑOS (CORREGIDO)
+  // INCIDENCIAS / DAÑOS
   // ==========================================
   
   getIncidenciasByEquipo: async (equipoId) => {
@@ -180,7 +176,6 @@ export const mantenimientoAPI = {
     return data.datos || [];
   },
 
-  // CREAR INCIDENCIA - DEVUELVE EL ID
   createIncidencia: async (incidenciaData) => {
     const url = `${API_BASE}/mantenimiento/incidencias`;
     const response = await fetch(url, {
@@ -189,7 +184,6 @@ export const mantenimientoAPI = {
       body: JSON.stringify(incidenciaData)
     });
     const result = await handleResponse(response);
-    // Asegurar que devolvemos un objeto con id
     return {
       ok: result.ok,
       id: result.id,
@@ -197,7 +191,17 @@ export const mantenimientoAPI = {
     };
   },
 
-  // ACTUALIZAR EVIDENCIAS DE INCIDENCIA
+  // === NUEVO: ACTUALIZAR INCIDENCIA COMPLETA ===
+  updateIncidencia: async (id, incidenciaData) => {
+    const url = `${API_BASE}/mantenimiento/incidencias/${id}`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(incidenciaData)
+    });
+    return handleResponse(response);
+  },
+
   updateIncidenciaEvidencias: async (id, evidenciasUrls) => {
     const url = `${API_BASE}/mantenimiento/incidencias/${id}/evidencias`;
     const response = await fetch(url, {
@@ -214,6 +218,53 @@ export const mantenimientoAPI = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado, solucion })
+    });
+    return handleResponse(response);
+  },
+
+  // ==========================================
+  // HISTORIAL DE EQUIPOS / CAMBIOS
+  // ==========================================
+  
+  getHistorialEquipo: async (equipoId) => {
+    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
+    const response = await fetch(url);
+    const data = await handleResponse(response);
+    return data.datos || [];
+  },
+
+  registrarCambio: async (equipoId, cambioData) => {
+    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cambioData)
+    });
+    const result = await handleResponse(response);
+    return {
+      ok: result.ok,
+      id: result.id,
+      message: result.message
+    };
+  },
+
+  // === NUEVO: ACTUALIZAR HISTORIAL COMPLETO ===
+  updateHistorial: async (id, historialData) => {
+    const url = `${API_BASE}/mantenimiento/historial/${id}`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(historialData)
+    });
+    return handleResponse(response);
+  },
+
+  updateHistorialFacturas: async (id, facturasUrls) => {
+    const url = `${API_BASE}/mantenimiento/historial/${id}/facturas`;
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facturas_urls: facturasUrls })
     });
     return handleResponse(response);
   },
@@ -247,45 +298,6 @@ export const mantenimientoAPI = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado, observaciones })
-    });
-    return handleResponse(response);
-  },
-
-  // ==========================================
-  // HISTORIAL DE CAMBIOS (CORREGIDO)
-  // ==========================================
-  
-  getHistorialEquipo: async (equipoId) => {
-    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
-    const response = await fetch(url);
-    const data = await handleResponse(response);
-    return data.datos || [];
-  },
-
-  // REGISTRAR CAMBIO - DEVUELVE EL ID
-  registrarCambio: async (equipoId, cambioData) => {
-    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(cambioData)
-    });
-    const result = await handleResponse(response);
-    // Asegurar que devolvemos un objeto con id
-    return {
-      ok: result.ok,
-      id: result.id,
-      message: result.message
-    };
-  },
-
-  // ACTUALIZAR FACTURAS DE HISTORIAL
-  updateHistorialFacturas: async (id, facturasUrls) => {
-    const url = `${API_BASE}/mantenimiento/historial/${id}/facturas`;
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ facturas_urls: facturasUrls })
     });
     return handleResponse(response);
   },
