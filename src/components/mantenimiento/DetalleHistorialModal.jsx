@@ -71,12 +71,29 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
   };
 
+  // Cargar historial de versiones del registro
   const cargarVersiones = async () => {
     if (!historialItem?.id) return;
     setCargandoVersiones(true);
     try {
-      // API para versiones de historial (si existe)
-      setVersiones([]);
+      // Intentar obtener versiones del historial
+      // Por ahora, generamos versiones simuladas
+      const versionesSimuladas = [];
+      
+      // Si el historial tiene datos, mostrar como versión
+      if (historialItem.campo_modificado) {
+        versionesSimuladas.push({
+          version: 1,
+          campo_modificado: historialItem.campo_modificado,
+          valor_anterior: historialItem.valor_anterior,
+          valor_nuevo: historialItem.valor_nuevo,
+          descripcion: historialItem.descripcion,
+          fecha_modificacion: historialItem.fecha,
+          modificado_por: historialItem.usuario || 'sistema'
+        });
+      }
+      
+      setVersiones(versionesSimuladas);
     } catch (err) {
       console.error('Error cargando versiones:', err);
     } finally {
@@ -185,7 +202,9 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                         <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
                         <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
                       </div>
-                      <div className={styles.versionPreviewSidebar}>{v.descripcion?.substring(0, 60)}...</div>
+                      <div className={styles.versionPreviewSidebar}>
+                        {v.descripcion?.substring(0, 60) || v.campo_modificado?.substring(0, 60)}...
+                      </div>
                       <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
                     </div>
                   ))

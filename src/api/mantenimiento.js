@@ -191,7 +191,7 @@ export const mantenimientoAPI = {
     };
   },
 
-  // === NUEVO: ACTUALIZAR INCIDENCIA COMPLETA ===
+  // ACTUALIZAR INCIDENCIA CON HISTORIAL
   updateIncidencia: async (id, incidenciaData) => {
     const url = `${API_BASE}/mantenimiento/incidencias/${id}`;
     const response = await fetch(url, {
@@ -200,6 +200,14 @@ export const mantenimientoAPI = {
       body: JSON.stringify(incidenciaData)
     });
     return handleResponse(response);
+  },
+
+  // OBTENER HISTORIAL DE VERSIONES DE INCIDENCIA
+  getHistorialVersionesIncidencia: async (id) => {
+    const url = `${API_BASE}/mantenimiento/incidencias/${id}/historial-versiones`;
+    const response = await fetch(url);
+    const data = await handleResponse(response);
+    return data.datos || [];
   },
 
   updateIncidenciaEvidencias: async (id, evidenciasUrls) => {
@@ -248,7 +256,6 @@ export const mantenimientoAPI = {
     };
   },
 
-  // === NUEVO: ACTUALIZAR HISTORIAL COMPLETO ===
   updateHistorial: async (id, historialData) => {
     const url = `${API_BASE}/mantenimiento/historial/${id}`;
     const response = await fetch(url, {

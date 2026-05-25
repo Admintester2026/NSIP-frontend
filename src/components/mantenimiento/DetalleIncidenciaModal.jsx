@@ -71,16 +71,34 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     }
   };
 
+  // Cargar historial de versiones de la incidencia desde la API
   const cargarVersiones = async () => {
     if (!incidencia?.id) return;
     setCargandoVersiones(true);
     try {
-      // API para versiones de incidencias (si existe)
-      // const data = await mantenimientoAPI.getHistorialIncidencias(incidencia.id);
-      // setVersiones(data || []);
-      setVersiones([]);
+      // Usar la API real para obtener el historial de versiones
+      const data = await mantenimientoAPI.getHistorialVersionesIncidencia(incidencia.id);
+      console.log('📜 Versiones de incidencia:', data);
+      setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando versiones:', err);
+      // Si no hay tabla de historial aún, mostrar versión actual como única
+      if (incidencia) {
+        setVersiones([{
+          version: 1,
+          titulo: incidencia.titulo,
+          descripcion: incidencia.descripcion,
+          gravedad: incidencia.gravedad,
+          solucion: incidencia.solucion,
+          costo_estimado: incidencia.costo_estimado,
+          estado: incidencia.estado,
+          reportado_por: incidencia.reportado_por,
+          fecha_reporte: incidencia.fecha_reporte,
+          fecha_solucion: incidencia.fecha_solucion,
+          fecha_modificacion: incidencia.fecha_reporte,
+          modificado_por: incidencia.reportado_por || 'sistema'
+        }]);
+      }
     } finally {
       setCargandoVersiones(false);
     }
@@ -205,16 +223,21 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
               <div className={styles.sidebarContent}>
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
-                ) : versiones.length > 0 ? (
-                  versiones.map((v, idx) => (
-                    <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
-                      <div className={styles.versionHeaderSidebar}>
-                        <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
-                        <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                ) : versiones.length > 1 ? (
+                  // Mostrar todas excepto la versión actual (versión 1 es la más antigua)
+                  [...versiones].sort((a, b) => b.version - a.version).map((v, idx) => (
+                    v.version !== 1 && (
+                      <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
+                        <div className={styles.versionHeaderSidebar}>
+                          <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
+                          <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                        </div>
+                        <div className={styles.versionPreviewSidebar}>
+                          {v.descripcion?.substring(0, 60) || v.titulo?.substring(0, 60)}...
+                        </div>
+                        <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
                       </div>
-                      <div className={styles.versionPreviewSidebar}>{v.descripcion?.substring(0, 60)}...</div>
-                      <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
-                    </div>
+                    )
                   ))
                 ) : (
                   <p className={styles.emptyMessage}>No hay versiones anteriores</p>
@@ -233,9 +256,9 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
                     '⚠️ Detalle de Incidencia'
                   )}
                 </h2>
-                {versiones.length > 0 && !esVistaPrevia && (
+                {versiones.length > 1 && !esVistaPrevia && (
                   <button className={styles.historyButton} onClick={() => setMostrarSidebar(true)} title="Ver historial de versiones">
-                    ⏱️ {versiones.length}
+                    ⏱️ {versiones.length - 1}
                   </button>
                 )}
                 {esVistaPrevia && (
@@ -285,6 +308,12 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
                     <span className={styles.infoValue}>{mostrarDatos.reportado_por}</span>
                   </div>
                 )}
+                {esVistaPrevia && mostrarDatos.modificado_por && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Modificado por:</span>
+                    <span className={styles.infoValue}>{mostrarDatos.modificado_por}</span>
+                  </div>
+                )}
               </div>
 
               <div className={styles.infoSection}>
@@ -297,6 +326,12 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
                   <div className={styles.infoRow}>
                     <span className={styles.infoLabel}>Solucionado:</span>
                     <span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_solucion)}</span>
+                  </div>
+                )}
+                {esVistaPrevia && mostrarDatos.fecha_modificacion && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Fecha modificación:</span>
+                    <span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_modificacion)}</span>
                   </div>
                 )}
               </div>
