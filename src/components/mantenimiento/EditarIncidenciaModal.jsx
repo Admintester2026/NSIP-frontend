@@ -163,6 +163,7 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
 
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
+      // IMPORTANTE: Llamar a onSuccess ANTES de cerrar el modal
       if (onSuccess) {
         await onSuccess();
       }

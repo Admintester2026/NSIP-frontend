@@ -172,7 +172,7 @@ export default function DetalleEquipo() {
   };
 
   // ==========================================
-  // HANDLERS PARA VER DETALLES - CORREGIDOS
+  // HANDLERS PARA VER DETALLES
   // ==========================================
   
   const handleVerDetalleMantenimiento = (mantenimiento) => {
@@ -181,77 +181,54 @@ export default function DetalleEquipo() {
   };
 
   const handleVerDetalleIncidencia = (incidencia) => {
-  console.log('🔵🔵🔵 PADRE: handleVerDetalleIncidencia 🔵🔵🔵');
-  console.log('📌 incidencia recibida:', incidencia);
-  console.log('📌 incidencia.id:', incidencia?.id);
-  
-  // Buscar la incidencia más actualizada en la lista
-  const incidenciaActualizada = incidencias.find(i => i.id === incidencia.id);
-  console.log('📌 incidenciaActualizada encontrada:', incidenciaActualizada);
-  
-  setIncidenciaSeleccionada(incidenciaActualizada || incidencia);
-  setShowDetalleIncidenciaModal(true);
-};
+    const incidenciaActualizada = incidencias.find(i => i.id === incidencia.id);
+    setIncidenciaSeleccionada(incidenciaActualizada || incidencia);
+    setShowDetalleIncidenciaModal(true);
+  };
 
-const handleVerDetalleHistorial = (historialItem) => {
-  console.log('🟢🟢🟢 PADRE: handleVerDetalleHistorial 🟢🟢🟢');
-  console.log('📌 historialItem recibido:', historialItem);
-  console.log('📌 historialItem.id:', historialItem?.id);
-  console.log('📌 equipo?.id:', equipo?.id);
-  
-  // Buscar el historial más actualizado en la lista
-  const historialActualizado = historial.find(h => h.id === historialItem.id);
-  console.log('📌 historialActualizado encontrado:', historialActualizado);
-  
-  setHistorialSeleccionado(historialActualizado || historialItem);
-  setShowDetalleHistorialModal(true);
-};
+  const handleVerDetalleHistorial = (historialItem) => {
+    const historialActualizado = historial.find(h => h.id === historialItem.id);
+    setHistorialSeleccionado(historialActualizado || historialItem);
+    setShowDetalleHistorialModal(true);
+  };
 
   // ==========================================
-  // FUNCIONES PARA RECARGAR DESPUÉS DE EDITAR
+  // FUNCIONES PARA RECARGAR DESPUÉS DE EDITAR (NO CIERRAN MODALES)
   // ==========================================
   
+  // Para incidencias - SOLO RECARGA DATOS, NO CIERRA EL MODAL
   const handleIncidenciaEditSuccess = async () => {
-    // Recargar todos los datos del equipo
     await cargarDatos();
     
-    // CERRAR EL MODAL automáticamente
-    setShowDetalleIncidenciaModal(false);
+    // Actualizar la incidencia seleccionada con los datos frescos
+    if (incidenciaSeleccionada) {
+      const incidenciaActualizada = incidencias.find(i => i.id === incidenciaSeleccionada.id);
+      if (incidenciaActualizada) {
+        setIncidenciaSeleccionada(incidenciaActualizada);
+      }
+    }
     
-    // Limpiar la incidencia seleccionada
-    setIncidenciaSeleccionada(null);
-    
-    // Mostrar mensaje de éxito
     setAlertMessage('✅ Incidencia actualizada exitosamente');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
   };
 
+  // Para historial - SOLO RECARGA DATOS, NO CIERRA EL MODAL
   const handleHistorialEditSuccess = async () => {
-  console.log('🟢🟢🟢 PADRE: handleHistorialEditSuccess INICIADO 🟢🟢🟢');
-  console.log('📌 historialSeleccionado antes:', historialSeleccionado);
-  
-  await cargarDatos();
-  
-  console.log('📌 historial después de cargarDatos:', historial);
-  
-  if (historialSeleccionado) {
-    const historialActualizado = historial.find(h => h.id === historialSeleccionado.id);
-    console.log('📌 historialActualizado encontrado:', historialActualizado);
-    if (historialActualizado) {
-      setHistorialSeleccionado(historialActualizado);
-      console.log('✅ historialSeleccionado actualizado');
+    await cargarDatos();
+    
+    // Actualizar el historial seleccionado con los datos frescos
+    if (historialSeleccionado) {
+      const historialActualizado = historial.find(h => h.id === historialSeleccionado.id);
+      if (historialActualizado) {
+        setHistorialSeleccionado(historialActualizado);
+      }
     }
-  }
-  
-  setShowDetalleHistorialModal(false);
-  setHistorialSeleccionado(null);
-  
-  setAlertMessage('✅ Cambio actualizado exitosamente');
-  setShowAlert(true);
-  setTimeout(() => setShowAlert(false), 3000);
-  console.log('🟢🟢🟢 PADRE: handleHistorialEditSuccess FINALIZADO 🟢🟢🟢');
-};
+    
+    setAlertMessage('✅ Cambio actualizado exitosamente');
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
 
   // ==========================================
   // FUNCIÓN CON REINTENTOS
@@ -830,11 +807,10 @@ const handleVerDetalleHistorial = (historialItem) => {
       
       <DetalleMantenimientoModal isOpen={showDetalleModal} onClose={() => setShowDetalleModal(false)} mantenimiento={mantenimientoSeleccionado} equipoNombre={equipo?.nombre} onEdit={cargarDatos} />
       
-      {/* MODAL DE INCIDENCIA CORREGIDO */}
-<DetalleIncidenciaModal 
+      {/* MODAL DE INCIDENCIA - NO CIERRA AL EDITAR */}
+      <DetalleIncidenciaModal 
         isOpen={showDetalleIncidenciaModal} 
         onClose={() => {
-          console.log('🔴🔴🔴 PADRE: Cerrando modal de incidencia 🔴🔴🔴');
           setShowDetalleIncidenciaModal(false);
           setIncidenciaSeleccionada(null);
         }} 
@@ -843,17 +819,16 @@ const handleVerDetalleHistorial = (historialItem) => {
         onEdit={handleIncidenciaEditSuccess}
       />
       
-      {/* MODAL DE HISTORIAL CORREGIDO CON equipoId */}
+      {/* MODAL DE HISTORIAL - NO CIERRA AL EDITAR */}
       <DetalleHistorialModal 
         isOpen={showDetalleHistorialModal} 
         onClose={() => {
-          console.log('🔴🔴🔴 PADRE: Cerrando modal de historial 🔴🔴🔴');
           setShowDetalleHistorialModal(false);
           setHistorialSeleccionado(null);
         }} 
         historialItem={historialSeleccionado} 
         equipoNombre={equipo?.nombre}
-        equipoId={equipo?.id}  // ← IMPORTANTE: Asegurar que esto existe
+        equipoId={equipo?.id}
         onEdit={handleHistorialEditSuccess}
       />
       

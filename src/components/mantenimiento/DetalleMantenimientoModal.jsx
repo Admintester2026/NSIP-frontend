@@ -22,22 +22,34 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [mantenimientoActual, setMantenimientoActual] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Actualizar el mantenimiento actual cuando cambia la prop
+  useEffect(() => {
+    if (mantenimiento) {
+      setMantenimientoActual(mantenimiento);
+    }
+  }, [mantenimiento]);
 
   useEffect(() => {
     if (isOpen && mantenimiento?.id) {
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
+      setMantenimientoActual(mantenimiento);
       cargarEvidencias();
       cargarVersiones();
     }
   }, [isOpen, mantenimiento?.id]);
 
   const cargarEvidencias = async () => {
+    const idActual = mantenimientoActual?.id || mantenimiento?.id;
+    if (!idActual) return;
+    
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${mantenimiento.id}`);
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${idActual}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
@@ -58,10 +70,12 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   };
 
   const cargarVersiones = async () => {
-    if (!mantenimiento?.id) return;
+    const idActual = mantenimientoActual?.id || mantenimiento?.id;
+    if (!idActual) return;
+    
     setCargandoVersiones(true);
     try {
-      const data = await mantenimientoAPI.getHistorialVersiones(mantenimiento.id);
+      const data = await mantenimientoAPI.getHistorialVersiones(idActual);
       setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando versiones:', err);
@@ -79,13 +93,27 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     setVistaPreviaVersion(null);
   };
 
-  const handleEditSuccess = async () => {
-    if (onEdit) {
-      await onEdit();
+  const recargarDatosCompletos = async () => {
+    setRecargando(true);
+    try {
+      // Recargar el mantenimiento actualizado desde el padre
+      if (onEdit) {
+        await onEdit();
+      }
+      // Recargar datos locales
+      await cargarEvidencias();
+      await cargarVersiones();
+      // Forzar actualización
+      setRefreshKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Error recargando datos:', err);
+    } finally {
+      setRecargando(false);
     }
-    await cargarEvidencias();
-    await cargarVersiones();
-    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleEditSuccess = async () => {
+    await recargarDatosCompletos();
   };
 
   const formatDate = (dateString) => {
@@ -107,7 +135,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
 
   if (!isOpen) return null;
 
-  if (!mantenimiento) {
+  if (!mantenimientoActual && !mantenimiento) {
     return (
       <div className={styles.modalOverlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -138,6 +166,10 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
       </div>
     );
   }
+
+  const datosMostrar = mantenimientoActual || mantenimiento;
+  const mostrarDatos = vistaPreviaVersion || datosMostrar;
+  const esVistaPrevia = vistaPreviaVersion !== null;
 
   return (
     <>
@@ -174,18 +206,18 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
             <div className={styles.modalHeader}>
               <div className={styles.headerLeft}>
                 <h2>
-                  {vistaPreviaVersion ? (
+                  {esVistaPrevia ? (
                     <span className={styles.versionPreviewBadge}>🔍 Vista previa - Versión {vistaPreviaVersion.version}</span>
                   ) : (
                     '📋 Detalle del Mantenimiento'
                   )}
                 </h2>
-                {versiones.length > 0 && !vistaPreviaVersion && (
+                {versiones.length > 0 && !esVistaPrevia && (
                   <button className={styles.historyButton} onClick={() => setMostrarSidebar(true)} title="Ver historial de versiones">
                     ⏱️ {versiones.length}
                   </button>
                 )}
-                {vistaPreviaVersion && (
+                {esVistaPrevia && (
                   <button className={styles.backToCurrentBtn} onClick={cerrarVistaPrevia}>← Volver a versión actual</button>
                 )}
               </div>
@@ -194,49 +226,52 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
 
             <div className={styles.modalBody}>
               <div className={styles.infoSection}>
-                <div className={styles.infoRow}><span className={styles.infoLabel}>Título:</span><span className={styles.infoValue}>{mantenimiento.titulo}</span></div>
+                <div className={styles.sectionHeader}>
+                  <h4 className={styles.sectionSubtitle}>📋 Información general</h4>
+                  {!esVistaPrevia && (
+                    <button className={styles.editarButton} onClick={() => setShowEditModal(true)}>
+                      ✏️ Editar
+                    </button>
+                  )}
+                </div>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Título:</span><span className={styles.infoValue}>{mostrarDatos.titulo}</span></div>
                 <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
-                <div className={styles.infoRow}><span className={styles.infoLabel}>Tipo:</span><span className={styles.infoValue}>{mantenimiento.tipo || 'No especificado'}</span></div>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Tipo:</span><span className={styles.infoValue}>{mostrarDatos.tipo || 'No especificado'}</span></div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Prioridad:</span>
                   <span className={`${styles.prioridadBadge} ${
-                    mantenimiento.prioridad === 'urgente' ? styles.urgente :
-                    mantenimiento.prioridad === 'alta' ? styles.alta :
-                    mantenimiento.prioridad === 'media' ? styles.media : styles.baja
-                  }`}>{mantenimiento.prioridad || 'No especificada'}</span>
+                    mostrarDatos.prioridad === 'urgente' ? styles.urgente :
+                    mostrarDatos.prioridad === 'alta' ? styles.alta :
+                    mostrarDatos.prioridad === 'media' ? styles.media : styles.baja
+                  }`}>{mostrarDatos.prioridad || 'No especificada'}</span>
                 </div>
               </div>
 
               <div className={styles.infoSection}>
                 <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
-                <div className={styles.infoRow}><span className={styles.infoLabel}>Programado:</span><span className={styles.infoValue}>{formatDate(mantenimiento.fecha_inicio)}</span></div>
-                {mantenimiento.fecha_fin && <div className={styles.infoRow}><span className={styles.infoLabel}>Fin programado:</span><span className={styles.infoValue}>{formatDate(mantenimiento.fecha_fin)}</span></div>}
-                <div className={styles.infoRow}><span className={styles.infoLabel}>Completado original:</span><span className={styles.infoValue}>{formatDate(mantenimiento.fecha_completado)}</span></div>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Programado:</span><span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_inicio)}</span></div>
+                {mostrarDatos.fecha_fin && <div className={styles.infoRow}><span className={styles.infoLabel}>Fin programado:</span><span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_fin)}</span></div>}
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Completado:</span><span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_completado)}</span></div>
               </div>
 
               <div className={styles.infoSection}>
-                <div className={styles.sectionHeader}>
-                  <h4 className={styles.sectionSubtitle}>👤 Ejecución</h4>
-                  {!vistaPreviaVersion && (
-                    <button className={styles.editarButton} onClick={() => setShowEditModal(true)}>✏️ Editar</button>
-                  )}
-                </div>
-                <div className={styles.infoRow}><span className={styles.infoLabel}>Técnico:</span><span className={styles.infoValue}>{mantenimiento.completado_por || mantenimiento.tecnico || 'No registrado'}</span></div>
-                {mantenimiento.duracion && <div className={styles.infoRow}><span className={styles.infoLabel}>Duración:</span><span className={styles.infoValue}>{mantenimiento.duracion} minutos</span></div>}
+                <h4 className={styles.sectionSubtitle}>👤 Ejecución</h4>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Técnico:</span><span className={styles.infoValue}>{mostrarDatos.completado_por || mostrarDatos.tecnico || 'No registrado'}</span></div>
+                {mostrarDatos.duracion && <div className={styles.infoRow}><span className={styles.infoLabel}>Duración:</span><span className={styles.infoValue}>{mostrarDatos.duracion} minutos</span></div>}
               </div>
 
-              {(mantenimiento.materiales_usados || mantenimiento.costo_materiales) && (
+              {(mostrarDatos.materiales_usados || mostrarDatos.costo_materiales) && (
                 <div className={styles.infoSection}>
                   <h4 className={styles.sectionSubtitle}>🔧 Materiales y Costos</h4>
-                  {mantenimiento.materiales_usados && <div className={styles.infoRow}><span className={styles.infoLabel}>Materiales usados:</span><span className={styles.infoValue}>{mantenimiento.materiales_usados}</span></div>}
-                  {mantenimiento.costo_materiales && <div className={styles.infoRow}><span className={styles.infoLabel}>Costo de materiales:</span><span className={styles.infoValue}>${Number(mantenimiento.costo_materiales).toFixed(2)}</span></div>}
+                  {mostrarDatos.materiales_usados && <div className={styles.infoRow}><span className={styles.infoLabel}>Materiales usados:</span><span className={styles.infoValue}>{mostrarDatos.materiales_usados}</span></div>}
+                  {mostrarDatos.costo_materiales && <div className={styles.infoRow}><span className={styles.infoLabel}>Costo de materiales:</span><span className={styles.infoValue}>${Number(mostrarDatos.costo_materiales).toFixed(2)}</span></div>}
                 </div>
               )}
 
-              {mantenimiento.notas_completado && (
+              {mostrarDatos.notas_completado && (
                 <div className={styles.infoSection}>
                   <h4 className={styles.sectionSubtitle}>📝 Notas del trabajo</h4>
-                  <div className={styles.notasBox}>{mantenimiento.notas_completado}</div>
+                  <div className={styles.notasBox}>{mostrarDatos.notas_completado}</div>
                 </div>
               )}
 
@@ -264,7 +299,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
-        mantenimiento={mantenimiento}
+        mantenimiento={datosMostrar}
         equipoNombre={equipoNombre}
       />
     </>

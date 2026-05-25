@@ -25,9 +25,15 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const [historialActual, setHistorialActual] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Actualizar el historial actual cuando cambia la prop
+  useEffect(() => {
+    if (historialItem) {
+      setHistorialActual(historialItem);
+    }
+  }, [historialItem]);
+
   useEffect(() => {
     if (isOpen && historialItem?.id) {
-      console.log('🎬 DetalleHistorialModal - Abriendo con historial:', historialItem.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setHistorialActual(historialItem);
@@ -36,15 +42,8 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
   }, [isOpen, historialItem?.id]);
 
-  useEffect(() => {
-    if (historialItem) {
-      setHistorialActual(historialItem);
-      setRefreshKey(prev => prev + 1);
-    }
-  }, [historialItem]);
-
   const cargarFacturas = async () => {
-    const idActual = historialItem?.id || historialActual?.id;
+    const idActual = historialActual?.id || historialItem?.id;
     if (!idActual) return;
     
     setLoadingFacturas(true);
@@ -71,7 +70,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   };
 
   const cargarVersiones = async () => {
-    const idActual = historialItem?.id || historialActual?.id;
+    const idActual = historialActual?.id || historialItem?.id;
     if (!idActual) return;
     
     setCargandoVersiones(true);
@@ -108,14 +107,27 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     setVistaPreviaVersion(null);
   };
 
-  const handleEditSuccess = async () => {
-    console.log('🔵 DetalleHistorialModal - EditSuccess, recargando...');
-    if (onEdit) {
-      await onEdit();
+  const recargarDatosCompletos = async () => {
+    setRecargando(true);
+    try {
+      // Recargar el historial actualizado desde el padre
+      if (onEdit) {
+        await onEdit();
+      }
+      // Recargar datos locales
+      await cargarFacturas();
+      await cargarVersiones();
+      // Forzar actualización
+      setRefreshKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Error recargando datos:', err);
+    } finally {
+      setRecargando(false);
     }
-    await cargarFacturas();
-    await cargarVersiones();
-    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleEditSuccess = async () => {
+    await recargarDatosCompletos();
   };
 
   const formatDate = (dateString) => {

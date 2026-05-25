@@ -25,9 +25,15 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const [incidenciaActual, setIncidenciaActual] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Actualizar la incidencia actual cuando cambia la prop
+  useEffect(() => {
+    if (incidencia) {
+      setIncidenciaActual(incidencia);
+    }
+  }, [incidencia]);
+
   useEffect(() => {
     if (isOpen && incidencia?.id) {
-      console.log('🎬 DetalleIncidenciaModal - Abriendo con incidencia:', incidencia.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setIncidenciaActual(incidencia);
@@ -36,15 +42,8 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     }
   }, [isOpen, incidencia?.id]);
 
-  useEffect(() => {
-    if (incidencia) {
-      setIncidenciaActual(incidencia);
-      setRefreshKey(prev => prev + 1);
-    }
-  }, [incidencia]);
-
   const cargarEvidencias = async () => {
-    const idActual = incidencia?.id || incidenciaActual?.id;
+    const idActual = incidenciaActual?.id || incidencia?.id;
     if (!idActual) return;
     
     setLoadingEvidencias(true);
@@ -71,7 +70,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   };
 
   const cargarVersiones = async () => {
-    const idActual = incidencia?.id || incidenciaActual?.id;
+    const idActual = incidenciaActual?.id || incidencia?.id;
     if (!idActual) return;
     
     setCargandoVersiones(true);
@@ -95,16 +94,27 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     setVistaPreviaVersion(null);
   };
 
-  const handleEditSuccess = async () => {
-    console.log('🔵 DetalleIncidenciaModal - EditSuccess, recargando...');
-    if (onEdit) {
-      await onEdit();
+  const recargarDatosCompletos = async () => {
+    setRecargando(true);
+    try {
+      // Recargar la incidencia actualizada desde el padre
+      if (onEdit) {
+        await onEdit();
+      }
+      // Recargar datos locales
+      await cargarEvidencias();
+      await cargarVersiones();
+      // Forzar actualización
+      setRefreshKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Error recargando datos:', err);
+    } finally {
+      setRecargando(false);
     }
-    // Recargar los datos después de editar
-    await cargarEvidencias();
-    await cargarVersiones();
-    // Forzar actualización de la incidencia actual
-    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleEditSuccess = async () => {
+    await recargarDatosCompletos();
   };
 
   const formatDate = (dateString) => {

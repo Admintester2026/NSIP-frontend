@@ -148,6 +148,7 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
 
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
+      // IMPORTANTE: Llamar a onSuccess ANTES de cerrar el modal
       if (onSuccess) {
         await onSuccess();
       }
