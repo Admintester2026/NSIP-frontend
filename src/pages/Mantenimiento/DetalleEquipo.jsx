@@ -199,15 +199,36 @@ export default function DetalleEquipo() {
   // ==========================================
   
   const handleIncidenciaEditSuccess = async () => {
-    // Recargar todos los datos del equipo
-    await cargarDatos();
-    // Actualizar la incidencia seleccionada con los datos frescos
-    if (incidenciaSeleccionada) {
-      const incidenciaActualizada = incidencias.find(i => i.id === incidenciaSeleccionada.id);
-      setIncidenciaSeleccionada(incidenciaActualizada || incidenciaSeleccionada);
-    }
-    // No cerramos el modal automáticamente, el modal se cierra solo
-  };
+  // Recargar todos los datos del equipo
+  await cargarDatos();
+  
+  // CERRAR EL MODAL automáticamente
+  setShowDetalleIncidenciaModal(false);
+  
+  // Limpiar la incidencia seleccionada
+  setIncidenciaSeleccionada(null);
+  
+  // Mostrar mensaje de éxito
+  setAlertMessage('✅ Incidencia actualizada exitosamente');
+  setShowAlert(true);
+  setTimeout(() => setShowAlert(false), 3000);
+};
+
+const handleHistorialEditSuccess = async () => {
+  // Recargar todos los datos del equipo
+  await cargarDatos();
+  
+  // CERRAR EL MODAL automáticamente
+  setShowDetalleHistorialModal(false);
+  
+  // Limpiar el historial seleccionado
+  setHistorialSeleccionado(null);
+  
+  // Mostrar mensaje de éxito
+  setAlertMessage('✅ Cambio actualizado exitosamente');
+  setShowAlert(true);
+  setTimeout(() => setShowAlert(false), 3000);
+};
 
   const handleHistorialEditSuccess = async () => {
     // Recargar todos los datos del equipo
