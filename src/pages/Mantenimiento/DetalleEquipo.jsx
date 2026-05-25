@@ -816,12 +816,13 @@ export default function DetalleEquipo() {
         onEdit={handleIncidenciaEditSuccess}
       />
       
-      {/* MODAL DE HISTORIAL CORREGIDO */}
+      {/* MODAL DE HISTORIAL CORREGIDO CON equipoId */}
       <DetalleHistorialModal 
         isOpen={showDetalleHistorialModal} 
         onClose={() => setShowDetalleHistorialModal(false)} 
         historialItem={historialSeleccionado} 
-        equipoNombre={equipo?.nombre} 
+        equipoNombre={equipo?.nombre}
+        equipoId={equipo?.id}
         onEdit={handleHistorialEditSuccess}
       />
       

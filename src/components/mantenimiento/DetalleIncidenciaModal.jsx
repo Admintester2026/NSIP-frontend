@@ -23,39 +23,42 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  
-  // Estado local para la incidencia actualizada
   const [incidenciaActual, setIncidenciaActual] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Forzar re-render
 
   // Cargar la incidencia actualizada desde el backend
   const cargarIncidenciaActualizada = async () => {
-    if (!incidencia?.id) return null;
+    if (!incidencia?.id && !incidenciaActual?.id) return null;
+    const idActual = incidencia?.id || incidenciaActual?.id;
+    if (!idActual) return null;
+    
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${incidencia.id}`);
+      // Obtener todas las incidencias del equipo y filtrar
+      const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${idActual}`);
       const data = await response.json();
       if (data.ok && data.datos && data.datos.length > 0) {
-        // Buscar la incidencia específica por ID
-        const incidenciaEncontrada = data.datos.find(i => i.id === incidencia.id);
+        const incidenciaEncontrada = data.datos.find(i => i.id === idActual);
         if (incidenciaEncontrada) {
           setIncidenciaActual(incidenciaEncontrada);
+          setRefreshKey(prev => prev + 1); // Forzar re-render
           return incidenciaEncontrada;
         }
       }
-      return incidencia;
+      return incidenciaActual || incidencia;
     } catch (err) {
       console.error('Error cargando incidencia actualizada:', err);
-      return incidencia;
+      return incidenciaActual || incidencia;
     }
   };
 
   const recargarDatosIncidencia = async () => {
-    if (!incidencia?.id) return;
+    if (!incidencia?.id && !incidenciaActual?.id) return;
+    const idActual = incidencia?.id || incidenciaActual?.id;
     
     setRecargando(true);
     try {
-      // Recargar la incidencia actualizada
-      const incidenciaActualizada = await cargarIncidenciaActualizada();
+      await cargarIncidenciaActualizada();
       await cargarVersiones();
       await cargarEvidencias();
     } catch (err) {
@@ -69,13 +72,12 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     if (isOpen && incidencia?.id) {
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
-      setIncidenciaActual(incidencia); // Inicializar con la prop
+      setIncidenciaActual(incidencia);
       cargarEvidencias();
       cargarVersiones();
     }
   }, [isOpen, incidencia?.id]);
 
-  // Actualizar incidenciaActual cuando cambia la prop
   useEffect(() => {
     if (incidencia) {
       setIncidenciaActual(incidencia);
@@ -83,10 +85,13 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   }, [incidencia]);
 
   const cargarEvidencias = async () => {
+    const idActual = incidencia?.id || incidenciaActual?.id;
+    if (!idActual) return;
+    
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/incidencia/${incidencia.id}`);
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/incidencia/${idActual}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
@@ -107,28 +112,31 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   };
 
   const cargarVersiones = async () => {
-    if (!incidencia?.id) return;
+    const idActual = incidencia?.id || incidenciaActual?.id;
+    if (!idActual) return;
+    
     setCargandoVersiones(true);
     try {
-      const data = await mantenimientoAPI.getHistorialVersionesIncidencia(incidencia.id);
+      const data = await mantenimientoAPI.getHistorialVersionesIncidencia(idActual);
       console.log('📜 Versiones de incidencia:', data);
       setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando versiones:', err);
-      if (incidencia) {
+      if (incidenciaActual || incidencia) {
+        const datos = incidenciaActual || incidencia;
         setVersiones([{
           version: 1,
-          titulo: incidencia.titulo,
-          descripcion: incidencia.descripcion,
-          gravedad: incidencia.gravedad,
-          solucion: incidencia.solucion,
-          costo_estimado: incidencia.costo_estimado,
-          estado: incidencia.estado,
-          reportado_por: incidencia.reportado_por,
-          fecha_reporte: incidencia.fecha_reporte,
-          fecha_solucion: incidencia.fecha_solucion,
-          fecha_modificacion: incidencia.fecha_reporte,
-          modificado_por: incidencia.reportado_por || 'sistema'
+          titulo: datos.titulo,
+          descripcion: datos.descripcion,
+          gravedad: datos.gravedad,
+          solucion: datos.solucion,
+          costo_estimado: datos.costo_estimado,
+          estado: datos.estado,
+          reportado_por: datos.reportado_por,
+          fecha_reporte: datos.fecha_reporte,
+          fecha_solucion: datos.fecha_solucion,
+          fecha_modificacion: datos.fecha_reporte,
+          modificado_por: datos.reportado_por || 'sistema'
         }]);
       }
     } finally {
@@ -416,6 +424,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
 
       {/* Modal de edición */}
       <EditarIncidenciaModal
+        key={refreshKey}
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
