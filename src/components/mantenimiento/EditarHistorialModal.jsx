@@ -25,7 +25,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   
-  // Estados para nuevas facturas
   const [nuevasFacturas, setNuevasFacturas] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -51,7 +50,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
         descripcion: historialItem.descripcion || ''
       });
       cargarHistorial();
-      // Resetear nuevas facturas
       setNuevasFacturas([]);
       setPreviewUrls([]);
       setUploadProgress(0);
@@ -61,8 +59,7 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
   const cargarHistorial = async () => {
     setCargandoHistorial(true);
     try {
-      // Si tienes API para historial de cambios
-      setVersiones([]); // Placeholder
+      setVersiones([]);
     } catch (err) {
       console.error('Error cargando historial:', err);
     } finally {
@@ -96,7 +93,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Subir nuevas facturas al backend
   const uploadNewFacturas = async () => {
     if (nuevasFacturas.length === 0) return [];
     
@@ -138,7 +134,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
         throw new Error('Selecciona el tipo de cambio');
       }
 
-      // Subir nuevas facturas si hay
       let nuevasUrls = [];
       if (nuevasFacturas.length > 0) {
         setSubiendoFacturas(true);
@@ -146,7 +141,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
         console.log(`📎 Subidas ${nuevasUrls.length} nuevas facturas`);
       }
 
-      // Actualizar el historial
       await mantenimientoAPI.updateHistorial(historialItem.id, {
         campo_modificado: formData.campo_modificado,
         valor_anterior: formData.valor_anterior,
@@ -155,10 +149,11 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
         nuevas_facturas_urls: nuevasUrls
       });
 
-      // Limpiar previews
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        await onSuccess();
+      }
       onClose();
     } catch (err) {
       setError(err.message);
@@ -245,7 +240,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
               />
             </div>
 
-            {/* Sección para añadir nuevas facturas */}
             <div className={styles.formGroup}>
               <label>🧾 Añadir más facturas / Comprobantes</label>
               <div className={styles.fileInputArea}>
@@ -286,7 +280,6 @@ export default function EditarHistorialModal({ isOpen, onClose, onSuccess, histo
               </div>
             )}
 
-            {/* Historial de versiones */}
             <button 
               type="button" 
               className={styles.historialButton} 

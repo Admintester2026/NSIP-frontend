@@ -59,7 +59,6 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
         estado: incidencia.estado || 'reportado'
       });
       cargarHistorial();
-      // Resetear nuevas evidencias
       setNuevasEvidencias([]);
       setPreviewUrls([]);
       setUploadProgress(0);
@@ -69,12 +68,11 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
   const cargarHistorial = async () => {
     setCargandoHistorial(true);
     try {
-      // Si tienes API para historial de incidencias
-      // const data = await mantenimientoAPI.getHistorialIncidencias(incidencia.id);
-      // setVersiones(data || []);
-      setVersiones([]); // Placeholder
+      const data = await mantenimientoAPI.getHistorialVersionesIncidencia(incidencia.id);
+      setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando historial:', err);
+      setVersiones([]);
     } finally {
       setCargandoHistorial(false);
     }
@@ -106,7 +104,6 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Subir nuevas evidencias al backend
   const uploadNewEvidencias = async () => {
     if (nuevasEvidencias.length === 0) return [];
     
@@ -151,7 +148,6 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
         throw new Error('La descripción es requerida');
       }
 
-      // Subir nuevas evidencias si hay
       let nuevasUrls = [];
       if (nuevasEvidencias.length > 0) {
         setSubiendoEvidencias(true);
@@ -159,7 +155,6 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
         console.log(`📸 Subidas ${nuevasUrls.length} nuevas evidencias`);
       }
 
-      // Actualizar la incidencia
       await mantenimientoAPI.updateIncidencia(incidencia.id, {
         titulo: formData.titulo,
         descripcion: formData.descripcion,
@@ -170,10 +165,12 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
         nuevas_evidencias_urls: nuevasUrls
       });
 
-      // Limpiar previews
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      if (onSuccess) onSuccess();
+      // Llamar a onSuccess ANTES de cerrar para que el padre recargue los datos
+      if (onSuccess) {
+        await onSuccess();
+      }
       onClose();
     } catch (err) {
       setError(err.message);
@@ -275,7 +272,6 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
               />
             </div>
 
-            {/* Sección para añadir nuevas evidencias */}
             <div className={styles.formGroup}>
               <label>📸 Añadir más evidencias (Fotos / Documentos)</label>
               <div className={styles.fileInputArea}>
@@ -316,7 +312,6 @@ export default function EditarIncidenciaModal({ isOpen, onClose, onSuccess, inci
               </div>
             )}
 
-            {/* Historial de versiones */}
             <button 
               type="button" 
               className={styles.historialButton} 

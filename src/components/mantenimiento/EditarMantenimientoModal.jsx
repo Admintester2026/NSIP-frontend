@@ -27,7 +27,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   
-  // Estados para nuevas evidencias
   const [nuevasEvidencias, setNuevasEvidencias] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -45,7 +44,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
         observaciones: ''
       });
       cargarHistorial();
-      // Resetear nuevas evidencias
       setNuevasEvidencias([]);
       setPreviewUrls([]);
       setUploadProgress(0);
@@ -90,7 +88,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Subir nuevas evidencias al backend
   const uploadNewEvidencias = async () => {
     if (nuevasEvidencias.length === 0) return [];
     
@@ -135,7 +132,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
         throw new Error('Las notas de trabajo son requeridas');
       }
 
-      // Subir nuevas evidencias si hay
       let nuevasUrls = [];
       if (nuevasEvidencias.length > 0) {
         setSubiendoEvidencias(true);
@@ -143,7 +139,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
         console.log(`📸 Subidas ${nuevasUrls.length} nuevas evidencias`);
       }
 
-      // Actualizar el mantenimiento (solo los datos editables, las evidencias ya están en el sistema de archivos)
       await mantenimientoAPI.editarMantenimientoCompletado(mantenimiento.id, {
         notas_completado: formData.notas_completado,
         tecnico: formData.tecnico,
@@ -151,13 +146,14 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
         materiales_usados: formData.materiales_usados,
         costo_materiales: formData.costo_materiales,
         observaciones: formData.observaciones,
-        nuevas_evidencias_urls: nuevasUrls  // Opcional: guardar referencia si tienes tabla de evidencias
+        nuevas_evidencias_urls: nuevasUrls
       });
 
-      // Limpiar previews
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        await onSuccess();
+      }
       onClose();
     } catch (err) {
       setError(err.message);
@@ -257,7 +253,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
               />
             </div>
 
-            {/* Sección para añadir nuevas evidencias */}
             <div className={styles.formGroup}>
               <label>📸 Añadir más evidencias (Fotos / Videos)</label>
               <div className={styles.fileInputArea}>
@@ -298,7 +293,6 @@ export default function EditarMantenimientoModal({ isOpen, onClose, onSuccess, m
               </div>
             )}
 
-            {/* Historial de versiones */}
             <button 
               type="button" 
               className={styles.historialButton} 
