@@ -1,4 +1,4 @@
-/* DetalleIncidenciaModal.module.css */
+/* DetalleIncidenciaModal.module.css - COMPLETO */
 
 .modalOverlay {
   position: fixed;
@@ -21,26 +21,188 @@
   width: 90%;
   max-width: 700px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   animation: slideIn 0.2s ease;
+  display: flex;
+  transition: all 0.3s ease;
+}
+
+.modal.withSidebar {
+  max-width: 950px;
+}
+
+/* Sidebar de versiones */
+.sidebar {
+  width: 280px;
+  background: var(--bg-raised);
+  border-right: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-surface);
+}
+
+.sidebarHeader h3 {
+  font-size: 0.9rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.sidebarClose {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.sidebarClose:hover {
+  color: var(--red);
+}
+
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Items de versión en sidebar */
+.versionItemSidebar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.versionItemSidebar:hover {
+  border-color: var(--green);
+  transform: translateX(4px);
+}
+
+.versionHeaderSidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.versionBadgeSidebar {
+  background: var(--green-dim);
+  color: var(--green);
+  padding: 0.15rem 0.4rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.versionDateSidebar {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.versionPreviewSidebar {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.versionUserSidebar {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Main content */
+.modalMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modalHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-dim);
   background: var(--bg-raised);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .modalHeader h2 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   color: var(--text-primary);
   margin: 0;
+}
+
+.versionPreviewBadge {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+}
+
+.historyButton {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-secondary);
+}
+
+.historyButton:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.backToCurrentBtn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.backToCurrentBtn:hover {
+  border-color: var(--green);
+  color: var(--green);
 }
 
 .modalClose {
@@ -68,16 +230,17 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modalFooter {
   display: flex;
   justify-content: flex-end;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-dim);
   background: var(--bg-raised);
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
 }
 
 /* Secciones de información */
@@ -88,13 +251,41 @@
   padding: 1rem;
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
 .sectionSubtitle {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
+  margin: 0;
+}
+
+.editarButton {
+  padding: 0.3rem 0.85rem;
+  background: rgba(255, 179, 64, 0.1);
+  border: 1px solid var(--amber);
+  border-radius: var(--r-md);
+  color: var(--amber);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.editarButton:hover {
+  background: var(--amber);
+  color: var(--bg-primary);
+  transform: translateY(-1px);
 }
 
 .infoRow {
@@ -151,6 +342,16 @@
 .estadoPendiente {
   background: rgba(255, 179, 64, 0.15);
   color: var(--amber);
+}
+
+.estadoEnProceso {
+  background: rgba(0, 150, 255, 0.15);
+  color: #0096ff;
+}
+
+.estadoCerrado {
+  background: rgba(128, 128, 128, 0.15);
+  color: #aaa;
 }
 
 /* Cajas de texto */
@@ -243,6 +444,23 @@
   color: var(--green);
 }
 
+/* Scrollbar */
+.modalBody::-webkit-scrollbar,
+.sidebarContent::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modalBody::-webkit-scrollbar-track,
+.sidebarContent::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+}
+
+.modalBody::-webkit-scrollbar-thumb,
+.sidebarContent::-webkit-scrollbar-thumb {
+  background: var(--green-dim);
+  border-radius: 4px;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -259,65 +477,48 @@
   .modal {
     width: 95%;
     max-height: 95vh;
-    margin: 1rem;
+    flex-direction: column;
   }
-
-  .modalHeader, .modalBody, .modalFooter {
+  
+  .modal.withSidebar {
+    max-width: 95%;
+  }
+  
+  .sidebar {
+    width: 100%;
+    max-height: 40%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  
+  .modalHeader {
     padding: 1rem;
   }
-
+  
+  .modalBody {
+    padding: 1rem;
+  }
+  
+  .modalFooter {
+    padding: 0.75rem 1rem;
+  }
+  
+  .headerLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
   .infoRow {
     flex-direction: column;
     gap: 0.25rem;
   }
-
+  
   .infoLabel {
     min-width: auto;
   }
-
+  
   .evidenciasGrid {
     justify-content: center;
   }
-}
-/* Añadir al final de DetalleIncidenciaModal.module.css */
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.editarButton {
-  padding: 0.3rem 0.85rem;
-  background: rgba(255, 179, 64, 0.1);
-  border: 1px solid var(--amber);
-  border-radius: var(--r-md);
-  color: var(--amber);
-  font-size: 0.7rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.editarButton:hover {
-  background: var(--amber);
-  color: var(--bg-primary);
-  transform: translateY(-1px);
-}
-
-/* Estados adicionales */
-.estadoEnProceso {
-  background: rgba(0, 150, 255, 0.15);
-  color: #0096ff;
-}
-
-.estadoCerrado {
-  background: rgba(128, 128, 128, 0.15);
-  color: #aaa;
 }
