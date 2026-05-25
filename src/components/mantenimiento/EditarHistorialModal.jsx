@@ -1,10 +1,9 @@
-// FRONTEND/src/components/mantenimiento/DetalleHistorialModal.jsx
-import { useState, useEffect } from 'react';
+// FRONTEND/src/components/mantenimiento/EditarHistorialModal.jsx
+import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
-import ImageGallery from './ImageGallery';
-import EditarHistorialModal from './EditarHistorialModal';
-import styles from './DetalleHistorialModal.module.css';
+import styles from './EditarHistorialModal.module.css';
 
+// Función para obtener la base del backend
 const getBackendBase = () => {
   return 'http://192.168.3.65:3000';
 };
@@ -13,423 +12,373 @@ const getApiBase = () => {
   return `${getBackendBase()}/api`;
 };
 
-export default function DetalleHistorialModal({ isOpen, onClose, historialItem, equipoNombre, onEdit, equipoId }) {
-  const [facturas, setFacturas] = useState([]);
-  const [loadingFacturas, setLoadingFacturas] = useState(false);
+export default function EditarHistorialModal({ isOpen, onClose, onSuccess, historialItem, equipoNombre }) {
+  const [formData, setFormData] = useState({
+    campo_modificado: '',
+    valor_anterior: '',
+    valor_nuevo: '',
+    descripcion: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [versiones, setVersiones] = useState([]);
-  const [cargandoVersiones, setCargandoVersiones] = useState(false);
-  const [mostrarSidebar, setMostrarSidebar] = useState(false);
-  const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
-  const [recargando, setRecargando] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [historialActual, setHistorialActual] = useState(null);
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  
+  const [nuevasFacturas, setNuevasFacturas] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [subiendoFacturas, setSubiendoFacturas] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const campos = [
+    { value: 'pieza_reemplazada', label: '🔧 Pieza Reemplazada' },
+    { value: 'configuracion', label: '⚙️ Configuración' },
+    { value: 'calibracion', label: '📏 Calibración' },
+    { value: 'reparacion', label: '🛠️ Reparación' },
+    { value: 'actualizacion', label: '🔄 Actualización' },
+    { value: 'observacion', label: '📝 Observación' },
+    { value: 'factura', label: '🧾 Factura / Comprobante' }
+  ];
 
   // LOG: Cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
-      console.log('🔴🔴🔴 DETALLE HISTORIAL - MODAL ABIERTO 🔴🔴🔴');
-      console.log('📌 historialItem recibido (prop):', historialItem);
+      console.log('🟣🟣🟣 EDITAR HISTORIAL - MODAL ABIERTO 🟣🟣🟣');
+      console.log('📌 historialItem recibido:', historialItem);
       console.log('📌 historialItem.id:', historialItem?.id);
-      console.log('📌 equipoId recibido:', equipoId);
+      console.log('📌 equipoNombre:', equipoNombre);
     }
   }, [isOpen]);
 
   useEffect(() => {
-    console.log('🟡🟡🟡 DETALLE HISTORIAL - historialItem PROP CAMBIÓ 🟡🟡🟡');
-    console.log('📌 nuevo historialItem:', historialItem);
-  }, [historialItem]);
-
-  useEffect(() => {
-    console.log('🟢🟢🟢 DETALLE HISTORIAL - historialActual CAMBIÓ 🟢🟢🟢');
-    console.log('📌 historialActual:', historialActual);
-  }, [historialActual]);
-
-  const cargarHistorialActualizado = async () => {
-    const idActual = historialItem?.id;
-    const equipoIdActual = equipoId || historialItem?.equipo_id;
-    
-    console.log('🔍🔍🔍 CARGANDO HISTORIAL ACTUALIZADO 🔍🔍🔍');
-    console.log('📌 ID a buscar:', idActual);
-    console.log('📌 equipoId:', equipoIdActual);
-    
-    if (!idActual || !equipoIdActual) return null;
-    
-    try {
-      const API_BASE = getApiBase();
-      const url = `${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`;
-      console.log('📡 Fetching URL:', url);
+    if (isOpen && historialItem) {
+      console.log('📝📝📝 EDITAR HISTORIAL - INICIALIZANDO FORMULARIO 📝📝📝');
+      console.log('📌 Datos originales:', {
+        campo_modificado: historialItem.campo_modificado,
+        valor_anterior: historialItem.valor_anterior,
+        valor_nuevo: historialItem.valor_nuevo,
+        descripcion: historialItem.descripcion
+      });
       
-      const response = await fetch(url);
-      const data = await response.json();
-      console.log('📡 Respuesta completa:', data);
-      
-      if (data.ok && data.datos) {
-        const encontrado = data.datos.find(h => h.id === idActual);
-        console.log('📌 Historial encontrado:', encontrado);
-        
-        if (encontrado) {
-          console.log('✅ Actualizando historialActual con:', encontrado);
-          setHistorialActual(encontrado);
-          return encontrado;
-        }
-      }
-      console.log('⚠️ No se encontró el historial, usando el original');
-      return historialItem;
-    } catch (err) {
-      console.error('❌ Error cargando historial actualizado:', err);
-      return historialItem;
+      setFormData({
+        campo_modificado: historialItem.campo_modificado || '',
+        valor_anterior: historialItem.valor_anterior || '',
+        valor_nuevo: historialItem.valor_nuevo || '',
+        descripcion: historialItem.descripcion || ''
+      });
+      cargarHistorial();
+      setNuevasFacturas([]);
+      setPreviewUrls([]);
+      setUploadProgress(0);
     }
-  };
+  }, [isOpen, historialItem]);
 
-  const recargarDatosHistorial = async () => {
-    console.log('🔄🔄🔄 RECARGANDO DATOS DE HISTORIAL 🔄🔄🔄');
-    setRecargando(true);
+  const cargarHistorial = async () => {
+    console.log('📜📜📜 CARGANDO HISTORIAL DE VERSIONES 📜📜📜');
+    setCargandoHistorial(true);
     try {
-      console.log('📌 Paso 1: Cargar historial actualizado');
-      const historialActualizado = await cargarHistorialActualizado();
-      console.log('📌 historialActualizado obtenido:', historialActualizado);
-      
-      console.log('📌 Paso 2: Cargar versiones');
-      await cargarVersiones();
-      
-      console.log('📌 Paso 3: Cargar facturas');
-      await cargarFacturas();
-      
-      console.log('✅ Recarga completada');
+      setVersiones([]);
+      console.log('✅ Historial de versiones cargado (vacío por ahora)');
     } catch (err) {
-      console.error('❌ Error recargando datos:', err);
+      console.error('❌ Error cargando historial:', err);
     } finally {
-      setRecargando(false);
+      setCargandoHistorial(false);
     }
   };
 
-  useEffect(() => {
-    if (isOpen && historialItem?.id) {
-      console.log('🎬🎬🎬 useEffect INIT - Modal abierto con historial ID:', historialItem.id);
-      setVistaPreviaVersion(null);
-      setMostrarSidebar(false);
-      setHistorialActual(historialItem);
-      cargarFacturas();
-      cargarVersiones();
-    }
-  }, [isOpen, historialItem?.id]);
-
-  useEffect(() => {
-    if (historialItem) {
-      console.log('📌 Actualizando historialActual porque cambió la prop historialItem');
-      setHistorialActual(historialItem);
-    }
-  }, [historialItem]);
-
-  const cargarFacturas = async () => {
-    const idActual = historialItem?.id || historialActual?.id;
-    console.log('📸📸📸 CARGANDO FACTURAS para historial ID:', idActual);
-    
-    if (!idActual) return;
-    
-    setLoadingFacturas(true);
-    try {
-      const API_BASE = getApiBase();
-      const url = `${API_BASE}/mantenimiento/evidencias/historial/${idActual}`;
-      console.log('📡 Fetching facturas desde:', url);
-      
-      const response = await fetch(url);
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        console.log('📡 Respuesta facturas:', data);
-        if (data.ok) {
-          const backendBase = getBackendBase();
-          const facturasConUrlAbsoluta = (data.datos || []).map(fact => ({
-            ...fact,
-            url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
-          }));
-          console.log('✅ Facturas cargadas:', facturasConUrlAbsoluta.length);
-          setFacturas(facturasConUrlAbsoluta);
-        }
-      }
-    } catch (err) {
-      console.error('❌ Error cargando facturas:', err);
-    } finally {
-      setLoadingFacturas(false);
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    console.log(`📝 Campo cambiado: ${name} = ${value}`);
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const cargarVersiones = async () => {
-    const idActual = historialItem?.id || historialActual?.id;
-    console.log('📜📜📜 CARGANDO VERSIONES para historial ID:', idActual);
+  const handleFilesChange = (e) => {
+    const files = Array.from(e.target.files);
+    console.log('📎 Archivos seleccionados para facturas:', files.length);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    const validFiles = files.filter(file => allowedTypes.includes(file.type));
     
-    if (!idActual) return;
+    if (validFiles.length !== files.length) {
+      setError('Algunos archivos no son válidos. Solo JPG, PNG, GIF y PDF.');
+    }
     
-    setCargandoVersiones(true);
-    try {
-      // Simulación de versiones - en futuro usar API real
-      const versionesSimuladas = [];
-      const datos = historialActual || historialItem;
+    setNuevasFacturas(prev => [...prev, ...validFiles]);
+    
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+  };
+
+  const removeNewFile = (index) => {
+    console.log(`🗑️ Eliminando archivo preview ${index}`);
+    setNuevasFacturas(prev => prev.filter((_, i) => i !== index));
+    URL.revokeObjectURL(previewUrls[index]);
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadNewFacturas = async () => {
+    if (nuevasFacturas.length === 0) return [];
+    
+    console.log('📤 Subiendo nuevas facturas, cantidad:', nuevasFacturas.length);
+    const API_BASE = getApiBase();
+    const uploadedUrls = [];
+    
+    for (let i = 0; i < nuevasFacturas.length; i++) {
+      const file = nuevasFacturas[i];
+      const formDataFile = new FormData();
+      formDataFile.append('archivo', file);
+      formDataFile.append('tipo', 'factura');
+      formDataFile.append('entidad_id', historialItem.id);
       
-      if (datos?.campo_modificado) {
-        versionesSimuladas.push({
-          version: 1,
-          campo_modificado: datos.campo_modificado,
-          valor_anterior: datos.valor_anterior,
-          valor_nuevo: datos.valor_nuevo,
-          descripcion: datos.descripcion,
-          fecha_modificacion: datos.fecha || new Date().toISOString(),
-          modificado_por: datos.usuario || 'sistema'
+      try {
+        setUploadProgress(Math.round(((i + 1) / nuevasFacturas.length) * 100));
+        const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+          method: 'POST',
+          body: formDataFile
         });
+        const data = await response.json();
+        if (data.ok) {
+          uploadedUrls.push(data.url);
+          console.log(`✅ Factura ${i+1} subida:`, data.url);
+        } else {
+          console.error(`❌ Error subiendo factura ${i+1}:`, data);
+        }
+      } catch (err) {
+        console.error(`❌ Error subiendo archivo ${i}:`, err);
+      }
+    }
+    console.log(`📎 Total facturas subidas: ${uploadedUrls.length}`);
+    return uploadedUrls;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    console.log('🚀🚀🚀 EDITAR HISTORIAL - HANDLE SUBMIT 🚀🚀🚀');
+    console.log('📌 historialItem.id:', historialItem?.id);
+    console.log('📌 Datos del formulario:', {
+      campo_modificado: formData.campo_modificado,
+      valor_anterior: formData.valor_anterior,
+      valor_nuevo: formData.valor_nuevo,
+      descripcion: formData.descripcion
+    });
+    console.log('📌 nuevasFacturas.length:', nuevasFacturas.length);
+    
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!formData.campo_modificado) {
+        throw new Error('Selecciona el tipo de cambio');
+      }
+
+      let nuevasUrls = [];
+      if (nuevasFacturas.length > 0) {
+        setSubiendoFacturas(true);
+        nuevasUrls = await uploadNewFacturas();
+        console.log(`📎 Subidas ${nuevasUrls.length} nuevas facturas`);
+      }
+
+      console.log('📡 Enviando actualización a updateHistorial...');
+      const updateResult = await mantenimientoAPI.updateHistorial(historialItem.id, {
+        campo_modificado: formData.campo_modificado,
+        valor_anterior: formData.valor_anterior,
+        valor_nuevo: formData.valor_nuevo,
+        descripcion: formData.descripcion,
+        nuevas_facturas_urls: nuevasUrls
+      });
+      console.log('📡 Respuesta de updateHistorial:', updateResult);
+
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      console.log('📞 Llamando a onSuccess...');
+      if (onSuccess) {
+        await onSuccess();
+        console.log('✅ onSuccess completado');
+      } else {
+        console.log('⚠️ onSuccess no está definido');
       }
       
-      console.log('📜 Versiones generadas:', versionesSimuladas);
-      setVersiones(versionesSimuladas);
+      console.log('🔚 Cerrando modal de edición');
+      onClose();
+      console.log('✅ Modal cerrado correctamente');
     } catch (err) {
-      console.error('❌ Error cargando versiones:', err);
+      console.error('❌ Error en handleSubmit:', err);
+      setError(err.message);
     } finally {
-      setCargandoVersiones(false);
+      setLoading(false);
+      setSubiendoFacturas(false);
+      setUploadProgress(0);
     }
   };
 
-  const verVersionAnterior = (version) => {
-    console.log('👁️ Viendo versión anterior:', version);
-    setVistaPreviaVersion(version);
-    setMostrarSidebar(false);
-  };
-
-  const cerrarVistaPrevia = () => {
-    console.log('👁️ Cerrando vista previa');
-    setVistaPreviaVersion(null);
-  };
-
-  const handleEditSuccess = async () => {
-    console.log('🔵🔵🔵 HANDLE EDIT SUCCESS (HISTORIAL) - INICIANDO 🔵🔵🔵');
-    console.log('📌 historial actual antes de recargar:', historialActual);
-    
-    const historialActualizado = await cargarHistorialActualizado();
-    console.log('📌 historialActualizado después de cargar:', historialActualizado);
-    
-    if (historialActualizado) {
-      setHistorialActual(historialActualizado);
-      console.log('✅ historialActual actualizado');
+  // LOG: Cuando el modal se cierra
+  useEffect(() => {
+    if (!isOpen) {
+      console.log('🔴🔴🔴 EDITAR HISTORIAL - MODAL CERRADO 🔴🔴🔴');
     }
-    
-    await recargarDatosHistorial();
-    console.log('📌 onEdit será llamado');
-    if (onEdit) onEdit();
-    console.log('🔵🔵🔵 HANDLE EDIT SUCCESS (HISTORIAL) - FINALIZADO 🔵🔵🔵');
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'No definida';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Fecha inválida';
-    return date.toLocaleDateString('es-MX', { 
-      day: '2-digit', month: 'long', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-  };
-
-  const formatDateShort = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
-
-  const getCampoModificadoTexto = (campo) => {
-    const campos = {
-      'pieza_reemplazada': '🔧 Pieza Reemplazada',
-      'configuracion': '⚙️ Configuración',
-      'calibracion': '📏 Calibración',
-      'reparacion': '🛠️ Reparación',
-      'actualizacion': '🔄 Actualización',
-      'observacion': '📝 Observación',
-      'factura': '🧾 Factura / Comprobante'
-    };
-    return campos[campo] || campo;
-  };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  if (!historialActual && !historialItem) {
-    return (
-      <div className={styles.modalOverlay} onClick={onClose}>
-        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-          <div className={styles.modalHeader}>
-            <h2>Cargando...</h2>
-            <button className={styles.modalClose} onClick={onClose}>✕</button>
-          </div>
-          <div className={styles.modalBody}>
-            <p className={styles.loadingText}>Cargando información del registro...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (recargando) {
-    return (
-      <div className={styles.modalOverlay} onClick={onClose}>
-        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-          <div className={styles.modalHeader}>
-            <h2>Actualizando...</h2>
-            <button className={styles.modalClose} onClick={onClose}>✕</button>
-          </div>
-          <div className={styles.modalBody}>
-            <p className={styles.loadingText}>Actualizando información...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const datosMostrar = historialActual || historialItem;
-  const mostrarDatos = vistaPreviaVersion || datosMostrar;
-  const esVistaPrevia = vistaPreviaVersion !== null;
-
-  console.log('🎨🎨🎨 RENDERIZANDO MODAL HISTORIAL con datosMostrar:', datosMostrar);
-
   return (
-    <>
-      <div className={styles.modalOverlay} onClick={onClose}>
-        <div className={`${styles.modal} ${mostrarSidebar ? styles.withSidebar : ''}`} onClick={(e) => e.stopPropagation()}>
-          {mostrarSidebar && (
-            <div className={styles.sidebar}>
-              <div className={styles.sidebarHeader}>
-                <h3>📜 Versiones anteriores</h3>
-                <button className={styles.sidebarClose} onClick={() => setMostrarSidebar(false)}>✕</button>
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h2>✏️ Editar Registro de Cambio</h2>
+          <button className={styles.modalClose} onClick={onClose}>✕</button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className={styles.modalBody}>
+            {error && <div className={styles.errorMessage}>⚠️ {error}</div>}
+
+            <div className={styles.infoBox}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Registro ID:</span>
+                <span className={styles.infoValue}>#{historialItem?.id}</span>
               </div>
-              <div className={styles.sidebarContent}>
-                {cargandoVersiones ? (
-                  <p className={styles.loadingText}>Cargando...</p>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Equipo:</span>
+                <span className={styles.infoValue}>{equipoNombre}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Fecha:</span>
+                <span className={styles.infoValue}>{new Date(historialItem?.fecha).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Tipo de Cambio *</label>
+              <select 
+                name="campo_modificado" 
+                value={formData.campo_modificado} 
+                onChange={handleChange}
+                required
+              >
+                <option value="">Seleccionar...</option>
+                {campos.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+
+            <div className={styles.row}>
+              <div className={styles.formGroup}>
+                <label>Valor Anterior</label>
+                <input
+                  type="text"
+                  name="valor_anterior"
+                  value={formData.valor_anterior}
+                  onChange={handleChange}
+                  placeholder="Valor anterior / pieza vieja"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Valor Nuevo</label>
+                <input
+                  type="text"
+                  name="valor_nuevo"
+                  value={formData.valor_nuevo}
+                  onChange={handleChange}
+                  placeholder="Valor nuevo / pieza nueva"
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Descripción / Observaciones</label>
+              <textarea
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleChange}
+                rows="3"
+                placeholder="Detalles del cambio realizado..."
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>🧾 Añadir más facturas / Comprobantes</label>
+              <div className={styles.fileInputArea}>
+                <button type="button" className={styles.fileButton} onClick={() => fileInputRef.current?.click()}>
+                  📎 Seleccionar archivos adicionales
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,application/pdf"
+                  onChange={handleFilesChange}
+                  multiple
+                  className={styles.hiddenInput}
+                />
+                <span className={styles.fileHint}>Añade más facturas o comprobantes (no se borrarán los existentes)</span>
+              </div>
+              
+              {previewUrls.length > 0 && (
+                <div className={styles.previewGrid}>
+                  {previewUrls.map((url, idx) => (
+                    <div key={idx} className={styles.previewItem}>
+                      {url.match(/\.pdf$/i) ? (
+                        <div className={styles.pdfPreview}>📄 PDF</div>
+                      ) : (
+                        <img src={url} alt={`Nueva factura ${idx + 1}`} className={styles.previewImage} />
+                      )}
+                      <button type="button" className={styles.removePreview} onClick={() => removeNewFile(idx)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {uploadProgress > 0 && (
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
+                <span className={styles.progressText}>Subiendo nuevos archivos... {uploadProgress}%</span>
+              </div>
+            )}
+
+            <button 
+              type="button" 
+              className={styles.historialButton} 
+              onClick={() => setMostrarHistorial(!mostrarHistorial)}
+            >
+              📜 Ver historial de cambios ({versiones.length})
+            </button>
+
+            {mostrarHistorial && (
+              <div className={styles.historialContainer}>
+                {cargandoHistorial ? (
+                  <p className={styles.loadingText}>Cargando historial...</p>
                 ) : versiones.length > 0 ? (
                   versiones.map((v, idx) => (
-                    <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
-                      <div className={styles.versionHeaderSidebar}>
-                        <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
-                        <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                    <div key={idx} className={styles.versionItem}>
+                      <div className={styles.versionHeader}>
+                        <span className={styles.versionBadge}>Versión {v.version}</span>
+                        <span className={styles.versionDate}>{new Date(v.fecha_modificacion).toLocaleString()}</span>
+                        <span className={styles.versionUser}>👤 {v.modificado_por || 'sistema'}</span>
                       </div>
-                      <div className={styles.versionPreviewSidebar}>
-                        {v.descripcion?.substring(0, 60) || v.campo_modificado?.substring(0, 60)}...
+                      <div className={styles.versionContent}>
+                        {v.descripcion && <p><strong>Descripción:</strong> {v.descripcion}</p>}
+                        {v.valor_anterior && <p><strong>Valor anterior:</strong> {v.valor_anterior}</p>}
+                        {v.valor_nuevo && <p><strong>Valor nuevo:</strong> {v.valor_nuevo}</p>}
                       </div>
-                      <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
                     </div>
                   ))
                 ) : (
-                  <p className={styles.emptyMessage}>No hay versiones anteriores</p>
+                  <p className={styles.emptyMessage}>No hay versiones anteriores registradas</p>
                 )}
               </div>
-            </div>
-          )}
-
-          <div className={styles.modalMain}>
-            <div className={styles.modalHeader}>
-              <div className={styles.headerLeft}>
-                <h2>
-                  {esVistaPrevia ? (
-                    <span className={styles.versionPreviewBadge}>🔍 Vista previa - Versión {vistaPreviaVersion.version}</span>
-                  ) : (
-                    '📜 Detalle de Cambio Registrado'
-                  )}
-                </h2>
-                {versiones.length > 0 && !esVistaPrevia && (
-                  <button className={styles.historyButton} onClick={() => setMostrarSidebar(true)} title="Ver historial de versiones">
-                    ⏱️ {versiones.length}
-                  </button>
-                )}
-                {esVistaPrevia && (
-                  <button className={styles.backToCurrentBtn} onClick={cerrarVistaPrevia}>← Volver a versión actual</button>
-                )}
-              </div>
-              <button className={styles.modalClose} onClick={onClose}>✕</button>
-            </div>
-
-            <div className={styles.modalBody}>
-              <div className={styles.infoSection}>
-                <div className={styles.sectionHeader}>
-                  <h4 className={styles.sectionSubtitle}>📋 Información del cambio</h4>
-                  {!esVistaPrevia && (
-                    <button className={styles.editarButton} onClick={() => setShowEditModal(true)}>
-                      ✏️ Editar
-                    </button>
-                  )}
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>ID:</span>
-                  <span className={styles.infoValue}>#{datosMostrar.id}</span>
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Tipo de cambio:</span>
-                  <span className={styles.infoValue}>{getCampoModificadoTexto(mostrarDatos.campo_modificado)}</span>
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Equipo:</span>
-                  <span className={styles.infoValue}>{equipoNombre}</span>
-                </div>
-                {mostrarDatos.usuario && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Registrado por:</span>
-                    <span className={styles.infoValue}>{mostrarDatos.usuario}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.infoSection}>
-                <h4 className={styles.sectionSubtitle}>📅 Fecha del cambio</h4>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoValue}>{formatDate(mostrarDatos.fecha)}</span>
-                </div>
-              </div>
-
-              {(mostrarDatos.valor_anterior || mostrarDatos.valor_nuevo) && (
-                <div className={styles.infoSection}>
-                  <h4 className={styles.sectionSubtitle}>🔄 Valores del cambio</h4>
-                  {mostrarDatos.valor_anterior && (
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Valor anterior:</span>
-                      <span className={styles.valorAnterior}>{mostrarDatos.valor_anterior}</span>
-                    </div>
-                  )}
-                  {mostrarDatos.valor_nuevo && (
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Valor nuevo:</span>
-                      <span className={styles.valorNuevo}>{mostrarDatos.valor_nuevo}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {mostrarDatos.descripcion && (
-                <div className={styles.infoSection}>
-                  <h4 className={styles.sectionSubtitle}>📝 Descripción</h4>
-                  <div className={styles.descripcionBox}>{mostrarDatos.descripcion}</div>
-                </div>
-              )}
-
-              <div className={styles.infoSection}>
-                <h4 className={styles.sectionSubtitle}>🧾 Facturas / Comprobantes</h4>
-                {loadingFacturas ? (
-                  <p className={styles.loadingText}>Cargando documentos...</p>
-                ) : facturas.length > 0 ? (
-                  <ImageGallery images={facturas} title="Facturas y comprobantes" />
-                ) : (
-                  <p className={styles.emptyMessage}>No hay facturas o comprobantes adjuntos</p>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button className={styles.closeButton} onClick={onClose}>Cerrar</button>
-            </div>
+            )}
           </div>
-        </div>
-      </div>
 
-      <EditarHistorialModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        onSuccess={handleEditSuccess}
-        historialItem={datosMostrar}
-        equipoNombre={equipoNombre}
-      />
-    </>
+          <div className={styles.modalFooter}>
+            <button type="button" className={styles.cancelButton} onClick={onClose}>
+              Cancelar
+            </button>
+            <button type="submit" className={styles.submitButton} disabled={loading || subiendoFacturas}>
+              {loading ? 'Guardando...' : subiendoFacturas ? 'Subiendo archivos...' : '💾 Guardar cambios'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
