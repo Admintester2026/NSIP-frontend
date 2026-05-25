@@ -23,12 +23,39 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  // Estado local para la incidencia actualizada
+  const [incidenciaActual, setIncidenciaActual] = useState(null);
+
+  // Cargar la incidencia actualizada desde el backend
+  const cargarIncidenciaActualizada = async () => {
+    if (!incidencia?.id) return null;
+    try {
+      const API_BASE = getApiBase();
+      const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${incidencia.id}`);
+      const data = await response.json();
+      if (data.ok && data.datos && data.datos.length > 0) {
+        // Buscar la incidencia específica por ID
+        const incidenciaEncontrada = data.datos.find(i => i.id === incidencia.id);
+        if (incidenciaEncontrada) {
+          setIncidenciaActual(incidenciaEncontrada);
+          return incidenciaEncontrada;
+        }
+      }
+      return incidencia;
+    } catch (err) {
+      console.error('Error cargando incidencia actualizada:', err);
+      return incidencia;
+    }
+  };
 
   const recargarDatosIncidencia = async () => {
     if (!incidencia?.id) return;
     
     setRecargando(true);
     try {
+      // Recargar la incidencia actualizada
+      const incidenciaActualizada = await cargarIncidenciaActualizada();
       await cargarVersiones();
       await cargarEvidencias();
     } catch (err) {
@@ -42,10 +69,18 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     if (isOpen && incidencia?.id) {
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
+      setIncidenciaActual(incidencia); // Inicializar con la prop
       cargarEvidencias();
       cargarVersiones();
     }
   }, [isOpen, incidencia?.id]);
+
+  // Actualizar incidenciaActual cuando cambia la prop
+  useEffect(() => {
+    if (incidencia) {
+      setIncidenciaActual(incidencia);
+    }
+  }, [incidencia]);
 
   const cargarEvidencias = async () => {
     setLoadingEvidencias(true);
@@ -71,18 +106,15 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     }
   };
 
-  // Cargar historial de versiones de la incidencia desde la API
   const cargarVersiones = async () => {
     if (!incidencia?.id) return;
     setCargandoVersiones(true);
     try {
-      // Usar la API real para obtener el historial de versiones
       const data = await mantenimientoAPI.getHistorialVersionesIncidencia(incidencia.id);
       console.log('📜 Versiones de incidencia:', data);
       setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando versiones:', err);
-      // Si no hay tabla de historial aún, mostrar versión actual como única
       if (incidencia) {
         setVersiones([{
           version: 1,
@@ -114,7 +146,13 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   };
 
   const handleEditSuccess = async () => {
+    // Recargar la incidencia actualizada desde el backend
+    const incidenciaActualizada = await cargarIncidenciaActualizada();
+    if (incidenciaActualizada) {
+      setIncidenciaActual(incidenciaActualizada);
+    }
     await recargarDatosIncidencia();
+    // Notificar al padre que recargue los datos
     if (onEdit) onEdit();
   };
 
@@ -175,7 +213,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
 
   if (!isOpen) return null;
 
-  if (!incidencia) {
+  if (!incidenciaActual && !incidencia) {
     return (
       <div className={styles.modalOverlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -207,7 +245,8 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     );
   }
 
-  const mostrarDatos = vistaPreviaVersion || incidencia;
+  const datosMostrar = incidenciaActual || incidencia;
+  const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
 
   return (
@@ -224,7 +263,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
                 ) : versiones.length > 1 ? (
-                  // Mostrar todas excepto la versión actual (versión 1 es la más antigua)
                   [...versiones].sort((a, b) => b.version - a.version).map((v, idx) => (
                     v.version !== 1 && (
                       <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
@@ -280,7 +318,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>ID:</span>
-                  <span className={styles.infoValue}>#{incidencia.id}</span>
+                  <span className={styles.infoValue}>#{datosMostrar.id}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Título:</span>
@@ -381,7 +419,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
-        incidencia={incidencia}
+        incidencia={datosMostrar}
         equipoNombre={equipoNombre}
       />
     </>

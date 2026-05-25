@@ -23,12 +23,37 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  // Estado local para el historial actualizado
+  const [historialActual, setHistorialActual] = useState(null);
+
+  // Cargar el historial actualizado desde el backend
+  const cargarHistorialActualizado = async () => {
+    if (!historialItem?.id) return null;
+    try {
+      const API_BASE = getApiBase();
+      const response = await fetch(`${API_BASE}/mantenimiento/equipos/${historialItem.equipo_id}/historial`);
+      const data = await response.json();
+      if (data.ok && data.datos) {
+        const encontrado = data.datos.find(h => h.id === historialItem.id);
+        if (encontrado) {
+          setHistorialActual(encontrado);
+          return encontrado;
+        }
+      }
+      return historialItem;
+    } catch (err) {
+      console.error('Error cargando historial actualizado:', err);
+      return historialItem;
+    }
+  };
 
   const recargarDatosHistorial = async () => {
     if (!historialItem?.id) return;
     
     setRecargando(true);
     try {
+      await cargarHistorialActualizado();
       await cargarVersiones();
       await cargarFacturas();
     } catch (err) {
@@ -42,10 +67,17 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     if (isOpen && historialItem?.id) {
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
+      setHistorialActual(historialItem);
       cargarFacturas();
       cargarVersiones();
     }
   }, [isOpen, historialItem?.id]);
+
+  useEffect(() => {
+    if (historialItem) {
+      setHistorialActual(historialItem);
+    }
+  }, [historialItem]);
 
   const cargarFacturas = async () => {
     setLoadingFacturas(true);
@@ -71,16 +103,11 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
   };
 
-  // Cargar historial de versiones del registro
   const cargarVersiones = async () => {
     if (!historialItem?.id) return;
     setCargandoVersiones(true);
     try {
-      // Intentar obtener versiones del historial
-      // Por ahora, generamos versiones simuladas
       const versionesSimuladas = [];
-      
-      // Si el historial tiene datos, mostrar como versión
       if (historialItem.campo_modificado) {
         versionesSimuladas.push({
           version: 1,
@@ -92,7 +119,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
           modificado_por: historialItem.usuario || 'sistema'
         });
       }
-      
       setVersiones(versionesSimuladas);
     } catch (err) {
       console.error('Error cargando versiones:', err);
@@ -111,6 +137,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   };
 
   const handleEditSuccess = async () => {
+    await cargarHistorialActualizado();
     await recargarDatosHistorial();
     if (onEdit) onEdit();
   };
@@ -147,7 +174,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
 
   if (!isOpen) return null;
 
-  if (!historialItem) {
+  if (!historialActual && !historialItem) {
     return (
       <div className={styles.modalOverlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -179,7 +206,8 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     );
   }
 
-  const mostrarDatos = vistaPreviaVersion || historialItem;
+  const datosMostrar = historialActual || historialItem;
+  const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
 
   return (
@@ -249,7 +277,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>ID:</span>
-                  <span className={styles.infoValue}>#{historialItem.id}</span>
+                  <span className={styles.infoValue}>#{datosMostrar.id}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Tipo de cambio:</span>
@@ -323,7 +351,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
-        historialItem={historialItem}
+        historialItem={datosMostrar}
         equipoNombre={equipoNombre}
       />
     </>
