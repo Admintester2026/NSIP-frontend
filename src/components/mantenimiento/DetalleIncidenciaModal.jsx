@@ -23,18 +23,23 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [incidenciaActual, setIncidenciaActual] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Limpiar estado cuando se cierra el modal
+  useEffect(() => {
+    if (!isOpen) {
+      setIncidenciaActual(null);
+      setShowEditModal(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (incidencia) {
-      console.log('📌 [DetalleIncidencia] incidencia PROP actualizada:', incidencia.id);
       setIncidenciaActual(incidencia);
     }
   }, [incidencia]);
 
   useEffect(() => {
     if (isOpen && incidencia?.id) {
-      console.log('🎬 [DetalleIncidencia] Modal abierto con incidencia ID:', incidencia.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setIncidenciaActual(incidencia);
@@ -44,50 +49,39 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
 
   const recargarIncidenciaCompleta = async () => {
     const idActual = incidenciaActual?.id || incidencia?.id;
-    if (!idActual || !equipoId) {
-      console.log('⚠️ [DetalleIncidencia] Faltan IDs:', { idActual, equipoId });
-      return;
-    }
+    if (!idActual || !equipoId) return;
     
-    console.log('🔄 [DetalleIncidencia] Recargando datos de incidencia ID:', idActual, 'Equipo ID:', equipoId);
     setRecargando(true);
     try {
       await cargarIncidenciaDesdeBackend(idActual, equipoId);
       await cargarEvidencias(idActual);
       await cargarVersiones(idActual);
     } catch (err) {
-      console.error('❌ Error recargando incidencia:', err);
+      console.error('Error recargando incidencia:', err);
     } finally {
       setRecargando(false);
     }
   };
 
   const cargarIncidenciaDesdeBackend = async (idActual, equipoIdActual) => {
-    console.log('🔍 [DetalleIncidencia] Buscando incidencia ID:', idActual, 'en equipo:', equipoIdActual);
     try {
       const API_BASE = getApiBase();
       const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${equipoIdActual}`);
       const data = await response.json();
-      console.log('📡 [DetalleIncidencia] Respuesta del backend:', data);
-      
       if (data.ok && data.datos) {
         const encontrada = data.datos.find(i => i.id === idActual);
         if (encontrada) {
-          console.log('✅ [DetalleIncidencia] Incidencia encontrada:', encontrada);
           setIncidenciaActual(encontrada);
-        } else {
-          console.log('⚠️ [DetalleIncidencia] No se encontró la incidencia');
         }
       }
     } catch (err) {
-      console.error('❌ Error cargando incidencia:', err);
+      console.error('Error cargando incidencia:', err);
     }
   };
 
   const cargarEvidencias = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📸 [DetalleIncidencia] Cargando evidencias para ID:', idActual);
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
@@ -101,7 +95,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
             ...ev,
             url: ev.url.startsWith('http') ? ev.url : `${backendBase}${ev.url}`
           }));
-          console.log('✅ [DetalleIncidencia] Evidencias cargadas:', evidenciasConUrlAbsoluta.length);
           setEvidencias(evidenciasConUrlAbsoluta);
         }
       }
@@ -115,14 +108,12 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📜 [DetalleIncidencia] Cargando versiones para ID:', idActual);
     setCargandoVersiones(true);
     try {
       const data = await mantenimientoAPI.getHistorialVersionesIncidencia(idActual);
-      console.log('📜 [DetalleIncidencia] Versiones recibidas:', data?.length || 0);
       setVersiones(data || []);
     } catch (err) {
-      console.error('❌ Error cargando versiones:', err);
+      console.error('Error cargando versiones:', err);
       setVersiones([]);
     } finally {
       setCargandoVersiones(false);
@@ -130,32 +121,21 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   };
 
   const verVersionAnterior = (version) => {
-    console.log('👁️ [DetalleIncidencia] Viendo versión:', version.version);
     setVistaPreviaVersion(version);
     setMostrarSidebar(false);
   };
 
   const cerrarVistaPrevia = () => {
-    console.log('👁️ [DetalleIncidencia] Cerrando vista previa');
     setVistaPreviaVersion(null);
   };
 
   const handleEditSuccess = async () => {
-    console.log('🔵🔵🔵 [DetalleIncidencia] handleEditSuccess - INICIADO 🔵🔵🔵');
-    
     if (onEdit) {
-      console.log('📞 Llamando a onEdit del padre...');
       await onEdit();
     }
-    
-    console.log('🔄 Recargando todos los datos...');
     await recargarIncidenciaCompleta();
-    setRefreshKey(prev => prev + 1);
-    
-    console.log('🔵🔵🔵 [DetalleIncidencia] handleEditSuccess - FINALIZADO 🔵🔵🔵');
   };
 
-  // Resto del componente igual...
   const formatDate = (dateString) => {
     if (!dateString) return 'No definida';
     const date = new Date(dateString);
@@ -248,12 +228,6 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const datosMostrar = incidenciaActual || incidencia;
   const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
-
-  console.log('🎨 [DetalleIncidencia] Renderizando con datos:', { 
-    id: datosMostrar?.id, 
-    titulo: datosMostrar?.titulo,
-    versionesCount: versiones.length 
-  });
 
   return (
     <>
@@ -421,7 +395,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
       </div>
 
       <EditarIncidenciaModal
-        key={refreshKey}
+        key={incidenciaActual?.id} // ← CLAVE ÚNICA PARA CADA INCIDENCIA
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}

@@ -23,11 +23,24 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [historialActual, setHistorialActual] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [historialOriginalId, setHistorialOriginalId] = useState(null);
+
+  // Limpiar estado cuando se cierra el modal
+  useEffect(() => {
+    if (!isOpen) {
+      setHistorialActual(null);
+      setVersiones([]);
+      setShowEditModal(false);
+      setHistorialOriginalId(null);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (historialItem) {
       setHistorialActual(historialItem);
+      if (historialItem.id !== historialOriginalId) {
+        setHistorialOriginalId(historialItem.id);
+      }
     }
   }, [historialItem]);
 
@@ -98,28 +111,53 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
   };
 
+  // Cargar versiones acumuladas del historial
   const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
     setCargandoVersiones(true);
     try {
-      // Para historial, generamos versiones simuladas basadas en cambios anteriores
-      const versionesSimuladas = [];
-      const datos = historialActual || historialItem;
+      // Obtener todas las versiones del historial desde el backend
+      // Como no hay tabla de versiones para historial, generamos múltiples versiones
+      // basadas en los cambios registrados en la misma tabla
+      const API_BASE = getApiBase();
+      const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoId}/historial`);
+      const data = await response.json();
       
-      if (datos?.campo_modificado) {
-        versionesSimuladas.push({
-          version: 1,
-          campo_modificado: datos.campo_modificado,
-          valor_anterior: datos.valor_anterior,
-          valor_nuevo: datos.valor_nuevo,
-          descripcion: datos.descripcion,
-          fecha_modificacion: datos.fecha || new Date().toISOString(),
-          modificado_por: datos.usuario || 'sistema'
-        });
+      if (data.ok && data.datos) {
+        // Filtrar solo los registros del mismo campo_modificado para este equipo
+        // y ordenar por fecha para crear versiones
+        const registrosDelMismoCampo = data.datos.filter(h => 
+          h.campo_modificado === historialActual?.campo_modificado
+        );
+        
+        // Crear versiones simuladas basadas en los cambios históricos
+        const versionesGeneradas = registrosDelMismoCampo.map((h, index) => ({
+          version: registrosDelMismoCampo.length - index,
+          campo_modificado: h.campo_modificado,
+          valor_anterior: h.valor_anterior,
+          valor_nuevo: h.valor_nuevo,
+          descripcion: h.descripcion,
+          fecha_modificacion: h.fecha,
+          modificado_por: h.usuario || 'sistema'
+        }));
+        
+        setVersiones(versionesGeneradas);
+      } else {
+        // Fallback: solo la versión actual
+        const datos = historialActual || historialItem;
+        if (datos?.campo_modificado) {
+          setVersiones([{
+            version: 1,
+            campo_modificado: datos.campo_modificado,
+            valor_anterior: datos.valor_anterior,
+            valor_nuevo: datos.valor_nuevo,
+            descripcion: datos.descripcion,
+            fecha_modificacion: datos.fecha || new Date().toISOString(),
+            modificado_por: datos.usuario || 'sistema'
+          }]);
+        }
       }
-      
-      setVersiones(versionesSimuladas);
     } catch (err) {
       console.error('Error cargando versiones:', err);
     } finally {
@@ -141,7 +179,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
       await onEdit();
     }
     await recargarHistorialCompleto();
-    setRefreshKey(prev => prev + 1);
   };
 
   const formatDate = (dateString) => {
@@ -225,18 +262,20 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
               <div className={styles.sidebarContent}>
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
-                ) : versiones.length > 0 ? (
+                ) : versiones.length > 1 ? (
                   versiones.map((v, idx) => (
-                    <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
-                      <div className={styles.versionHeaderSidebar}>
-                        <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
-                        <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                    v.version !== versiones[0]?.version && (
+                      <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
+                        <div className={styles.versionHeaderSidebar}>
+                          <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
+                          <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                        </div>
+                        <div className={styles.versionPreviewSidebar}>
+                          {v.descripcion?.substring(0, 60) || v.campo_modificado?.substring(0, 60)}...
+                        </div>
+                        <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
                       </div>
-                      <div className={styles.versionPreviewSidebar}>
-                        {v.descripcion?.substring(0, 60) || v.campo_modificado?.substring(0, 60)}...
-                      </div>
-                      <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
-                    </div>
+                    )
                   ))
                 ) : (
                   <p className={styles.emptyMessage}>No hay versiones anteriores</p>
@@ -255,9 +294,9 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                     '📜 Detalle de Cambio Registrado'
                   )}
                 </h2>
-                {versiones.length > 0 && !esVistaPrevia && (
+                {versiones.length > 1 && !esVistaPrevia && (
                   <button className={styles.historyButton} onClick={() => setMostrarSidebar(true)} title="Ver historial de versiones">
-                    ⏱️ {versiones.length}
+                    ⏱️ {versiones.length - 1}
                   </button>
                 )}
                 {esVistaPrevia && (
@@ -349,7 +388,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
       </div>
 
       <EditarHistorialModal
-        key={refreshKey}
+        key={historialActual?.id} // ← CLAVE ÚNICA PARA CADA HISTORIAL
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}

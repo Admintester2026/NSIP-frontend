@@ -23,7 +23,14 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [mantenimientoActual, setMantenimientoActual] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Limpiar estado cuando se cierra el modal
+  useEffect(() => {
+    if (!isOpen) {
+      setMantenimientoActual(null);
+      setShowEditModal(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (mantenimiento) {
@@ -42,11 +49,11 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
 
   const recargarMantenimientoCompleto = async () => {
     const idActual = mantenimientoActual?.id || mantenimiento?.id;
-    if (!idActual) return;
+    if (!idActual || !equipoId) return;
     
     setRecargando(true);
     try {
-      await cargarMantenimientoDesdeBackend(idActual);
+      await cargarMantenimientoDesdeBackend(idActual, equipoId);
       await cargarEvidencias(idActual);
       await cargarVersiones(idActual);
     } catch (err) {
@@ -56,10 +63,10 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     }
   };
 
-  const cargarMantenimientoDesdeBackend = async (idActual) => {
+  const cargarMantenimientoDesdeBackend = async (idActual, equipoIdActual) => {
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/mantenimientos/equipo/${idActual}`);
+      const response = await fetch(`${API_BASE}/mantenimiento/mantenimientos/equipo/${equipoIdActual}`);
       const data = await response.json();
       if (data.ok && data.datos) {
         const encontrado = data.datos.find(m => m.id === idActual);
@@ -126,7 +133,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
       await onEdit();
     }
     await recargarMantenimientoCompleto();
-    setRefreshKey(prev => prev + 1);
   };
 
   const formatDate = (dateString) => {
@@ -197,16 +203,18 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
               <div className={styles.sidebarContent}>
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
-                ) : versiones.length > 0 ? (
+                ) : versiones.length > 1 ? (
                   versiones.map((v, idx) => (
-                    <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
-                      <div className={styles.versionHeaderSidebar}>
-                        <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
-                        <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                    v.version !== versiones[0]?.version && (
+                      <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
+                        <div className={styles.versionHeaderSidebar}>
+                          <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
+                          <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
+                        </div>
+                        <div className={styles.versionPreviewSidebar}>{v.notas_completado?.substring(0, 60)}...</div>
+                        <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
                       </div>
-                      <div className={styles.versionPreviewSidebar}>{v.notas_completado?.substring(0, 60)}...</div>
-                      <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
-                    </div>
+                    )
                   ))
                 ) : (
                   <p className={styles.emptyMessage}>No hay versiones anteriores</p>
@@ -225,9 +233,9 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
                     '📋 Detalle del Mantenimiento'
                   )}
                 </h2>
-                {versiones.length > 0 && !esVistaPrevia && (
+                {versiones.length > 1 && !esVistaPrevia && (
                   <button className={styles.historyButton} onClick={() => setMostrarSidebar(true)} title="Ver historial de versiones">
-                    ⏱️ {versiones.length}
+                    ⏱️ {versiones.length - 1}
                   </button>
                 )}
                 {esVistaPrevia && (
@@ -308,7 +316,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
       </div>
 
       <EditarMantenimientoModal
-        key={refreshKey}
+        key={mantenimientoActual?.id} // ← CLAVE ÚNICA PARA CADA MANTENIMIENTO
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
