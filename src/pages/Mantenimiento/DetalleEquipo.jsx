@@ -259,7 +259,7 @@ export default function DetalleEquipo() {
       await mantenimientoAPI.addEquipoPhoto(id, photo.url);
     }
     await cargarFotosEquipo();
-    await cargarDatos(); // Recargar equipo para actualizar foto principal
+    await cargarDatos();
     setAlertMessage(`✅ ${newPhotos.length} foto(s) agregada(s) correctamente`);
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
@@ -268,19 +268,18 @@ export default function DetalleEquipo() {
   const handleSelectProfilePhoto = async (fotoUrl) => {
     await mantenimientoAPI.setPrincipalPhoto(id, fotoUrl);
     await cargarFotosEquipo();
-    await cargarDatos(); // Recargar equipo para actualizar foto principal
+    await cargarDatos();
     setAlertMessage('✅ Foto de perfil actualizada');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
   };
 
   const handleDeletePhoto = async (fotoUrl, index) => {
-    // Encontrar el ID de la foto por URL
     const photoToDelete = equipoPhotos.find(p => p.foto_url === fotoUrl);
     if (photoToDelete) {
       await mantenimientoAPI.deleteEquipoPhoto(id, photoToDelete.id);
       await cargarFotosEquipo();
-      await cargarDatos(); // Recargar equipo para actualizar foto principal si era la principal
+      await cargarDatos();
       setAlertMessage('🗑️ Foto eliminada');
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
@@ -332,7 +331,6 @@ export default function DetalleEquipo() {
       setIncidencias(incidenciasResult.status === 'fulfilled' ? incidenciasResult.value || [] : []);
       setHistorial(historialResult.status === 'fulfilled' ? historialResult.value || [] : []);
       
-      // Cargar fotos del equipo
       await cargarFotosEquipo();
       
       retryCountRef.current = 0;
@@ -395,6 +393,7 @@ export default function DetalleEquipo() {
   const handleEditSuccess = () => {
     setShowEditModal(false);
     cargarDatos();
+    cargarFotosEquipo();
   };
 
   const handleDeleteClick = () => {
@@ -466,6 +465,7 @@ export default function DetalleEquipo() {
     setShowCompletarModal(false);
     setMantenimientoACompletar(null);
     cargarDatos();
+    cargarFotosEquipo();
     setAlertMessage('✅ Mantenimiento completado exitosamente');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
@@ -829,7 +829,6 @@ export default function DetalleEquipo() {
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>📸 Galería de Fotos del Equipo</h3>
               
-              {/* Galería de múltiples fotos */}
               <EquipmentPhotoGallery 
                 photos={equipoPhotos}
                 selectedPhotoUrl={equipo.foto_url}
@@ -840,7 +839,6 @@ export default function DetalleEquipo() {
                 readOnly={false}
               />
 
-              {/* Mostrar documentos técnicos (Ficha Técnica y Manual) con DocumentViewer */}
               {documentosTecnicos.length > 0 && (
                 <>
                   <div className={styles.divider}></div>
@@ -851,7 +849,6 @@ export default function DetalleEquipo() {
                 </>
               )}
 
-              {/* Si no hay ningún documento técnico ni fotos */}
               {documentosTecnicos.length === 0 && equipoPhotos.length === 0 && (
                 <p className={styles.emptyMessage}>No hay documentos ni fotos cargadas para este equipo</p>
               )}
