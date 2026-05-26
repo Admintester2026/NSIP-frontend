@@ -1,4 +1,3 @@
-// FRONTEND/src/components/mantenimiento/AddEquipmentModal.jsx
 import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './AddEquipmentModal.module.css';
@@ -23,10 +22,13 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [nombreSugerencias, setNombreSugerencias] = useState([]);
+  
+  // Estados para validación de campos tocados
   const [touched, setTouched] = useState({
     nombre: false,
     ubicacion: false,
-    descripcion: false
+    descripcion: false,
+    categorias: false
   });
   
   const fotoInputRef = useRef(null);
@@ -70,8 +72,14 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           manual_url: ''
         });
       }
+      // Resetear touched
+      setTouched({
+        nombre: false,
+        ubicacion: false,
+        descripcion: false,
+        categorias: false
+      });
       setError('');
-      setTouched({ nombre: false, ubicacion: false, descripcion: false });
     }
   }, [isOpen, editMode, equipoData]);
 
@@ -97,6 +105,9 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Marcar como tocado
+    setTouched(prev => ({ ...prev, [name]: true }));
     
     // Solo mostrar sugerencias en modo creación y si no es edición
     if (!editMode && name === 'nombre' && value.length > 2) {
@@ -126,14 +137,14 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       
       return { ...prev, categorias: categoriasSeleccionadas };
     });
+    // Marcar categorías como tocadas
+    setTouched(prev => ({ ...prev, categorias: true }));
   };
 
   const handleFileChange = (e, tipo) => {
     const file = e.target.files[0];
     if (file) {
-      // Límite temporal (después lo aumentamos)
-      const maxSize = 50 * 1024 * 1024; // 50MB para imágenes
-      if (file.size > maxSize) {
+      if (file.size > 50 * 1024 * 1024) { // Aumentado a 50MB para imágenes
         setError(`El archivo es demasiado grande. Máximo 50MB para imágenes`);
         return;
       }
@@ -151,6 +162,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const handleSugerenciaClick = (nombre) => {
     setFormData(prev => ({ ...prev, nombre }));
     setSugerencias([]);
+    setTouched(prev => ({ ...prev, nombre: true }));
   };
 
   const uploadFile = async (file, tipo) => {
@@ -173,6 +185,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     }
   };
 
+  // Validar el formulario
   const validateForm = () => {
     const errors = [];
     
@@ -181,17 +194,32 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       setTouched(prev => ({ ...prev, nombre: true }));
     }
     
-    if (errors.length > 0) {
-      setError(errors.join('. '));
-      return false;
+    if (!formData.ubicacion.trim()) {
+      errors.push('La ubicación es requerida');
+      setTouched(prev => ({ ...prev, ubicacion: true }));
     }
-    return true;
+    
+    if (!formData.descripcion.trim()) {
+      errors.push('La descripción es requerida');
+      setTouched(prev => ({ ...prev, descripcion: true }));
+    }
+    
+    if (formData.categorias.length === 0) {
+      errors.push('Debes seleccionar al menos una categoría');
+      setTouched(prev => ({ ...prev, categorias: true }));
+    }
+    
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join('. '));
+      return;
+    }
     
     setLoading(true);
     setError('');
@@ -203,10 +231,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       let manualUrl = formData.manual_url;
 
       if (formData.foto) {
-        fotoUrl = await uploadFile(formData.foto, 'foto');
+        fotoUrl = await uploadFile(formData.foto, 'foto_equipo');
       }
       if (formData.ficha_tecnica) {
-        fichaUrl = await uploadFile(formData.ficha_tecnica, 'ficha');
+        fichaUrl = await uploadFile(formData.ficha_tecnica, 'ficha_tecnica');
       }
       if (formData.manual) {
         manualUrl = await uploadFile(formData.manual, 'manual');
@@ -214,8 +242,8 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
 
       const equipoDataToSend = {
         nombre: formData.nombre.trim(),
-        ubicacion: formData.ubicacion.trim() || null,
-        descripcion: formData.descripcion.trim() || null,
+        ubicacion: formData.ubicacion.trim(),
+        descripcion: formData.descripcion.trim(),
         categorias: formData.categorias,
         foto_url: fotoUrl,
         ficha_tecnica_url: fichaUrl,
@@ -254,6 +282,14 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     }
   };
 
+  // Verificar si un campo tiene error
+  const hasError = (field) => {
+    return touched[field] && (
+      (field === 'categorias' && formData.categorias.length === 0) ||
+      (field !== 'categorias' && !formData[field]?.trim())
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -272,7 +308,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
               </div>
             )}
 
-            <div className={styles.formGroup}>
+            <div className={`${styles.formGroup} ${hasError('nombre') ? styles.hasError : ''}`}>
               <label className={styles.label}>
                 Nombre del equipo <span className={styles.required}>*</span>
               </label>
@@ -282,12 +318,11 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
                 value={formData.nombre}
                 onChange={handleInputChange}
                 onBlur={() => handleBlur('nombre')}
-                className={`${styles.input} ${touched.nombre && !formData.nombre.trim() ? styles.inputError : ''}`}
+                className={`${styles.input} ${hasError('nombre') ? styles.inputError : ''}`}
                 placeholder="Ej: Centrífuga, Microscopio, Reactor..."
                 autoComplete="off"
-                required
               />
-              {touched.nombre && !formData.nombre.trim() && (
+              {hasError('nombre') && (
                 <span className={styles.errorText}>El nombre del equipo es requerido</span>
               )}
               {sugerencias.length > 0 && !editMode && (
@@ -305,32 +340,46 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
               )}
             </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Ubicación</label>
+            <div className={`${styles.formGroup} ${hasError('ubicacion') ? styles.hasError : ''}`}>
+              <label className={styles.label}>
+                Ubicación <span className={styles.required}>*</span>
+              </label>
               <input
                 type="text"
                 name="ubicacion"
                 value={formData.ubicacion}
                 onChange={handleInputChange}
-                className={styles.input}
+                onBlur={() => handleBlur('ubicacion')}
+                className={`${styles.input} ${hasError('ubicacion') ? styles.inputError : ''}`}
                 placeholder="Ej: Laboratorio 1, Planta Baja..."
               />
+              {hasError('ubicacion') && (
+                <span className={styles.errorText}>La ubicación es requerida</span>
+              )}
             </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Descripción</label>
+            <div className={`${styles.formGroup} ${hasError('descripcion') ? styles.hasError : ''}`}>
+              <label className={styles.label}>
+                Descripción <span className={styles.required}>*</span>
+              </label>
               <textarea
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleInputChange}
-                className={styles.textarea}
+                onBlur={() => handleBlur('descripcion')}
+                className={`${styles.textarea} ${hasError('descripcion') ? styles.inputError : ''}`}
                 rows="3"
                 placeholder="Características, especificaciones, etc."
               />
+              {hasError('descripcion') && (
+                <span className={styles.errorText}>La descripción es requerida</span>
+              )}
             </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Categorías / Etiquetas</label>
+            <div className={`${styles.formGroup} ${hasError('categorias') ? styles.hasError : ''}`}>
+              <label className={styles.label}>
+                Categorías / Etiquetas <span className={styles.required}>* (mínimo una)</span>
+              </label>
               <div className={styles.categoriasGrid}>
                 {categoriasDisponibles.map(cat => (
                   <button
@@ -350,6 +399,14 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
                   </button>
                 ))}
               </div>
+              {hasError('categorias') && (
+                <span className={styles.errorText}>Debes seleccionar al menos una categoría</span>
+              )}
+              {formData.categorias.length > 0 && (
+                <span className={styles.categoriasCount}>
+                  ✅ {formData.categorias.length} categoría(s) seleccionada(s)
+                </span>
+              )}
             </div>
 
             <div className={styles.formGroup}>
