@@ -1,3 +1,4 @@
+// FRONTEND/src/components/mantenimiento/EquipmentCard.jsx
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import styles from './EquipmentCard.module.css';
@@ -45,15 +46,41 @@ export default function EquipmentCard({
   const categoriasMostrar = categoriasList.slice(0, 3);
   const tieneMas = categoriasList.length > 3;
 
+  // FUNCIÓN CORREGIDA PARA FORMATAR FECHAS
   const formatDate = (dateString) => {
     if (!dateString) return null;
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return null;
-    return date.toLocaleDateString('es-MX', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
-    });
+    
+    // Intentar parsear la fecha
+    let date;
+    try {
+      // Si es un string ISO como '2026-05-22T21:06:06.110Z'
+      if (typeof dateString === 'string') {
+        date = new Date(dateString);
+      } else if (dateString instanceof Date) {
+        date = dateString;
+      } else {
+        return null;
+      }
+      
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        // Intentar formato YYYY-MM-DD
+        const parts = dateString.split('T')[0].split('-');
+        if (parts.length === 3) {
+          date = new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+        if (isNaN(date.getTime())) return null;
+      }
+      
+      return date.toLocaleDateString('es-MX', { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    } catch (err) {
+      console.error('Error formateando fecha:', dateString, err);
+      return null;
+    }
   };
 
   const handleSelectClick = (e) => {
@@ -64,6 +91,9 @@ export default function EquipmentCard({
 
   const ultimoMantFecha = ultimoMantenimiento?.fecha || ultimoMantenimiento;
   const proximoMantFecha = proximoMantenimiento?.fecha || proximoMantenimiento;
+  
+  // Formatear la fecha de registro de forma segura
+  const fechaRegistroFormateada = formatDate(equipo.fecha_registro);
 
   return (
     <div className={`${styles.cardWrapper} ${isSelected ? styles.selected : ''}`}>
@@ -150,7 +180,7 @@ export default function EquipmentCard({
 
         <div className={styles.cardFooter}>
           <span className={styles.fecha}>
-            📅 {formatDate(equipo.fecha_registro) || 'Fecha desconocida'}
+            📅 {fechaRegistroFormateada || 'Fecha desconocida'}
           </span>
           <span className={styles.verDetalle}>
             Ver detalles →
