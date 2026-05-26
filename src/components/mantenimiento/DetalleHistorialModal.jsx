@@ -25,56 +25,61 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const [historialActual, setHistorialActual] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Actualizar el historial actual cuando cambia la prop
   useEffect(() => {
     if (historialItem) {
+      console.log('📌 [DetalleHistorial] historialItem PROP actualizada:', historialItem.id);
       setHistorialActual(historialItem);
     }
   }, [historialItem]);
 
   useEffect(() => {
     if (isOpen && historialItem?.id) {
+      console.log('🎬 [DetalleHistorial] Modal abierto con historial ID:', historialItem.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
-      recargarHistorialCompleto();
+      setHistorialActual(historialItem);
+      cargarTodo();
     }
   }, [isOpen, historialItem?.id]);
 
-  // FUNCIÓN CLAVE: Recarga TODOS los datos del historial
-  const recargarHistorialCompleto = async () => {
+  const cargarTodo = async () => {
+    console.log('🔄 [DetalleHistorial] Iniciando carga completa...');
+    await cargarHistorialDesdeBackend();
+    await cargarFacturas();
+    await cargarVersiones();
+  };
+
+  const cargarHistorialDesdeBackend = async () => {
     const idActual = historialActual?.id || historialItem?.id;
     const equipoIdActual = equipoId || historialItem?.equipo_id;
     if (!idActual || !equipoIdActual) return;
     
-    setRecargando(true);
+    console.log('🔍 [DetalleHistorial] Recargando historial ID:', idActual, 'Equipo ID:', equipoIdActual);
     try {
-      // 1. Recargar el historial desde el backend
       const API_BASE = getApiBase();
       const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
       const data = await response.json();
+      console.log('📡 [DetalleHistorial] Respuesta del backend:', data);
+      
       if (data.ok && data.datos) {
-        const historialEncontrado = data.datos.find(h => h.id === idActual);
-        if (historialEncontrado) {
-          setHistorialActual(historialEncontrado);
+        const encontrado = data.datos.find(h => h.id === idActual);
+        if (encontrado) {
+          console.log('✅ [DetalleHistorial] Historial encontrado:', encontrado);
+          setHistorialActual(encontrado);
+        } else {
+          console.log('⚠️ [DetalleHistorial] No se encontró el historial');
         }
       }
-      
-      // 2. Recargar facturas
-      await cargarFacturas(idActual);
-      
-      // 3. Recargar versiones
-      await cargarVersiones(idActual);
-      
     } catch (err) {
-      console.error('Error recargando historial:', err);
-    } finally {
-      setRecargando(false);
+      console.error('❌ [DetalleHistorial] Error cargando historial:', err);
     }
   };
 
-  const cargarFacturas = async (idActual) => {
+  const cargarFacturas = async () => {
+    const idActual = historialActual?.id || historialItem?.id;
     if (!idActual) return;
     
+    console.log('📸 [DetalleHistorial] Cargando facturas para ID:', idActual);
     setLoadingFacturas(true);
     try {
       const API_BASE = getApiBase();
@@ -88,64 +93,79 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             ...fact,
             url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
           }));
+          console.log('✅ [DetalleHistorial] Facturas cargadas:', facturasConUrlAbsoluta.length);
           setFacturas(facturasConUrlAbsoluta);
         }
       }
     } catch (err) {
-      console.error('Error cargando facturas:', err);
+      console.error('❌ Error cargando facturas:', err);
     } finally {
       setLoadingFacturas(false);
     }
   };
 
-  const cargarVersiones = async (idActual) => {
+  const cargarVersiones = async () => {
+    const idActual = historialActual?.id || historialItem?.id;
     if (!idActual) return;
     
+    console.log('📜 [DetalleHistorial] Cargando versiones para historial ID:', idActual);
     setCargandoVersiones(true);
     try {
-      // Intentar obtener versiones del historial desde el backend
-      const versionesSimuladas = [];
+      // Para historial de equipos, las versiones son los propios registros
+      // Cada vez que se edita, se crea un NUEVO registro en historial_equipos
+      // Por ahora, mostramos el registro actual como única versión
+      // En el futuro, si quieres versionado, necesitarías una tabla historial_equipos_historial
       
-      if (historialActual || historialItem) {
-        const datos = historialActual || historialItem;
-        if (datos?.campo_modificado) {
-          versionesSimuladas.push({
-            version: 1,
-            campo_modificado: datos.campo_modificado,
-            valor_anterior: datos.valor_anterior,
-            valor_nuevo: datos.valor_nuevo,
-            descripcion: datos.descripcion,
-            fecha_modificacion: datos.fecha || new Date().toISOString(),
-            modificado_por: datos.usuario || 'sistema'
-          });
-        }
+      const versionesSimuladas = [];
+      const datos = historialActual || historialItem;
+      
+      if (datos?.campo_modificado) {
+        versionesSimuladas.push({
+          version: 1,
+          campo_modificado: datos.campo_modificado,
+          valor_anterior: datos.valor_anterior,
+          valor_nuevo: datos.valor_nuevo,
+          descripcion: datos.descripcion,
+          fecha_modificacion: datos.fecha || new Date().toISOString(),
+          modificado_por: datos.usuario || 'sistema'
+        });
       }
       
+      console.log('📜 [DetalleHistorial] Versiones generadas:', versionesSimuladas.length);
       setVersiones(versionesSimuladas);
     } catch (err) {
-      console.error('Error cargando versiones:', err);
+      console.error('❌ Error cargando versiones:', err);
     } finally {
       setCargandoVersiones(false);
     }
   };
 
   const verVersionAnterior = (version) => {
+    console.log('👁️ [DetalleHistorial] Viendo versión:', version.version);
     setVistaPreviaVersion(version);
     setMostrarSidebar(false);
   };
 
   const cerrarVistaPrevia = () => {
+    console.log('👁️ [DetalleHistorial] Cerrando vista previa');
     setVistaPreviaVersion(null);
   };
 
   const handleEditSuccess = async () => {
-    // Notificar al padre que recargue las listas
+    console.log('🔵🔵🔵 [DetalleHistorial] handleEditSuccess - INICIADO 🔵🔵🔵');
+    
     if (onEdit) {
+      console.log('📞 [DetalleHistorial] Llamando a onEdit del padre...');
       await onEdit();
     }
-    // Recargar todos los datos del historial actual
-    await recargarHistorialCompleto();
+    
+    console.log('🔄 [DetalleHistorial] Recargando todos los datos...');
+    await cargarHistorialDesdeBackend();
+    await cargarFacturas();
+    await cargarVersiones();
+    
     setRefreshKey(prev => prev + 1);
+    console.log('🔵🔵🔵 [DetalleHistorial] handleEditSuccess - FINALIZADO 🔵🔵🔵');
   };
 
   const formatDate = (dateString) => {
@@ -216,6 +236,12 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
 
+  console.log('🎨 [DetalleHistorial] Renderizando con datos:', { 
+    id: datosMostrar?.id, 
+    campo: datosMostrar?.campo_modificado,
+    versionesCount: versiones.length 
+  });
+
   return (
     <>
       <div className={styles.modalOverlay} onClick={onClose}>
@@ -223,7 +249,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
           {mostrarSidebar && (
             <div className={styles.sidebar}>
               <div className={styles.sidebarHeader}>
-                <h3>📜 Versiones anteriores</h3>
+                <h3>📜 Versiones anteriores ({versiones.length})</h3>
                 <button className={styles.sidebarClose} onClick={() => setMostrarSidebar(false)}>✕</button>
               </div>
               <div className={styles.sidebarContent}>
@@ -261,9 +287,9 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                     '📜 Detalle de Cambio Registrado'
                   )}
                 </h2>
-                {versiones.length > 0 && !esVistaPrevia && (
+                {versiones.length > 1 && !esVistaPrevia && (
                   <button className={styles.historyButton} onClick={() => setMostrarSidebar(true)} title="Ver historial de versiones">
-                    ⏱️ {versiones.length}
+                    ⏱️ {versiones.length - 1}
                   </button>
                 )}
                 {esVistaPrevia && (
