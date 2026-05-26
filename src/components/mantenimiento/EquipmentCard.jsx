@@ -1,4 +1,3 @@
-// FRONTEND/src/components/mantenimiento/EquipmentCard.jsx
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import styles from './EquipmentCard.module.css';
@@ -46,41 +45,54 @@ export default function EquipmentCard({
   const categoriasMostrar = categoriasList.slice(0, 3);
   const tieneMas = categoriasList.length > 3;
 
-  // FUNCIÓN CORREGIDA PARA FORMATAR FECHAS
   const formatDate = (dateString) => {
-    if (!dateString) return null;
+    console.log('📅 [EquipmentCard] Formateando fecha:', dateString, 'tipo:', typeof dateString);
     
-    // Intentar parsear la fecha
-    let date;
-    try {
-      // Si es un string ISO como '2026-05-22T21:06:06.110Z'
-      if (typeof dateString === 'string') {
-        date = new Date(dateString);
-      } else if (dateString instanceof Date) {
-        date = dateString;
-      } else {
+    if (!dateString) {
+      console.log('⚠️ [EquipmentCard] fecha_registro es null o undefined');
+      return null;
+    }
+    
+    // Si ya es un objeto Date
+    if (dateString instanceof Date) {
+      if (isNaN(dateString.getTime())) {
+        console.log('❌ [EquipmentCard] Fecha inválida (Date object)');
         return null;
       }
-      
-      // Verificar si la fecha es válida
-      if (isNaN(date.getTime())) {
-        // Intentar formato YYYY-MM-DD
-        const parts = dateString.split('T')[0].split('-');
-        if (parts.length === 3) {
-          date = new Date(parts[0], parts[1] - 1, parts[2]);
-        }
-        if (isNaN(date.getTime())) return null;
-      }
-      
-      return date.toLocaleDateString('es-MX', { 
+      const formatted = dateString.toLocaleDateString('es-MX', { 
         day: '2-digit', 
         month: 'short', 
         year: 'numeric' 
       });
-    } catch (err) {
-      console.error('Error formateando fecha:', dateString, err);
+      console.log('✅ [EquipmentCard] Fecha formateada (Date):', formatted);
+      return formatted;
+    }
+    
+    // Si es string, intentar parsear
+    let fecha = new Date(dateString);
+    
+    // Si falla, intentar parsear formato YYYY-MM-DD
+    if (isNaN(fecha.getTime()) && typeof dateString === 'string' && dateString.includes('-')) {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        // Formato: YYYY-MM-DD
+        fecha = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        console.log('📅 [EquipmentCard] Parseando fecha manual:', parts, '->', fecha);
+      }
+    }
+    
+    if (isNaN(fecha.getTime())) {
+      console.log('❌ [EquipmentCard] Fecha inválida después de parsear:', dateString);
       return null;
     }
+    
+    const formatted = fecha.toLocaleDateString('es-MX', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+    console.log('✅ [EquipmentCard] Fecha formateada:', formatted);
+    return formatted;
   };
 
   const handleSelectClick = (e) => {
@@ -92,8 +104,17 @@ export default function EquipmentCard({
   const ultimoMantFecha = ultimoMantenimiento?.fecha || ultimoMantenimiento;
   const proximoMantFecha = proximoMantenimiento?.fecha || proximoMantenimiento;
   
-  // Formatear la fecha de registro de forma segura
-  const fechaRegistroFormateada = formatDate(equipo.fecha_registro);
+  // Log para ver qué está llegando
+  console.log('🔍 [EquipmentCard] Datos del equipo:', {
+    id: equipo.id,
+    nombre: equipo.nombre,
+    fecha_registro_raw: equipo.fecha_registro,
+    fecha_registro_type: typeof equipo.fecha_registro,
+    fecha_registro_value: equipo.fecha_registro
+  });
+
+  const fechaFormateada = formatDate(equipo.fecha_registro);
+  const fechaMostrar = fechaFormateada || 'Fecha desconocida';
 
   return (
     <div className={`${styles.cardWrapper} ${isSelected ? styles.selected : ''}`}>
@@ -180,7 +201,7 @@ export default function EquipmentCard({
 
         <div className={styles.cardFooter}>
           <span className={styles.fecha}>
-            📅 {fechaRegistroFormateada || 'Fecha desconocida'}
+            📅 {fechaMostrar}
           </span>
           <span className={styles.verDetalle}>
             Ver detalles →
