@@ -12,6 +12,7 @@ import DetalleMantenimientoModal from '../../components/mantenimiento/DetalleMan
 import DetalleIncidenciaModal from '../../components/mantenimiento/DetalleIncidenciaModal';
 import DetalleHistorialModal from '../../components/mantenimiento/DetalleHistorialModal';
 import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal';
+import DocumentViewer from '../../components/mantenimiento/DocumentViewer';
 import styles from './styles/Detallesquiposestilos/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -570,6 +571,20 @@ export default function DetalleEquipo() {
     );
   }
 
+  // Preparar documentos técnicos para DocumentViewer
+  const documentosTecnicos = [
+    ...(equipo.ficha_tecnica_url ? [{ 
+      url: equipo.ficha_tecnica_url, 
+      nombre: 'Ficha Técnica',
+      fecha: equipo.fecha_registro
+    }] : []),
+    ...(equipo.manual_url ? [{ 
+      url: equipo.manual_url, 
+      nombre: 'Manual de Usuario',
+      fecha: equipo.fecha_registro
+    }] : [])
+  ];
+
   return (
     <div className={styles.detalleEquipo}>
       {showAlert && (
@@ -787,17 +802,45 @@ export default function DetalleEquipo() {
           </div>
         )}
 
-        {/* Tab Documentos */}
+        {/* Tab Documentos - MEJORADA CON DocumentViewer */}
         {activeTab === 'documentos' && (
           <div className={styles.documentosTab}>
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>📄 Documentos del Equipo</h3>
-              <div className={styles.documentosGrid}>
-                {equipo.foto_url && <a href={equipo.foto_url} target="_blank" rel="noopener noreferrer" className={styles.documentoLink}><span className={styles.documentoIcon}>🖼️</span><span>Ver Foto del Equipo</span></a>}
-                {equipo.ficha_tecnica_url && <a href={equipo.ficha_tecnica_url} target="_blank" rel="noopener noreferrer" className={styles.documentoLink}><span className={styles.documentoIcon}>📑</span><span>Ficha Técnica</span></a>}
-                {equipo.manual_url && <a href={equipo.manual_url} target="_blank" rel="noopener noreferrer" className={styles.documentoLink}><span className={styles.documentoIcon}>📘</span><span>Manual de Usuario</span></a>}
-                {!equipo.foto_url && !equipo.ficha_tecnica_url && !equipo.manual_url && <p className={styles.emptyMessage}>No hay documentos cargados para este equipo</p>}
-              </div>
+              
+              {/* Mostrar foto del equipo si existe */}
+              {equipo.foto_url && (
+                <div className={styles.fotoSection}>
+                  <label className={styles.sectionLabel}>📷 Foto del equipo</label>
+                  <div className={styles.fotoPreviewContainer}>
+                    <img 
+                      src={equipo.foto_url} 
+                      alt={equipo.nombre}
+                      className={styles.fotoPreview}
+                      onClick={() => window.open(equipo.foto_url, '_blank')}
+                    />
+                    <button 
+                      className={styles.openFotoBtn}
+                      onClick={() => window.open(equipo.foto_url, '_blank')}
+                    >
+                      🔍 Ver foto completa
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Mostrar documentos técnicos (Ficha Técnica y Manual) con DocumentViewer */}
+              {documentosTecnicos.length > 0 && (
+                <DocumentViewer 
+                  documents={documentosTecnicos}
+                  title="📑 Documentos Técnicos"
+                />
+              )}
+
+              {/* Si no hay ningún documento */}
+              {!equipo.foto_url && documentosTecnicos.length === 0 && (
+                <p className={styles.emptyMessage}>No hay documentos cargados para este equipo</p>
+              )}
             </div>
           </div>
         )}
