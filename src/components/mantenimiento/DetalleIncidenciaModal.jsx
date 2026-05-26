@@ -36,14 +36,42 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     if (isOpen && incidencia?.id) {
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
-      setIncidenciaActual(incidencia);
-      cargarEvidencias();
-      cargarVersiones();
+      recargarIncidenciaCompleta();
     }
   }, [isOpen, incidencia?.id]);
 
-  const cargarEvidencias = async () => {
+  // FUNCIÓN CLAVE: Recarga TODOS los datos de la incidencia
+  const recargarIncidenciaCompleta = async () => {
     const idActual = incidenciaActual?.id || incidencia?.id;
+    if (!idActual) return;
+    
+    setRecargando(true);
+    try {
+      // 1. Recargar la incidencia desde el backend
+      const API_BASE = getApiBase();
+      const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${idActual}`);
+      const data = await response.json();
+      if (data.ok && data.datos) {
+        const incidenciaEncontrada = data.datos.find(i => i.id === idActual);
+        if (incidenciaEncontrada) {
+          setIncidenciaActual(incidenciaEncontrada);
+        }
+      }
+      
+      // 2. Recargar evidencias
+      await cargarEvidencias(idActual);
+      
+      // 3. Recargar versiones
+      await cargarVersiones(idActual);
+      
+    } catch (err) {
+      console.error('Error recargando incidencia:', err);
+    } finally {
+      setRecargando(false);
+    }
+  };
+
+  const cargarEvidencias = async (idActual) => {
     if (!idActual) return;
     
     setLoadingEvidencias(true);
@@ -69,8 +97,7 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     }
   };
 
-  const cargarVersiones = async () => {
-    const idActual = incidenciaActual?.id || incidencia?.id;
+  const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
     setCargandoVersiones(true);
@@ -94,27 +121,14 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
     setVistaPreviaVersion(null);
   };
 
-  const recargarDatosCompletos = async () => {
-    setRecargando(true);
-    try {
-      // Recargar la incidencia actualizada desde el padre
-      if (onEdit) {
-        await onEdit();
-      }
-      // Recargar datos locales
-      await cargarEvidencias();
-      await cargarVersiones();
-      // Forzar actualización
-      setRefreshKey(prev => prev + 1);
-    } catch (err) {
-      console.error('Error recargando datos:', err);
-    } finally {
-      setRecargando(false);
-    }
-  };
-
   const handleEditSuccess = async () => {
-    await recargarDatosCompletos();
+    // Notificar al padre que recargue las listas
+    if (onEdit) {
+      await onEdit();
+    }
+    // Recargar todos los datos de la incidencia actual
+    await recargarIncidenciaCompleta();
+    setRefreshKey(prev => prev + 1);
   };
 
   const formatDate = (dateString) => {

@@ -36,14 +36,43 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     if (isOpen && historialItem?.id) {
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
-      setHistorialActual(historialItem);
-      cargarFacturas();
-      cargarVersiones();
+      recargarHistorialCompleto();
     }
   }, [isOpen, historialItem?.id]);
 
-  const cargarFacturas = async () => {
+  // FUNCIÓN CLAVE: Recarga TODOS los datos del historial
+  const recargarHistorialCompleto = async () => {
     const idActual = historialActual?.id || historialItem?.id;
+    const equipoIdActual = equipoId || historialItem?.equipo_id;
+    if (!idActual || !equipoIdActual) return;
+    
+    setRecargando(true);
+    try {
+      // 1. Recargar el historial desde el backend
+      const API_BASE = getApiBase();
+      const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
+      const data = await response.json();
+      if (data.ok && data.datos) {
+        const historialEncontrado = data.datos.find(h => h.id === idActual);
+        if (historialEncontrado) {
+          setHistorialActual(historialEncontrado);
+        }
+      }
+      
+      // 2. Recargar facturas
+      await cargarFacturas(idActual);
+      
+      // 3. Recargar versiones
+      await cargarVersiones(idActual);
+      
+    } catch (err) {
+      console.error('Error recargando historial:', err);
+    } finally {
+      setRecargando(false);
+    }
+  };
+
+  const cargarFacturas = async (idActual) => {
     if (!idActual) return;
     
     setLoadingFacturas(true);
@@ -69,25 +98,27 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
   };
 
-  const cargarVersiones = async () => {
-    const idActual = historialActual?.id || historialItem?.id;
+  const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
     setCargandoVersiones(true);
     try {
+      // Intentar obtener versiones del historial desde el backend
       const versionesSimuladas = [];
-      const datos = historialActual || historialItem;
       
-      if (datos?.campo_modificado) {
-        versionesSimuladas.push({
-          version: 1,
-          campo_modificado: datos.campo_modificado,
-          valor_anterior: datos.valor_anterior,
-          valor_nuevo: datos.valor_nuevo,
-          descripcion: datos.descripcion,
-          fecha_modificacion: datos.fecha || new Date().toISOString(),
-          modificado_por: datos.usuario || 'sistema'
-        });
+      if (historialActual || historialItem) {
+        const datos = historialActual || historialItem;
+        if (datos?.campo_modificado) {
+          versionesSimuladas.push({
+            version: 1,
+            campo_modificado: datos.campo_modificado,
+            valor_anterior: datos.valor_anterior,
+            valor_nuevo: datos.valor_nuevo,
+            descripcion: datos.descripcion,
+            fecha_modificacion: datos.fecha || new Date().toISOString(),
+            modificado_por: datos.usuario || 'sistema'
+          });
+        }
       }
       
       setVersiones(versionesSimuladas);
@@ -107,27 +138,14 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     setVistaPreviaVersion(null);
   };
 
-  const recargarDatosCompletos = async () => {
-    setRecargando(true);
-    try {
-      // Recargar el historial actualizado desde el padre
-      if (onEdit) {
-        await onEdit();
-      }
-      // Recargar datos locales
-      await cargarFacturas();
-      await cargarVersiones();
-      // Forzar actualización
-      setRefreshKey(prev => prev + 1);
-    } catch (err) {
-      console.error('Error recargando datos:', err);
-    } finally {
-      setRecargando(false);
-    }
-  };
-
   const handleEditSuccess = async () => {
-    await recargarDatosCompletos();
+    // Notificar al padre que recargue las listas
+    if (onEdit) {
+      await onEdit();
+    }
+    // Recargar todos los datos del historial actual
+    await recargarHistorialCompleto();
+    setRefreshKey(prev => prev + 1);
   };
 
   const formatDate = (dateString) => {

@@ -36,14 +36,42 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     if (isOpen && mantenimiento?.id) {
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
-      setMantenimientoActual(mantenimiento);
-      cargarEvidencias();
-      cargarVersiones();
+      recargarMantenimientoCompleto();
     }
   }, [isOpen, mantenimiento?.id]);
 
-  const cargarEvidencias = async () => {
+  // FUNCIÓN CLAVE: Recarga TODOS los datos del mantenimiento
+  const recargarMantenimientoCompleto = async () => {
     const idActual = mantenimientoActual?.id || mantenimiento?.id;
+    if (!idActual) return;
+    
+    setRecargando(true);
+    try {
+      // 1. Recargar el mantenimiento desde el backend
+      const API_BASE = getApiBase();
+      const response = await fetch(`${API_BASE}/mantenimiento/mantenimientos/equipo/${idActual}`);
+      const data = await response.json();
+      if (data.ok && data.datos) {
+        const mantenimientoEncontrado = data.datos.find(m => m.id === idActual);
+        if (mantenimientoEncontrado) {
+          setMantenimientoActual(mantenimientoEncontrado);
+        }
+      }
+      
+      // 2. Recargar evidencias
+      await cargarEvidencias(idActual);
+      
+      // 3. Recargar versiones
+      await cargarVersiones(idActual);
+      
+    } catch (err) {
+      console.error('Error recargando mantenimiento:', err);
+    } finally {
+      setRecargando(false);
+    }
+  };
+
+  const cargarEvidencias = async (idActual) => {
     if (!idActual) return;
     
     setLoadingEvidencias(true);
@@ -69,8 +97,7 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     }
   };
 
-  const cargarVersiones = async () => {
-    const idActual = mantenimientoActual?.id || mantenimiento?.id;
+  const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
     setCargandoVersiones(true);
@@ -93,27 +120,14 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     setVistaPreviaVersion(null);
   };
 
-  const recargarDatosCompletos = async () => {
-    setRecargando(true);
-    try {
-      // Recargar el mantenimiento actualizado desde el padre
-      if (onEdit) {
-        await onEdit();
-      }
-      // Recargar datos locales
-      await cargarEvidencias();
-      await cargarVersiones();
-      // Forzar actualización
-      setRefreshKey(prev => prev + 1);
-    } catch (err) {
-      console.error('Error recargando datos:', err);
-    } finally {
-      setRecargando(false);
-    }
-  };
-
   const handleEditSuccess = async () => {
-    await recargarDatosCompletos();
+    // Notificar al padre que recargue las listas
+    if (onEdit) {
+      await onEdit();
+    }
+    // Recargar todos los datos del mantenimiento actual
+    await recargarMantenimientoCompleto();
+    setRefreshKey(prev => prev + 1);
   };
 
   const formatDate = (dateString) => {
