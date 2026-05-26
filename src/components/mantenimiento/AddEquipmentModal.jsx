@@ -159,22 +159,24 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     setTouched(prev => ({ ...prev, nombre: true }));
   };
 
-  const uploadFile = async (file, tipo) => {
+  const uploadFile = async (file, tipo, entidadId) => {
     if (!file) return null;
     
     const formDataFile = new FormData();
     formDataFile.append('archivo', file);
     formDataFile.append('tipo', tipo);
+    formDataFile.append('entidad_id', entidadId);
     
     try {
-      console.log(`📤 Subiendo ${tipo}...`);
+      console.log(`📤 Subiendo ${tipo} para equipo ${entidadId}...`);
       const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
         method: 'POST',
         body: formDataFile
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
       const data = await response.json();
@@ -225,37 +227,89 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     setError('');
 
     try {
-      let fotoUrl = formData.foto_url;
-      let fichaUrl = formData.ficha_tecnica_url;
-      let manualUrl = formData.manual_url;
-
-      if (formData.foto) {
-        fotoUrl = await uploadFile(formData.foto, 'foto_equipo');
-      }
-      if (formData.ficha_tecnica) {
-        fichaUrl = await uploadFile(formData.ficha_tecnica, 'ficha_tecnica');
-      }
-      if (formData.manual) {
-        manualUrl = await uploadFile(formData.manual, 'manual');
-      }
-
-      const equipoDataToSend = {
-        nombre: formData.nombre.trim(),
-        ubicacion: formData.ubicacion.trim(),
-        descripcion: formData.descripcion.trim(),
-        categorias: formData.categorias,
-        foto_url: fotoUrl,
-        ficha_tecnica_url: fichaUrl,
-        manual_url: manualUrl
-      };
-
-      let result;
       if (editMode && formData.id) {
-        result = await mantenimientoAPI.updateEquipo(formData.id, equipoDataToSend);
+        // ==========================================
+        // MODO EDICIÓN: Actualizar equipo existente
+        // ==========================================
+        
+        let fotoUrl = formData.foto_url;
+        let fichaUrl = formData.ficha_tecnica_url;
+        let manualUrl = formData.manual_url;
+
+        if (formData.foto) {
+          fotoUrl = await uploadFile(formData.foto, 'foto_equipo', formData.id);
+        }
+        if (formData.ficha_tecnica) {
+          fichaUrl = await uploadFile(formData.ficha_tecnica, 'ficha_tecnica', formData.id);
+        }
+        if (formData.manual) {
+          manualUrl = await uploadFile(formData.manual, 'manual', formData.id);
+        }
+
+        const equipoDataToSend = {
+          nombre: formData.nombre.trim(),
+          ubicacion: formData.ubicacion.trim(),
+          descripcion: formData.descripcion.trim(),
+          categorias: formData.categorias,
+          foto_url: fotoUrl,
+          ficha_tecnica_url: fichaUrl,
+          manual_url: manualUrl
+        };
+
+        await mantenimientoAPI.updateEquipo(formData.id, equipoDataToSend);
+        
       } else {
-        result = await mantenimientoAPI.createEquipo(equipoDataToSend);
+        // ==========================================
+        // MODO CREACIÓN: Primero crear equipo, luego subir archivos
+        // ==========================================
+        
+        // Paso 1: Crear equipo sin archivos
+        const equipoDataToSend = {
+          nombre: formData.nombre.trim(),
+          ubicacion: formData.ubicacion.trim(),
+          descripcion: formData.descripcion.trim(),
+          categorias: formData.categorias,
+          foto_url: null,
+          ficha_tecnica_url: null,
+          manual_url: null
+        };
+
+        const result = await mantenimientoAPI.createEquipo(equipoDataToSend);
+        const nuevoEquipoId = result.id;
+        
+        console.log(`✅ Equipo creado con ID: ${nuevoEquipoId}`);
+        
+        // Paso 2: Subir archivos con el nuevo ID
+        let fotoUrl = null;
+        let fichaUrl = null;
+        let manualUrl = null;
+        
+        if (formData.foto) {
+          fotoUrl = await uploadFile(formData.foto, 'foto_equipo', nuevoEquipoId);
+        }
+        if (formData.ficha_tecnica) {
+          fichaUrl = await uploadFile(formData.ficha_tecnica, 'ficha_tecnica', nuevoEquipoId);
+        }
+        if (formData.manual) {
+          manualUrl = await uploadFile(formData.manual, 'manual', nuevoEquipoId);
+        }
+        
+        // Paso 3: Actualizar el equipo con las URLs de los archivos
+        if (fotoUrl || fichaUrl || manualUrl) {
+          await mantenimientoAPI.updateEquipo(nuevoEquipoId, {
+            nombre: formData.nombre.trim(),
+            ubicacion: formData.ubicacion.trim(),
+            descripcion: formData.descripcion.trim(),
+            categorias: formData.categorias,
+            foto_url: fotoUrl,
+            ficha_tecnica_url: fichaUrl,
+            manual_url: manualUrl
+          });
+          console.log(`✅ Equipo actualizado con archivos`);
+        }
       }
       
+      // Limpiar formulario
       setFormData({
         id: null,
         nombre: '',
@@ -270,9 +324,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         manual_url: ''
       });
       
-      if (onSuccess) onSuccess(result?.id);
+      if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
+      console.error('Error en handleSubmit:', err);
       setError(err.message || `Error al ${editMode ? 'actualizar' : 'crear'} el equipo`);
     } finally {
       setLoading(false);
