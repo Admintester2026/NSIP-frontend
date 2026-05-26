@@ -1,6 +1,22 @@
 // src/api/mantenimiento.js
 const API_BASE = import.meta.env.VITE_API_URL;
 
+// Normalizar URLs para que apunten al backend correctamente
+function normalizeUrl(url) {
+  if (!url) return null;
+  // Si ya es una URL completa (http o https), devolverla tal cual
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // Si la URL comienza con /uploads, agregar la base del backend
+  if (url.startsWith('/uploads')) {
+    // Eliminar /api de API_BASE para obtener la base del backend
+    const backendBase = API_BASE ? API_BASE.replace('/api', '') : '';
+    return `${backendBase}${url}`;
+  }
+  return url;
+}
+
 async function handleResponse(response) {
   if (!response.ok) {
     let errorMessage = `HTTP ${response.status}`;
@@ -25,14 +41,30 @@ export const mantenimientoAPI = {
     const url = `${API_BASE}/mantenimiento/equipos${estado ? `?estado=${estado}` : ''}`;
     const response = await fetch(url);
     const data = await handleResponse(response);
-    return data.datos || [];
+    const equipos = data.datos || [];
+    
+    // Normalizar URLs de todos los equipos
+    return equipos.map(equipo => ({
+      ...equipo,
+      foto_url: normalizeUrl(equipo.foto_url),
+      ficha_tecnica_url: normalizeUrl(equipo.ficha_tecnica_url),
+      manual_url: normalizeUrl(equipo.manual_url)
+    }));
   },
 
   getEquipoById: async (id) => {
     const url = `${API_BASE}/mantenimiento/equipos/${id}`;
     const response = await fetch(url);
     const data = await handleResponse(response);
-    return data.datos;
+    const equipo = data.datos;
+    
+    if (equipo) {
+      equipo.foto_url = normalizeUrl(equipo.foto_url);
+      equipo.ficha_tecnica_url = normalizeUrl(equipo.ficha_tecnica_url);
+      equipo.manual_url = normalizeUrl(equipo.manual_url);
+    }
+    
+    return equipo;
   },
 
   createEquipo: async (equipoData) => {
@@ -101,7 +133,13 @@ export const mantenimientoAPI = {
     const url = `${API_BASE}/mantenimiento/mantenimientos/equipo/${equipoId}`;
     const response = await fetch(url);
     const data = await handleResponse(response);
-    return data.datos || [];
+    const mantenimientos = data.datos || [];
+    
+    // Normalizar URLs de evidencias en mantenimientos
+    return mantenimientos.map(m => ({
+      ...m,
+      evidencias_urls: m.evidencias_urls?.map(normalizeUrl) || []
+    }));
   },
 
   createMantenimiento: async (mantenimientoData) => {
@@ -173,7 +211,13 @@ export const mantenimientoAPI = {
     const url = `${API_BASE}/mantenimiento/incidencias/equipo/${equipoId}`;
     const response = await fetch(url);
     const data = await handleResponse(response);
-    return data.datos || [];
+    const incidencias = data.datos || [];
+    
+    // Normalizar URLs de evidencias en incidencias
+    return incidencias.map(i => ({
+      ...i,
+      evidencias_urls: i.evidencias_urls?.map(normalizeUrl) || []
+    }));
   },
 
   createIncidencia: async (incidenciaData) => {
@@ -238,7 +282,13 @@ export const mantenimientoAPI = {
     const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/historial`;
     const response = await fetch(url);
     const data = await handleResponse(response);
-    return data.datos || [];
+    const historial = data.datos || [];
+    
+    // Normalizar URLs de facturas en historial
+    return historial.map(h => ({
+      ...h,
+      facturas_urls: h.facturas_urls?.map(normalizeUrl) || []
+    }));
   },
 
   registrarCambio: async (equipoId, cambioData) => {
@@ -324,7 +374,8 @@ export const mantenimientoAPI = {
       body: formData
     });
     const result = await handleResponse(response);
-    return result.url;
+    // La URL que devuelve el backend es relativa, hay que normalizarla
+    return normalizeUrl(result.url);
   },
 
   uploadMultipleFiles: async (files, tipo, entidadId, onProgress) => {
