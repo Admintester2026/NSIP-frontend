@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react';
+﻿// FRONTEND/src/components/mantenimiento/DetalleEquipo.jsx
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import { useDateUtils } from '../../context/DateContext';
@@ -85,31 +86,72 @@ export default function DetalleEquipo() {
   const CLAVE_PREVENTIVA = 'C';
 
   // ==========================================
-  // FUNCIONES DE FORMATO CORREGIDAS
+  // FUNCIONES DE FORMATO CORREGIDAS (para ISO strings)
   // ==========================================
   
+  // Convierte cualquier formato de fecha a Date válido
+  const parseFecha = (dateString) => {
+    if (!dateString) return null;
+    
+    // Si ya es un objeto Date
+    if (dateString instanceof Date) {
+      return isNaN(dateString.getTime()) ? null : dateString;
+    }
+    
+    // Intentar parsear como ISO string (2026-04-02T11:00:42.740Z)
+    let fecha = new Date(dateString);
+    if (!isNaN(fecha.getTime())) {
+      return fecha;
+    }
+    
+    // Intentar parsear como YYYY-MM-DD
+    if (typeof dateString === 'string' && dateString.includes('-')) {
+      const parts = dateString.split('T')[0].split('-');
+      if (parts.length === 3) {
+        fecha = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        if (!isNaN(fecha.getTime())) {
+          return fecha;
+        }
+      }
+    }
+    
+    return null;
+  };
+
   const formatDate = (dateString) => {
-    if (!dateString) return 'No definida';
-    const [year, month, day] = dateString.split('-').map(Number);
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return 'Fecha inválida';
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString('es-MX', { 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric' 
-    });
+    const fecha = parseFecha(dateString);
+    if (!fecha) return 'Fecha no disponible';
+    
+    // Formato: DD/MM/YYYY (día/mes/año)
+    const day = fecha.getDate().toString().padStart(2, '0');
+    const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const year = fecha.getFullYear();
+    
+    return `${day}/${month}/${year}`;
   };
 
   const formatDateTime = (dateString) => {
-    if (!dateString) return 'No definida';
-    const fechaLimpia = dateString.split('T')[0];
-    const [year, month, day] = fechaLimpia.split('-').map(Number);
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return 'Fecha inválida';
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString('es-MX', { 
+    const fecha = parseFecha(dateString);
+    if (!fecha) return 'Fecha no disponible';
+    
+    const day = fecha.getDate().toString().padStart(2, '0');
+    const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const year = fecha.getFullYear();
+    const hours = fecha.getHours().toString().padStart(2, '0');
+    const minutes = fecha.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
+  // Formato largo para fechas (ej: 02 de abril de 2026)
+  const formatDateLong = (dateString) => {
+    const fecha = parseFecha(dateString);
+    if (!fecha) return 'Fecha no disponible';
+    
+    return fecha.toLocaleDateString('es-MX', { 
       day: '2-digit', 
       month: 'long', 
-      year: 'numeric'
+      year: 'numeric' 
     });
   };
 
