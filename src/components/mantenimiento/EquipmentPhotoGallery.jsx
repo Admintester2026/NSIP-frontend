@@ -35,7 +35,7 @@ export default function EquipmentPhotoGallery({
   // Normalizar URLs de las fotos
   const normalizedPhotos = photos.map(photo => ({
     ...photo,
-    url: normalizeUrl(photo.url)
+    url: normalizeUrl(photo.foto_url || photo.url)
   }));
 
   const selectedPhotoNormalized = normalizeUrl(selectedPhotoUrl);
@@ -201,7 +201,6 @@ export default function EquipmentPhotoGallery({
       if (onDeletePhoto) {
         await onDeletePhoto(photo.url, index);
       }
-      // Si era la foto de perfil, resetear
       if (photo.url === selectedPhotoNormalized && onSelectProfilePhoto) {
         onSelectProfilePhoto(null);
       }
@@ -269,7 +268,7 @@ export default function EquipmentPhotoGallery({
                 <span className={styles.profileIndicator}>⭐ Foto de perfil</span>
               )}
               <div className={styles.imageDateBadge}>
-                📅 {formatDate(normalizedPhotos[currentIndex]?.fecha) || 'Fecha no disponible'}
+                📅 {formatDate(normalizedPhotos[currentIndex]?.fecha_subida || normalizedPhotos[currentIndex]?.fecha) || 'Fecha no disponible'}
               </div>
             </div>
           </div>
