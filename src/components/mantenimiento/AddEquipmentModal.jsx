@@ -1,3 +1,4 @@
+// FRONTEND/src/components/mantenimiento/AddEquipmentModal.jsx
 import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './AddEquipmentModal.module.css';
@@ -22,6 +23,11 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [nombreSugerencias, setNombreSugerencias] = useState([]);
+  const [touched, setTouched] = useState({
+    nombre: false,
+    ubicacion: false,
+    descripcion: false
+  });
   
   const fotoInputRef = useRef(null);
   const fichaInputRef = useRef(null);
@@ -65,6 +71,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         });
       }
       setError('');
+      setTouched({ nombre: false, ubicacion: false, descripcion: false });
     }
   }, [isOpen, editMode, equipoData]);
 
@@ -102,6 +109,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     }
   };
 
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
   const handleCategoriaToggle = (categoriaId) => {
     setFormData(prev => {
       const categoriasSeleccionadas = [...prev.categorias];
@@ -120,8 +131,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const handleFileChange = (e, tipo) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError(`El archivo es demasiado grande. Máximo 5MB`);
+      // Límite temporal (después lo aumentamos)
+      const maxSize = 50 * 1024 * 1024; // 50MB para imágenes
+      if (file.size > maxSize) {
+        setError(`El archivo es demasiado grande. Máximo 50MB para imágenes`);
         return;
       }
       
@@ -160,16 +173,30 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     }
   };
 
+  const validateForm = () => {
+    const errors = [];
+    
+    if (!formData.nombre.trim()) {
+      errors.push('El nombre del equipo es requerido');
+      setTouched(prev => ({ ...prev, nombre: true }));
+    }
+    
+    if (errors.length > 0) {
+      setError(errors.join('. '));
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setLoading(true);
     setError('');
 
     try {
-      if (!formData.nombre.trim()) {
-        throw new Error('El nombre del equipo es requerido');
-      }
-
       // Subir archivos nuevos (si hay)
       let fotoUrl = formData.foto_url;
       let fichaUrl = formData.ficha_tecnica_url;
@@ -254,10 +281,15 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleInputChange}
-                className={styles.input}
+                onBlur={() => handleBlur('nombre')}
+                className={`${styles.input} ${touched.nombre && !formData.nombre.trim() ? styles.inputError : ''}`}
                 placeholder="Ej: Centrífuga, Microscopio, Reactor..."
                 autoComplete="off"
+                required
               />
+              {touched.nombre && !formData.nombre.trim() && (
+                <span className={styles.errorText}>El nombre del equipo es requerido</span>
+              )}
               {sugerencias.length > 0 && !editMode && (
                 <div className={styles.sugerencias}>
                   {sugerencias.map((sug, idx) => (
@@ -346,7 +378,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>Ficha técnica (PDF)</label>
+              <label className={styles.label}>Ficha técnica</label>
               <div className={styles.fileInput}>
                 <button
                   type="button"
@@ -358,7 +390,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
                 <input
                   ref={fichaInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.doc,.docx,image/*"
                   onChange={(e) => handleFileChange(e, 'ficha_tecnica')}
                   className={styles.hiddenInput}
                 />
@@ -371,7 +403,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>Manual de usuario (PDF)</label>
+              <label className={styles.label}>Manual de usuario</label>
               <div className={styles.fileInput}>
                 <button
                   type="button"
@@ -383,7 +415,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
                 <input
                   ref={manualInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.doc,.docx,image/*"
                   onChange={(e) => handleFileChange(e, 'manual')}
                   className={styles.hiddenInput}
                 />

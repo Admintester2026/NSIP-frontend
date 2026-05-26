@@ -314,3 +314,21 @@
     max-width: 150px;
   }
 }
+/* Agrega al final de AddEquipmentModal.module.css */
+
+.inputError {
+  border-color: var(--red) !important;
+  background: rgba(255, 77, 77, 0.05) !important;
+}
+
+.errorText {
+  font-size: 0.7rem;
+  color: var(--red);
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.required {
+  color: var(--red);
+  font-size: 0.8rem;
+}
