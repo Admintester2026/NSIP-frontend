@@ -13,6 +13,7 @@ import DetalleIncidenciaModal from '../../components/mantenimiento/DetalleIncide
 import DetalleHistorialModal from '../../components/mantenimiento/DetalleHistorialModal';
 import ReprogramarModal from '../../components/mantenimiento/ReprogramarModal';
 import DocumentViewer from '../../components/mantenimiento/DocumentViewer';
+import EquipmentPhotoGallery from '../../components/mantenimiento/EquipmentPhotoGallery';
 import styles from './styles/Detallesquiposestilos/DetalleEquipo.module.css';
 
 export default function DetalleEquipo() {
@@ -28,6 +29,7 @@ export default function DetalleEquipo() {
   } = useDateUtils();
   
   const [equipo, setEquipo] = useState(null);
+  const [equipoPhotos, setEquipoPhotos] = useState([]);
   const [mantenimientos, setMantenimientos] = useState([]);
   const [incidencias, setIncidencias] = useState([]);
   const [historial, setHistorial] = useState([]);
@@ -90,22 +92,15 @@ export default function DetalleEquipo() {
   // FUNCIONES DE FORMATO CORREGIDAS (para ISO strings)
   // ==========================================
   
-  // Convierte cualquier formato de fecha a Date válido
   const parseFecha = (dateString) => {
     if (!dateString) return null;
-    
-    // Si ya es un objeto Date
     if (dateString instanceof Date) {
       return isNaN(dateString.getTime()) ? null : dateString;
     }
-    
-    // Intentar parsear como ISO string (2026-04-02T11:00:42.740Z)
     let fecha = new Date(dateString);
     if (!isNaN(fecha.getTime())) {
       return fecha;
     }
-    
-    // Intentar parsear como YYYY-MM-DD
     if (typeof dateString === 'string' && dateString.includes('-')) {
       const parts = dateString.split('T')[0].split('-');
       if (parts.length === 3) {
@@ -115,45 +110,27 @@ export default function DetalleEquipo() {
         }
       }
     }
-    
     return null;
   };
 
   const formatDate = (dateString) => {
     const fecha = parseFecha(dateString);
     if (!fecha) return 'Fecha no disponible';
-    
-    // Formato: DD/MM/YYYY (día/mes/año)
     const day = fecha.getDate().toString().padStart(2, '0');
     const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const year = fecha.getFullYear();
-    
     return `${day}/${month}/${year}`;
   };
 
   const formatDateTime = (dateString) => {
     const fecha = parseFecha(dateString);
     if (!fecha) return 'Fecha no disponible';
-    
     const day = fecha.getDate().toString().padStart(2, '0');
     const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const year = fecha.getFullYear();
     const hours = fecha.getHours().toString().padStart(2, '0');
     const minutes = fecha.getMinutes().toString().padStart(2, '0');
-    
     return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
-
-  // Formato largo para fechas (ej: 02 de abril de 2026)
-  const formatDateLong = (dateString) => {
-    const fecha = parseFecha(dateString);
-    if (!fecha) return 'Fecha no disponible';
-    
-    return fecha.toLocaleDateString('es-MX', { 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric' 
-    });
   };
 
   // ==========================================
@@ -162,7 +139,6 @@ export default function DetalleEquipo() {
   
   const filtrarMantenimientosCompletados = () => {
     if (!buscarEnCompletados.trim()) return mantenimientosCompletados;
-    
     const busqueda = buscarEnCompletados.toLowerCase();
     return mantenimientosCompletados.filter(m => {
       let fecha;
@@ -173,7 +149,6 @@ export default function DetalleEquipo() {
       }
       if (!fecha) return false;
       const fechaStr = `${fecha.getDate().toString().padStart(2,'0')}/${(fecha.getMonth()+1).toString().padStart(2,'0')}/${fecha.getFullYear()}`;
-      
       return fechaStr.includes(busqueda) ||
              m.titulo?.toLowerCase().includes(busqueda) ||
              m.completado_por?.toLowerCase().includes(busqueda) ||
@@ -241,14 +216,12 @@ export default function DetalleEquipo() {
   
   const handleIncidenciaEditSuccess = async () => {
     await cargarDatos();
-    
     if (incidenciaSeleccionada) {
       const incidenciaActualizada = incidencias.find(i => i.id === incidenciaSeleccionada.id);
       if (incidenciaActualizada) {
         setIncidenciaSeleccionada(incidenciaActualizada);
       }
     }
-    
     setAlertMessage('✅ Incidencia actualizada exitosamente');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
@@ -256,17 +229,62 @@ export default function DetalleEquipo() {
 
   const handleHistorialEditSuccess = async () => {
     await cargarDatos();
-    
     if (historialSeleccionado) {
       const historialActualizado = historial.find(h => h.id === historialSeleccionado.id);
       if (historialActualizado) {
         setHistorialSeleccionado(historialActualizado);
       }
     }
-    
     setAlertMessage('✅ Cambio actualizado exitosamente');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
+  };
+
+  // ==========================================
+  // FUNCIONES PARA MÚLTIPLES FOTOS
+  // ==========================================
+  
+  const cargarFotosEquipo = async () => {
+    try {
+      const fotos = await mantenimientoAPI.getEquipoPhotos(id);
+      setEquipoPhotos(fotos || []);
+    } catch (err) {
+      console.error('Error cargando fotos del equipo:', err);
+      setEquipoPhotos([]);
+    }
+  };
+
+  const handleAddPhotos = async (newPhotos) => {
+    for (const photo of newPhotos) {
+      await mantenimientoAPI.addEquipoPhoto(id, photo.url);
+    }
+    await cargarFotosEquipo();
+    await cargarDatos(); // Recargar equipo para actualizar foto principal
+    setAlertMessage(`✅ ${newPhotos.length} foto(s) agregada(s) correctamente`);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
+
+  const handleSelectProfilePhoto = async (fotoUrl) => {
+    await mantenimientoAPI.setPrincipalPhoto(id, fotoUrl);
+    await cargarFotosEquipo();
+    await cargarDatos(); // Recargar equipo para actualizar foto principal
+    setAlertMessage('✅ Foto de perfil actualizada');
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
+
+  const handleDeletePhoto = async (fotoUrl, index) => {
+    // Encontrar el ID de la foto por URL
+    const photoToDelete = equipoPhotos.find(p => p.foto_url === fotoUrl);
+    if (photoToDelete) {
+      await mantenimientoAPI.deleteEquipoPhoto(id, photoToDelete.id);
+      await cargarFotosEquipo();
+      await cargarDatos(); // Recargar equipo para actualizar foto principal si era la principal
+      setAlertMessage('🗑️ Foto eliminada');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+    }
   };
 
   // ==========================================
@@ -313,6 +331,9 @@ export default function DetalleEquipo() {
       setMantenimientos(mantenimientosResult.status === 'fulfilled' ? mantenimientosResult.value || [] : []);
       setIncidencias(incidenciasResult.status === 'fulfilled' ? incidenciasResult.value || [] : []);
       setHistorial(historialResult.status === 'fulfilled' ? historialResult.value || [] : []);
+      
+      // Cargar fotos del equipo
+      await cargarFotosEquipo();
       
       retryCountRef.current = 0;
     } catch (err) {
@@ -536,6 +557,20 @@ export default function DetalleEquipo() {
 
   const mantenimientosCompletadosFiltrados = filtrarMantenimientosCompletados();
 
+  // Preparar documentos técnicos para DocumentViewer
+  const documentosTecnicos = [
+    ...(equipo?.ficha_tecnica_url ? [{ 
+      url: equipo.ficha_tecnica_url, 
+      nombre: 'Ficha Técnica',
+      fecha: equipo.fecha_registro
+    }] : []),
+    ...(equipo?.manual_url ? [{ 
+      url: equipo.manual_url, 
+      nombre: 'Manual de Usuario',
+      fecha: equipo.fecha_registro
+    }] : [])
+  ];
+
   // ==========================================
   // RENDER
   // ==========================================
@@ -570,20 +605,6 @@ export default function DetalleEquipo() {
       </div>
     );
   }
-
-  // Preparar documentos técnicos para DocumentViewer
-  const documentosTecnicos = [
-    ...(equipo.ficha_tecnica_url ? [{ 
-      url: equipo.ficha_tecnica_url, 
-      nombre: 'Ficha Técnica',
-      fecha: equipo.fecha_registro
-    }] : []),
-    ...(equipo.manual_url ? [{ 
-      url: equipo.manual_url, 
-      nombre: 'Manual de Usuario',
-      fecha: equipo.fecha_registro
-    }] : [])
-  ];
 
   return (
     <div className={styles.detalleEquipo}>
@@ -802,44 +823,37 @@ export default function DetalleEquipo() {
           </div>
         )}
 
-        {/* Tab Documentos - MEJORADA CON DocumentViewer */}
+        {/* Tab Documentos - MEJORADA CON EquipmentPhotoGallery Y DocumentViewer */}
         {activeTab === 'documentos' && (
           <div className={styles.documentosTab}>
             <div className={styles.card}>
-              <h3 className={styles.cardTitle}>📄 Documentos del Equipo</h3>
+              <h3 className={styles.cardTitle}>📸 Galería de Fotos del Equipo</h3>
               
-              {/* Mostrar foto del equipo si existe */}
-              {equipo.foto_url && (
-                <div className={styles.fotoSection}>
-                  <label className={styles.sectionLabel}>📷 Foto del equipo</label>
-                  <div className={styles.fotoPreviewContainer}>
-                    <img 
-                      src={equipo.foto_url} 
-                      alt={equipo.nombre}
-                      className={styles.fotoPreview}
-                      onClick={() => window.open(equipo.foto_url, '_blank')}
-                    />
-                    <button 
-                      className={styles.openFotoBtn}
-                      onClick={() => window.open(equipo.foto_url, '_blank')}
-                    >
-                      🔍 Ver foto completa
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* Galería de múltiples fotos */}
+              <EquipmentPhotoGallery 
+                photos={equipoPhotos}
+                selectedPhotoUrl={equipo.foto_url}
+                onSelectProfilePhoto={handleSelectProfilePhoto}
+                onAddPhotos={handleAddPhotos}
+                onDeletePhoto={handleDeletePhoto}
+                equipoId={equipo.id}
+                readOnly={false}
+              />
 
               {/* Mostrar documentos técnicos (Ficha Técnica y Manual) con DocumentViewer */}
               {documentosTecnicos.length > 0 && (
-                <DocumentViewer 
-                  documents={documentosTecnicos}
-                  title="📑 Documentos Técnicos"
-                />
+                <>
+                  <div className={styles.divider}></div>
+                  <DocumentViewer 
+                    documents={documentosTecnicos}
+                    title="📑 Documentos Técnicos"
+                  />
+                </>
               )}
 
-              {/* Si no hay ningún documento */}
-              {!equipo.foto_url && documentosTecnicos.length === 0 && (
-                <p className={styles.emptyMessage}>No hay documentos cargados para este equipo</p>
+              {/* Si no hay ningún documento técnico ni fotos */}
+              {documentosTecnicos.length === 0 && equipoPhotos.length === 0 && (
+                <p className={styles.emptyMessage}>No hay documentos ni fotos cargadas para este equipo</p>
               )}
             </div>
           </div>
@@ -886,7 +900,6 @@ export default function DetalleEquipo() {
       
       <CompletarMantenimientoModal isOpen={showCompletarModal} onClose={() => setShowCompletarModal(false)} onSuccess={handleCompletarSuccess} mantenimiento={mantenimientoACompletar} equipoNombre={equipo?.nombre} />
       
-      {/* MODAL DE MANTENIMIENTO CON equipoId */}
       <DetalleMantenimientoModal 
         isOpen={showDetalleModal} 
         onClose={() => setShowDetalleModal(false)} 
@@ -896,7 +909,6 @@ export default function DetalleEquipo() {
         onEdit={cargarDatos}
       />
       
-      {/* MODAL DE INCIDENCIA CON equipoId */}
       <DetalleIncidenciaModal 
         isOpen={showDetalleIncidenciaModal} 
         onClose={() => {
@@ -909,7 +921,6 @@ export default function DetalleEquipo() {
         onEdit={handleIncidenciaEditSuccess}
       />
       
-      {/* MODAL DE HISTORIAL CON equipoId */}
       <DetalleHistorialModal 
         isOpen={showDetalleHistorialModal} 
         onClose={() => {

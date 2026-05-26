@@ -1,0 +1,442 @@
+/* FRONTEND/src/components/mantenimiento/EquipmentPhotoGallery.module.css */
+
+.galleryContainer {
+  background: var(--bg-raised);
+  border-radius: var(--r-lg);
+  padding: 1rem;
+  border: 1px solid var(--border-dim);
+}
+
+.galleryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.galleryTitle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.addPhotosBtn {
+  padding: 0.25rem 0.75rem;
+  background: var(--green);
+  border: none;
+  border-radius: var(--r-md);
+  color: #000;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addPhotosBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
+}
+
+.addPhotosBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.galleryInfo {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.profileBadge {
+  font-size: 0.65rem;
+  color: var(--green);
+  background: rgba(0, 255, 157, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+}
+
+.carouselContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.navButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: #000;
+}
+
+.mainImageContainer {
+  flex: 1;
+  aspect-ratio: 16 / 9;
+  background: var(--bg-surface);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  border: 1px solid var(--border-dim);
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.imageOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+}
+
+.profileIndicator {
+  background: rgba(0, 255, 157, 0.9);
+  color: #000;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: bold;
+}
+
+.imageDateBadge {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+}
+
+.thumbnailContainer {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.thumbnail {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.thumbnail:hover {
+  transform: scale(1.05);
+}
+
+.activeThumbnail {
+  border-color: var(--green);
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnailOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.thumbnail:hover .thumbnailOverlay {
+  opacity: 1;
+}
+
+.thumbnailProfileIcon {
+  font-size: 1.2rem;
+  text-shadow: 0 0 4px black;
+}
+
+.deleteThumbnailBtn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 77, 77, 0.9);
+  border: none;
+  color: white;
+  font-size: 0.6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.thumbnail:hover .deleteThumbnailBtn {
+  opacity: 1;
+}
+
+.deleteThumbnailBtn:hover {
+  background: var(--red);
+  transform: scale(1.1);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+.setProfileBtn, .deleteCurrentBtn {
+  padding: 0.4rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.setProfileBtn {
+  background: rgba(0, 255, 157, 0.15);
+  border: 1px solid var(--green);
+  color: var(--green);
+}
+
+.setProfileBtn:hover {
+  background: var(--green);
+  color: #000;
+}
+
+.deleteCurrentBtn {
+  background: rgba(255, 77, 77, 0.15);
+  border: 1px solid var(--red);
+  color: var(--red);
+}
+
+.deleteCurrentBtn:hover {
+  background: var(--red);
+  color: white;
+}
+
+.emptyGallery {
+  text-align: center;
+  padding: 2rem;
+  background: var(--bg-raised);
+  border-radius: var(--r-lg);
+  border: 1px dashed var(--border-dim);
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.addFirstPhotoBtn {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--green);
+  border: none;
+  border-radius: var(--r-md);
+  color: #000;
+  cursor: pointer;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modalContent {
+  position: relative;
+  width: 90vw;
+  max-width: 1200px;
+  height: 85vh;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.zoomControls {
+  position: absolute;
+  top: 1rem;
+  right: 4rem;
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.25rem 0.5rem;
+  border-radius: 30px;
+  z-index: 10;
+}
+
+.zoomButton {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.modalCarousel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.modalNavPrev, .modalNavNext {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.modalNavPrev { left: 1rem; }
+.modalNavNext { right: 1rem; }
+
+.modalImageContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.modalImage {
+  max-width: 90%;
+  max-height: 85%;
+  object-fit: contain;
+  transition: transform 0.2s ease-out;
+}
+
+.modalInfo {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  font-size: 0.75rem;
+  color: #ccc;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalSetProfileBtn, .modalDeleteBtn {
+  padding: 0.4rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.modalSetProfileBtn {
+  background: rgba(0, 255, 157, 0.2);
+  border: 1px solid var(--green);
+  color: var(--green);
+}
+
+.modalDeleteBtn {
+  background: rgba(255, 77, 77, 0.2);
+  border: 1px solid var(--red);
+  color: var(--red);
+}
+
+@media (max-width: 768px) {
+  .thumbnail {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+  }
+  
+  .modalNavPrev, .modalNavNext {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+  }
+}

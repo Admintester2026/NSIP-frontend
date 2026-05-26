@@ -184,3 +184,9 @@
     font-size: 0.9rem;
   }
 }
+
+.divider {
+  height: 1px;
+  background: var(--border-dim);
+  margin: 1.5rem 0;
+}

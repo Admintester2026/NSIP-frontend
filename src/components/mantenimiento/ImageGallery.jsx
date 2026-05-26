@@ -2,6 +2,17 @@
 import { useState, useRef } from 'react';
 import styles from './ImageGallery.module.css';
 
+// Obtener la base del backend para normalizar URLs
+const API_BASE = import.meta.env.VITE_API_URL;
+const BACKEND_BASE = API_BASE ? API_BASE.replace('/api', '') : '';
+
+function normalizeUrl(url) {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/uploads')) return `${BACKEND_BASE}${url}`;
+  return url;
+}
+
 export default function ImageGallery({ images, title = 'Galería' }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
@@ -12,16 +23,22 @@ export default function ImageGallery({ images, title = 'Galería' }) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef(null);
 
-  if (!images || images.length === 0) {
-    return <p className={styles.emptyMessage}>No hay imágenes disponibles</p>;
+  // Normalizar URLs de las imágenes
+  const normalizedImages = images.map(img => ({
+    ...img,
+    url: normalizeUrl(img.url)
+  }));
+
+  if (!normalizedImages || normalizedImages.length === 0) {
+    return <p className={styles.emptyMessage}>📷 No hay imágenes disponibles</p>;
   }
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? normalizedImages.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === normalizedImages.length - 1 ? 0 : prev + 1));
   };
 
   const openModal = (index) => {
@@ -31,12 +48,12 @@ export default function ImageGallery({ images, title = 'Galería' }) {
   };
 
   const handleModalPrev = () => {
-    setModalIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setModalIndex((prev) => (prev === 0 ? normalizedImages.length - 1 : prev - 1));
     resetZoomAndPosition();
   };
 
   const handleModalNext = () => {
-    setModalIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setModalIndex((prev) => (prev === normalizedImages.length - 1 ? 0 : prev + 1));
     resetZoomAndPosition();
   };
 
@@ -75,7 +92,6 @@ export default function ImageGallery({ images, title = 'Galería' }) {
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Limitar movimiento
       const maxX = (zoomLevel - 1) * 250;
       const maxY = (zoomLevel - 1) * 250;
       
@@ -139,7 +155,7 @@ export default function ImageGallery({ images, title = 'Galería' }) {
       <div className={styles.galleryContainer}>
         <div className={styles.galleryHeader}>
           <span className={styles.galleryTitle}>{title}</span>
-          <span className={styles.galleryCount}>{images.length} archivo(s)</span>
+          <span className={styles.galleryCount}>{normalizedImages.length} archivo(s)</span>
         </div>
 
         <div className={styles.carouselContainer}>
@@ -148,25 +164,25 @@ export default function ImageGallery({ images, title = 'Galería' }) {
           </button>
 
           <div className={styles.mainImageContainer} onClick={() => openModal(currentIndex)}>
-            {isVideo(images[currentIndex]?.url) ? (
-              <video src={images[currentIndex].url} className={styles.mainVideo} controls />
-            ) : isPDF(images[currentIndex]?.url) ? (
+            {isVideo(normalizedImages[currentIndex]?.url) ? (
+              <video src={normalizedImages[currentIndex].url} className={styles.mainVideo} controls />
+            ) : isPDF(normalizedImages[currentIndex]?.url) ? (
               <div className={styles.pdfPreview}>
                 <span>📄</span>
-                <span>{images[currentIndex].filename || 'PDF'}</span>
-                <button className={styles.viewPdfBtn} onClick={(e) => { e.stopPropagation(); window.open(images[currentIndex].url, '_blank'); }}>
+                <span>{normalizedImages[currentIndex].filename || 'PDF'}</span>
+                <button className={styles.viewPdfBtn} onClick={(e) => { e.stopPropagation(); window.open(normalizedImages[currentIndex].url, '_blank'); }}>
                   Ver PDF
                 </button>
               </div>
             ) : (
               <img 
-                src={images[currentIndex].url} 
+                src={normalizedImages[currentIndex].url} 
                 alt={`Imagen ${currentIndex + 1}`} 
                 className={styles.mainImage}
               />
             )}
             <div className={styles.imageDateBadge}>
-              📅 {getImageDate(images[currentIndex])}
+              📅 {getImageDate(normalizedImages[currentIndex])}
             </div>
           </div>
 
@@ -176,7 +192,7 @@ export default function ImageGallery({ images, title = 'Galería' }) {
         </div>
 
         <div className={styles.thumbnailContainer}>
-          {images.map((img, idx) => (
+          {normalizedImages.map((img, idx) => (
             <div
               key={idx}
               className={`${styles.thumbnail} ${idx === currentIndex ? styles.activeThumbnail : ''}`}
@@ -202,7 +218,7 @@ export default function ImageGallery({ images, title = 'Galería' }) {
         </div>
       </div>
 
-      {/* Modal ampliado MEJORADO */}
+      {/* Modal ampliado */}
       {showModal && (
         <div 
           className={styles.modalOverlay} 
@@ -212,7 +228,6 @@ export default function ImageGallery({ images, title = 'Galería' }) {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <button className={styles.modalClose} onClick={() => setShowModal(false)}>✕</button>
             
-            {/* Controles de zoom */}
             <div className={styles.zoomControls}>
               <button className={styles.zoomButton} onClick={zoomOut} title="Alejar (-) / Rueda mouse">
                 <span>−</span>
@@ -237,19 +252,19 @@ export default function ImageGallery({ images, title = 'Galería' }) {
                 onMouseLeave={handleMouseUp}
                 style={{ cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
               >
-                {isVideo(images[modalIndex]?.url) ? (
+                {isVideo(normalizedImages[modalIndex]?.url) ? (
                   <video 
-                    src={images[modalIndex].url} 
+                    src={normalizedImages[modalIndex].url} 
                     className={styles.modalVideo} 
                     controls 
                     autoPlay 
                   />
-                ) : isPDF(images[modalIndex]?.url) ? (
-                  <iframe src={images[modalIndex].url} className={styles.modalPdf} title="PDF" />
+                ) : isPDF(normalizedImages[modalIndex]?.url) ? (
+                  <iframe src={normalizedImages[modalIndex].url} className={styles.modalPdf} title="PDF" />
                 ) : (
                   <div className={styles.zoomableWrapper}>
                     <img 
-                      src={images[modalIndex].url} 
+                      src={normalizedImages[modalIndex].url} 
                       alt={`Imagen ${modalIndex + 1}`} 
                       className={styles.modalImage}
                       style={{ 
@@ -266,32 +281,31 @@ export default function ImageGallery({ images, title = 'Galería' }) {
               <button className={styles.modalNavNext} onClick={handleModalNext}>›</button>
             </div>
 
-            {/* Información del modal */}
             <div className={styles.modalInfo}>
               <div className={styles.modalInfoLeft}>
                 <span className={styles.modalDate}>
-                  📅 {getImageDate(images[modalIndex])}
+                  📅 {getImageDate(normalizedImages[modalIndex])}
                 </span>
               </div>
               <div className={styles.modalInfoCenter}>
-                <span>{modalIndex + 1} de {images.length}</span>
+                <span>{modalIndex + 1} de {normalizedImages.length}</span>
               </div>
               <div className={styles.modalInfoRight}>
                 {zoomLevel > 1 && (
                   <span className={styles.zoomHint}>🔍 Arrastra para mover | Rueda para zoom</span>
                 )}
-                {images[modalIndex]?.filename && (
-                  <span className={styles.modalFilename} title={images[modalIndex].filename}>
-                    📄 {images[modalIndex].filename.length > 30 
-                      ? images[modalIndex].filename.substring(0, 27) + '...' 
-                      : images[modalIndex].filename}
+                {normalizedImages[modalIndex]?.filename && (
+                  <span className={styles.modalFilename} title={normalizedImages[modalIndex].filename}>
+                    📄 {normalizedImages[modalIndex].filename.length > 30 
+                      ? normalizedImages[modalIndex].filename.substring(0, 27) + '...' 
+                      : normalizedImages[modalIndex].filename}
                   </span>
                 )}
               </div>
             </div>
 
             <div className={styles.modalThumbnails}>
-              {images.map((img, idx) => (
+              {normalizedImages.map((img, idx) => (
                 <div
                   key={idx}
                   className={`${styles.modalThumbnail} ${idx === modalIndex ? styles.activeModalThumbnail : ''}`}

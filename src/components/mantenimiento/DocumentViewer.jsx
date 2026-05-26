@@ -2,11 +2,28 @@
 import { useState } from 'react';
 import styles from './DocumentViewer.module.css';
 
+// Obtener la base del backend desde la variable de entorno
+const API_BASE = import.meta.env.VITE_API_URL;
+const BACKEND_BASE = API_BASE ? API_BASE.replace('/api', '') : '';
+
+function normalizeUrl(url) {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/uploads')) return `${BACKEND_BASE}${url}`;
+  return url;
+}
+
 export default function DocumentViewer({ documents, title = 'Documentos' }) {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  if (!documents || documents.length === 0) {
+  // Normalizar URLs de los documentos
+  const normalizedDocuments = documents.map(doc => ({
+    ...doc,
+    url: normalizeUrl(doc.url)
+  }));
+
+  if (!normalizedDocuments || normalizedDocuments.length === 0) {
     return (
       <div className={styles.emptyContainer}>
         <p className={styles.emptyMessage}>📄 No hay documentos cargados</p>
@@ -37,10 +54,8 @@ export default function DocumentViewer({ documents, title = 'Documentos' }) {
   const getDocumentName = (doc) => {
     if (doc.nombre) return doc.nombre;
     if (doc.filename) return doc.filename;
-    // Extraer nombre de la URL
     const urlParts = doc.url.split('/');
     const filename = urlParts[urlParts.length - 1];
-    // Limpiar prefijos
     return filename.replace(/^(ficha_tecnica|manual|foto_equipo)-\d+-/, '');
   };
 
@@ -70,11 +85,11 @@ export default function DocumentViewer({ documents, title = 'Documentos' }) {
       <div className={styles.documentContainer}>
         <div className={styles.documentHeader}>
           <span className={styles.documentTitle}>{title}</span>
-          <span className={styles.documentCount}>{documents.length} documento(s)</span>
+          <span className={styles.documentCount}>{normalizedDocuments.length} documento(s)</span>
         </div>
 
         <div className={styles.documentsGrid}>
-          {documents.map((doc, idx) => (
+          {normalizedDocuments.map((doc, idx) => (
             <div
               key={idx}
               className={styles.documentCard}
@@ -106,7 +121,6 @@ export default function DocumentViewer({ documents, title = 'Documentos' }) {
         </div>
       </div>
 
-      {/* Modal de visualización de documento */}
       {showModal && selectedDoc && (
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
