@@ -1,6 +1,9 @@
+// FRONTEND/src/components/mantenimiento/AddEquipmentModal.jsx
 import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './AddEquipmentModal.module.css';
+
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode = false, equipoData = null }) {
   const [formData, setFormData] = useState({
@@ -144,7 +147,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const handleFileChange = (e, tipo) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) { // Aumentado a 50MB para imágenes
+      if (file.size > 50 * 1024 * 1024) {
         setError(`El archivo es demasiado grande. Máximo 50MB para imágenes`);
         return;
       }
@@ -171,12 +174,22 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     const formDataFile = new FormData();
     formDataFile.append('archivo', file);
     formDataFile.append('tipo', tipo);
+    // También enviar entidad_id si es necesario
+    if (formData.id) {
+      formDataFile.append('entidad_id', formData.id);
+    }
     
     try {
-      const response = await fetch('/api/mantenimiento/upload', {
+      // USAR LA URL COMPLETA DEL BACKEND
+      const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
         method: 'POST',
         body: formDataFile
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
       const data = await response.json();
       return data.url;
     } catch (err) {
@@ -251,10 +264,8 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       };
 
       if (editMode && formData.id) {
-        // Actualizar equipo existente
         await mantenimientoAPI.updateEquipo(formData.id, equipoDataToSend);
       } else {
-        // Crear nuevo equipo
         await mantenimientoAPI.createEquipo(equipoDataToSend);
       }
       
