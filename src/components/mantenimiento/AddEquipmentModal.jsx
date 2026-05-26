@@ -26,7 +26,6 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const [error, setError] = useState('');
   const [nombreSugerencias, setNombreSugerencias] = useState([]);
   
-  // Estados para validación de campos tocados
   const [touched, setTouched] = useState({
     nombre: false,
     ubicacion: false,
@@ -38,13 +37,11 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const fichaInputRef = useRef(null);
   const manualInputRef = useRef(null);
 
-  // Cargar datos cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       cargarCategorias();
       cargarSugerenciasNombres();
       
-      // Si es modo edición, cargar los datos del equipo
       if (editMode && equipoData) {
         setFormData({
           id: equipoData.id,
@@ -60,7 +57,6 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           manual_url: equipoData.manual_url || ''
         });
       } else {
-        // Resetear formulario en modo creación
         setFormData({
           id: null,
           nombre: '',
@@ -75,7 +71,6 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           manual_url: ''
         });
       }
-      // Resetear touched
       setTouched({
         nombre: false,
         ubicacion: false,
@@ -108,11 +103,8 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Marcar como tocado
     setTouched(prev => ({ ...prev, [name]: true }));
     
-    // Solo mostrar sugerencias en modo creación y si no es edición
     if (!editMode && name === 'nombre' && value.length > 2) {
       const sugerenciasFiltradas = nombreSugerencias.filter(
         nombre => nombre.toLowerCase().includes(value.toLowerCase())
@@ -140,7 +132,6 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       
       return { ...prev, categorias: categoriasSeleccionadas };
     });
-    // Marcar categorías como tocadas
     setTouched(prev => ({ ...prev, categorias: true }));
   };
 
@@ -174,13 +165,9 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     const formDataFile = new FormData();
     formDataFile.append('archivo', file);
     formDataFile.append('tipo', tipo);
-    // También enviar entidad_id si es necesario
-    if (formData.id) {
-      formDataFile.append('entidad_id', formData.id);
-    }
     
     try {
-      // USAR LA URL COMPLETA DEL BACKEND
+      console.log(`📤 Subiendo ${tipo}...`);
       const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
         method: 'POST',
         body: formDataFile
@@ -191,6 +178,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       }
       
       const data = await response.json();
+      console.log(`✅ ${tipo} subido:`, data.url);
       return data.url;
     } catch (err) {
       console.error(`Error subiendo ${tipo}:`, err);
@@ -198,7 +186,6 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     }
   };
 
-  // Validar el formulario
   const validateForm = () => {
     const errors = [];
     
@@ -238,7 +225,6 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     setError('');
 
     try {
-      // Subir archivos nuevos (si hay)
       let fotoUrl = formData.foto_url;
       let fichaUrl = formData.ficha_tecnica_url;
       let manualUrl = formData.manual_url;
@@ -263,13 +249,13 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         manual_url: manualUrl
       };
 
+      let result;
       if (editMode && formData.id) {
-        await mantenimientoAPI.updateEquipo(formData.id, equipoDataToSend);
+        result = await mantenimientoAPI.updateEquipo(formData.id, equipoDataToSend);
       } else {
-        await mantenimientoAPI.createEquipo(equipoDataToSend);
+        result = await mantenimientoAPI.createEquipo(equipoDataToSend);
       }
       
-      // Limpiar formulario
       setFormData({
         id: null,
         nombre: '',
@@ -284,7 +270,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         manual_url: ''
       });
       
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(result?.id);
       onClose();
     } catch (err) {
       setError(err.message || `Error al ${editMode ? 'actualizar' : 'crear'} el equipo`);
@@ -293,7 +279,6 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     }
   };
 
-  // Verificar si un campo tiene error
   const hasError = (field) => {
     return touched[field] && (
       (field === 'categorias' && formData.categorias.length === 0) ||
