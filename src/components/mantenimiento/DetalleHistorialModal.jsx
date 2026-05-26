@@ -23,6 +23,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [historialActual, setHistorialActual] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Limpiar estado cuando se cierra el modal
   useEffect(() => {
@@ -35,12 +36,14 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
 
   useEffect(() => {
     if (historialItem) {
+      console.log('📌 [Historial] historialItem recibido:', historialItem);
       setHistorialActual(historialItem);
     }
   }, [historialItem]);
 
   useEffect(() => {
     if (isOpen && historialItem?.id) {
+      console.log('🎬 [Historial] Modal abierto con historial ID:', historialItem.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setHistorialActual(historialItem);
@@ -52,11 +55,12 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     const idActual = historialActual?.id || historialItem?.id;
     if (!idActual || !equipoId) return;
     
+    console.log('🔄 [Historial] Recargando historial completo...');
     setRecargando(true);
     try {
       await cargarHistorialDesdeBackend(idActual, equipoId);
       await cargarFacturas(idActual);
-      await cargarVersiones(idActual, equipoId);
+      await cargarVersionesDesdeAPI(idActual);
     } catch (err) {
       console.error('Error recargando historial:', err);
     } finally {
@@ -69,9 +73,11 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
       const API_BASE = getApiBase();
       const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
       const data = await response.json();
+      console.log('📡 [Historial] Historial del equipo:', data);
       if (data.ok && data.datos) {
         const encontrado = data.datos.find(h => h.id === idActual);
         if (encontrado) {
+          console.log('✅ [Historial] Historial encontrado:', encontrado);
           setHistorialActual(encontrado);
         }
       }
@@ -83,6 +89,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const cargarFacturas = async (idActual) => {
     if (!idActual) return;
     
+    console.log('📸 [Historial] Cargando facturas para ID:', idActual);
     setLoadingFacturas(true);
     try {
       const API_BASE = getApiBase();
@@ -96,6 +103,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             ...fact,
             url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
           }));
+          console.log('✅ [Historial] Facturas cargadas:', facturasConUrlAbsoluta.length);
           setFacturas(facturasConUrlAbsoluta);
         }
       }
@@ -106,72 +114,42 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
   };
 
-  // FUNCIÓN CORREGIDA: Carga versiones acumuladas
-  const cargarVersiones = async (idActual, equipoIdActual) => {
-    if (!idActual || !equipoIdActual) return;
+  // NUEVA FUNCIÓN: Carga versiones desde la API de versiones
+  const cargarVersionesDesdeAPI = async (idActual) => {
+    if (!idActual) return;
     
+    console.log('📜 [Historial] Cargando versiones desde API para ID:', idActual);
     setCargandoVersiones(true);
     try {
       const API_BASE = getApiBase();
-      // Obtener TODO el historial del equipo
-      const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
+      const response = await fetch(`${API_BASE}/mantenimiento/historial/${idActual}/versiones`);
       const data = await response.json();
       
-      console.log('📜 [Historial] Datos completos del equipo:', data);
+      console.log('📜 [Historial] Respuesta de API de versiones:', data);
       
       if (data.ok && data.datos && data.datos.length > 0) {
-        // Obtener el campo_modificado del historial actual
-        const campoActual = historialActual?.campo_modificado || historialItem?.campo_modificado;
-        
-        // Filtrar SOLO los registros del mismo campo_modificado
-        const registrosDelMismoCampo = data.datos.filter(h => 
-          h.campo_modificado === campoActual
-        );
-        
-        console.log('📜 [Historial] Registros del mismo campo:', registrosDelMismoCampo);
-        console.log('📜 [Historial] Campo actual:', campoActual);
-        
-        if (registrosDelMismoCampo.length > 0) {
-          // Ordenar por fecha (más reciente primero)
-          const ordenados = [...registrosDelMismoCampo].sort((a, b) => 
-            new Date(b.fecha) - new Date(a.fecha)
-          );
-          
-          // Crear versiones (la primera es la actual, el resto son anteriores)
-          const versionesGeneradas = ordenados.map((h, index) => ({
-            version: index + 1,
-            id: h.id,
-            campo_modificado: h.campo_modificado,
-            valor_anterior: h.valor_anterior,
-            valor_nuevo: h.valor_nuevo,
-            descripcion: h.descripcion,
-            fecha_modificacion: h.fecha,
-            modificado_por: h.usuario || 'sistema'
-          }));
-          
-          console.log('📜 [Historial] Versiones generadas:', versionesGeneradas.length);
-          setVersiones(versionesGeneradas);
-          return;
+        console.log('✅ [Historial] Versiones encontradas:', data.datos.length);
+        setVersiones(data.datos);
+      } else {
+        console.log('⚠️ [Historial] No hay versiones en la API, usando datos actuales');
+        // Fallback: mostrar solo la versión actual
+        const datos = historialActual || historialItem;
+        if (datos?.campo_modificado) {
+          setVersiones([{
+            version: 1,
+            campo_modificado: datos.campo_modificado,
+            valor_anterior: datos.valor_anterior,
+            valor_nuevo: datos.valor_nuevo,
+            descripcion: datos.descripcion,
+            fecha_modificacion: datos.fecha || new Date().toISOString(),
+            modificado_por: datos.usuario || 'sistema'
+          }]);
+        } else {
+          setVersiones([]);
         }
       }
-      
-      // Fallback: si no hay múltiples registros, mostrar solo la versión actual
-      const datos = historialActual || historialItem;
-      if (datos?.campo_modificado) {
-        setVersiones([{
-          version: 1,
-          campo_modificado: datos.campo_modificado,
-          valor_anterior: datos.valor_anterior,
-          valor_nuevo: datos.valor_nuevo,
-          descripcion: datos.descripcion,
-          fecha_modificacion: datos.fecha || new Date().toISOString(),
-          modificado_por: datos.usuario || 'sistema'
-        }]);
-      } else {
-        setVersiones([]);
-      }
     } catch (err) {
-      console.error('Error cargando versiones:', err);
+      console.error('❌ Error cargando versiones desde API:', err);
       setVersiones([]);
     } finally {
       setCargandoVersiones(false);
@@ -189,10 +167,13 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   };
 
   const handleEditSuccess = async () => {
+    console.log('🔵🔵🔵 [Historial] handleEditSuccess - INICIADO 🔵🔵🔵');
     if (onEdit) {
       await onEdit();
     }
     await recargarHistorialCompleto();
+    setRefreshKey(prev => prev + 1);
+    console.log('🔵🔵🔵 [Historial] handleEditSuccess - FINALIZADO 🔵🔵🔵');
   };
 
   const formatDate = (dateString) => {
@@ -262,9 +243,11 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const datosMostrar = historialActual || historialItem;
   const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
-
-  // Mostrar el botón de historial si hay más de 1 versión
+  
+  // Mostrar el botón si hay más de 1 versión en el array
   const mostrarBotonHistorial = versiones.length > 1;
+
+  console.log('🎨 [Historial] Renderizando - versiones:', versiones.length, 'mostrarBoton:', mostrarBotonHistorial);
 
   return (
     <>
@@ -280,8 +263,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
                 ) : versiones.length > 1 ? (
-                  // Mostrar todas las versiones EXCEPTO la primera (actual)
-                  [...versiones].slice(1).map((v, idx) => (
+                  versiones.filter(v => v.version !== 1).map((v, idx) => (
                     <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
                       <div className={styles.versionHeaderSidebar}>
                         <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
@@ -404,7 +386,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
       </div>
 
       <EditarHistorialModal
-        key={historialActual?.id}
+        key={refreshKey}
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
