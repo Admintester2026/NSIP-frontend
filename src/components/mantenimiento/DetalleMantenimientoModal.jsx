@@ -1,9 +1,9 @@
-// FRONTEND/src/components/mantenimiento/DetalleHistorialModal.jsx
+// FRONTEND/src/components/mantenimiento/DetalleMantenimientoModal.jsx
 import { useState, useEffect } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import ImageGallery from './ImageGallery';
-import EditarHistorialModal from './EditarHistorialModal';
-import styles from './DetalleHistorialModal.module.css';
+import EditarMantenimientoModal from './EditarMantenimientoModal';
+import styles from './DetalleMantenimientoModal.module.css';
 
 const getBackendBase = () => {
   return 'http://192.168.3.65:3000';
@@ -13,123 +13,102 @@ const getApiBase = () => {
   return `${getBackendBase()}/api`;
 };
 
-export default function DetalleHistorialModal({ isOpen, onClose, historialItem, equipoNombre, onEdit, equipoId }) {
-  const [facturas, setFacturas] = useState([]);
-  const [loadingFacturas, setLoadingFacturas] = useState(false);
+export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimiento, equipoNombre, onEdit }) {
+  const [evidencias, setEvidencias] = useState([]);
+  const [loadingEvidencias, setLoadingEvidencias] = useState(false);
   const [versiones, setVersiones] = useState([]);
   const [cargandoVersiones, setCargandoVersiones] = useState(false);
   const [mostrarSidebar, setMostrarSidebar] = useState(false);
   const [vistaPreviaVersion, setVistaPreviaVersion] = useState(null);
   const [recargando, setRecargando] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [historialActual, setHistorialActual] = useState(null);
+  const [mantenimientoActual, setMantenimientoActual] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (historialItem) {
-      console.log('📌 [DetalleHistorial] historialItem PROP actualizada:', historialItem.id);
-      setHistorialActual(historialItem);
+    if (mantenimiento) {
+      console.log('📌 [DetalleMantenimiento] mantenimiento PROP actualizada:', mantenimiento.id);
+      setMantenimientoActual(mantenimiento);
     }
-  }, [historialItem]);
+  }, [mantenimiento]);
 
   useEffect(() => {
-    if (isOpen && historialItem?.id) {
-      console.log('🎬 [DetalleHistorial] Modal abierto con historial ID:', historialItem.id);
+    if (isOpen && mantenimiento?.id) {
+      console.log('🎬 [DetalleMantenimiento] Modal abierto con mantenimiento ID:', mantenimiento.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
-      setHistorialActual(historialItem);
-      recargarHistorialCompleto();
+      setMantenimientoActual(mantenimiento);
+      recargarMantenimientoCompleto();
     }
-  }, [isOpen, historialItem?.id]);
+  }, [isOpen, mantenimiento?.id]);
 
-  const recargarHistorialCompleto = async () => {
-    const idActual = historialActual?.id || historialItem?.id;
-    const equipoIdActual = equipoId || historialItem?.equipo_id;
+  const recargarMantenimientoCompleto = async () => {
+    const idActual = mantenimientoActual?.id || mantenimiento?.id;
+    if (!idActual) return;
     
-    if (!idActual || !equipoIdActual) {
-      console.log('⚠️ [DetalleHistorial] Faltan IDs:', { idActual, equipoIdActual });
-      return;
-    }
-    
-    console.log('🔄 [DetalleHistorial] Recargando datos del historial ID:', idActual, 'Equipo ID:', equipoIdActual);
+    console.log('🔄 [DetalleMantenimiento] Recargando datos del mantenimiento ID:', idActual);
     setRecargando(true);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
+      const response = await fetch(`${API_BASE}/mantenimiento/mantenimientos/equipo/${idActual}`);
       const data = await response.json();
-      console.log('📡 [DetalleHistorial] Respuesta del backend:', data);
+      console.log('📡 [DetalleMantenimiento] Respuesta del backend:', data);
       
       if (data.ok && data.datos) {
-        const encontrado = data.datos.find(h => h.id === idActual);
+        const encontrado = data.datos.find(m => m.id === idActual);
         if (encontrado) {
-          console.log('✅ [DetalleHistorial] Historial encontrado:', encontrado);
-          setHistorialActual(encontrado);
+          console.log('✅ [DetalleMantenimiento] Mantenimiento encontrado:', encontrado);
+          setMantenimientoActual(encontrado);
         }
       }
       
-      await cargarFacturas(idActual);
+      await cargarEvidencias(idActual);
       await cargarVersiones(idActual);
       
     } catch (err) {
-      console.error('❌ Error recargando historial:', err);
+      console.error('❌ Error recargando mantenimiento:', err);
     } finally {
       setRecargando(false);
     }
   };
 
-  const cargarFacturas = async (idActual) => {
+  const cargarEvidencias = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📸 [DetalleHistorial] Cargando facturas...');
-    setLoadingFacturas(true);
+    console.log('📸 [DetalleMantenimiento] Cargando evidencias...');
+    setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/historial/${idActual}`);
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${idActual}`);
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
         if (data.ok) {
           const backendBase = getBackendBase();
-          const facturasConUrlAbsoluta = (data.datos || []).map(fact => ({
-            ...fact,
-            url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
+          const evidenciasConUrlAbsoluta = (data.datos || []).map(ev => ({
+            ...ev,
+            url: ev.url.startsWith('http') ? ev.url : `${backendBase}${ev.url}`
           }));
-          console.log('✅ [DetalleHistorial] Facturas cargadas:', facturasConUrlAbsoluta.length);
-          setFacturas(facturasConUrlAbsoluta);
+          console.log('✅ [DetalleMantenimiento] Evidencias cargadas:', evidenciasConUrlAbsoluta.length);
+          setEvidencias(evidenciasConUrlAbsoluta);
         }
       }
     } catch (err) {
-      console.error('Error cargando facturas:', err);
+      console.error('Error cargando evidencias:', err);
     } finally {
-      setLoadingFacturas(false);
+      setLoadingEvidencias(false);
     }
   };
 
   const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📜 [DetalleHistorial] Cargando versiones...');
+    console.log('📜 [DetalleMantenimiento] Cargando versiones...');
     setCargandoVersiones(true);
     try {
-      // Para historial, generamos versiones simuladas basadas en cambios anteriores
-      // Si el historial tiene fecha de modificación, mostramos como versión
-      const versionesSimuladas = [];
-      
-      if (historialActual || historialItem) {
-        const datos = historialActual || historialItem;
-        versionesSimuladas.push({
-          version: 1,
-          campo_modificado: datos.campo_modificado,
-          valor_anterior: datos.valor_anterior,
-          valor_nuevo: datos.valor_nuevo,
-          descripcion: datos.descripcion,
-          fecha_modificacion: datos.fecha || new Date().toISOString(),
-          modificado_por: datos.usuario || 'sistema'
-        });
-      }
-      
-      console.log('✅ [DetalleHistorial] Versiones cargadas:', versionesSimuladas.length);
-      setVersiones(versionesSimuladas);
+      const data = await mantenimientoAPI.getHistorialVersiones(idActual);
+      console.log('✅ [DetalleMantenimiento] Versiones cargadas:', data?.length || 0);
+      setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando versiones:', err);
     } finally {
@@ -138,18 +117,18 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   };
 
   const verVersionAnterior = (version) => {
-    console.log('👁️ [DetalleHistorial] Viendo versión:', version);
+    console.log('👁️ [DetalleMantenimiento] Viendo versión:', version.version);
     setVistaPreviaVersion(version);
     setMostrarSidebar(false);
   };
 
   const cerrarVistaPrevia = () => {
-    console.log('👁️ [DetalleHistorial] Cerrando vista previa');
+    console.log('👁️ [DetalleMantenimiento] Cerrando vista previa');
     setVistaPreviaVersion(null);
   };
 
   const handleEditSuccess = async () => {
-    console.log('🟡🟡🟡 [DetalleHistorial] handleEditSuccess - INICIADO 🟡🟡🟡');
+    console.log('🔵🔵🔵 [DetalleMantenimiento] handleEditSuccess - INICIADO 🔵🔵🔵');
     
     if (onEdit) {
       console.log('📞 Llamando a onEdit del padre...');
@@ -157,10 +136,10 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
     
     console.log('🔄 Recargando todos los datos...');
-    await recargarHistorialCompleto();
+    await recargarMantenimientoCompleto();
     setRefreshKey(prev => prev + 1);
     
-    console.log('🟡🟡🟡 [DetalleHistorial] handleEditSuccess - FINALIZADO 🟡🟡🟡');
+    console.log('🔵🔵🔵 [DetalleMantenimiento] handleEditSuccess - FINALIZADO 🔵🔵🔵');
   };
 
   const formatDate = (dateString) => {
@@ -180,22 +159,9 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  const getCampoModificadoTexto = (campo) => {
-    const campos = {
-      'pieza_reemplazada': '🔧 Pieza Reemplazada',
-      'configuracion': '⚙️ Configuración',
-      'calibracion': '📏 Calibración',
-      'reparacion': '🛠️ Reparación',
-      'actualizacion': '🔄 Actualización',
-      'observacion': '📝 Observación',
-      'factura': '🧾 Factura / Comprobante'
-    };
-    return campos[campo] || campo;
-  };
-
   if (!isOpen) return null;
 
-  if (!historialActual && !historialItem) {
+  if (!mantenimientoActual && !mantenimiento) {
     return (
       <div className={styles.modalOverlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -204,7 +170,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             <button className={styles.modalClose} onClick={onClose}>✕</button>
           </div>
           <div className={styles.modalBody}>
-            <p className={styles.loadingText}>Cargando información del registro...</p>
+            <p className={styles.loadingText}>Cargando información del mantenimiento...</p>
           </div>
         </div>
       </div>
@@ -227,13 +193,13 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     );
   }
 
-  const datosMostrar = historialActual || historialItem;
+  const datosMostrar = mantenimientoActual || mantenimiento;
   const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
 
-  console.log('🎨 [DetalleHistorial] Renderizando con datos:', { 
+  console.log('🎨 [DetalleMantenimiento] Renderizando con datos:', { 
     id: datosMostrar?.id, 
-    campo: datosMostrar?.campo_modificado,
+    titulo: datosMostrar?.titulo,
     versionesCount: versiones.length 
   });
 
@@ -250,20 +216,16 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
               <div className={styles.sidebarContent}>
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
-                ) : versiones.length > 1 ? (
+                ) : versiones.length > 0 ? (
                   versiones.map((v, idx) => (
-                    v.version !== 1 && (
-                      <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
-                        <div className={styles.versionHeaderSidebar}>
-                          <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
-                          <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
-                        </div>
-                        <div className={styles.versionPreviewSidebar}>
-                          {v.descripcion?.substring(0, 60) || v.campo_modificado?.substring(0, 60)}...
-                        </div>
-                        <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
+                    <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
+                      <div className={styles.versionHeaderSidebar}>
+                        <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
+                        <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
                       </div>
-                    )
+                      <div className={styles.versionPreviewSidebar}>{v.notas_completado?.substring(0, 60)}...</div>
+                      <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
+                    </div>
                   ))
                 ) : (
                   <p className={styles.emptyMessage}>No hay versiones anteriores</p>
@@ -279,7 +241,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                   {esVistaPrevia ? (
                     <span className={styles.versionPreviewBadge}>🔍 Vista previa - Versión {vistaPreviaVersion.version}</span>
                   ) : (
-                    '📜 Detalle de Cambio Registrado'
+                    '📋 Detalle del Mantenimiento'
                   )}
                 </h2>
                 {versiones.length > 0 && !esVistaPrevia && (
@@ -297,73 +259,62 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             <div className={styles.modalBody}>
               <div className={styles.infoSection}>
                 <div className={styles.sectionHeader}>
-                  <h4 className={styles.sectionSubtitle}>📋 Información del cambio</h4>
+                  <h4 className={styles.sectionSubtitle}>📋 Información general</h4>
                   {!esVistaPrevia && (
                     <button className={styles.editarButton} onClick={() => setShowEditModal(true)}>
                       ✏️ Editar
                     </button>
                   )}
                 </div>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Título:</span><span className={styles.infoValue}>{mostrarDatos.titulo}</span></div>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Equipo:</span><span className={styles.infoValue}>{equipoNombre}</span></div>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Tipo:</span><span className={styles.infoValue}>{mostrarDatos.tipo || 'No especificado'}</span></div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>ID:</span>
-                  <span className={styles.infoValue}>#{datosMostrar.id}</span>
+                  <span className={styles.infoLabel}>Prioridad:</span>
+                  <span className={`${styles.prioridadBadge} ${
+                    mostrarDatos.prioridad === 'urgente' ? styles.urgente :
+                    mostrarDatos.prioridad === 'alta' ? styles.alta :
+                    mostrarDatos.prioridad === 'media' ? styles.media : styles.baja
+                  }`}>{mostrarDatos.prioridad || 'No especificada'}</span>
                 </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Tipo de cambio:</span>
-                  <span className={styles.infoValue}>{getCampoModificadoTexto(mostrarDatos.campo_modificado)}</span>
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Equipo:</span>
-                  <span className={styles.infoValue}>{equipoNombre}</span>
-                </div>
-                {mostrarDatos.usuario && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Registrado por:</span>
-                    <span className={styles.infoValue}>{mostrarDatos.usuario}</span>
-                  </div>
-                )}
               </div>
 
               <div className={styles.infoSection}>
-                <h4 className={styles.sectionSubtitle}>📅 Fecha del cambio</h4>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoValue}>{formatDate(mostrarDatos.fecha)}</span>
-                </div>
+                <h4 className={styles.sectionSubtitle}>📅 Fechas</h4>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Programado:</span><span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_inicio)}</span></div>
+                {mostrarDatos.fecha_fin && <div className={styles.infoRow}><span className={styles.infoLabel}>Fin programado:</span><span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_fin)}</span></div>}
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Completado:</span><span className={styles.infoValue}>{formatDate(mostrarDatos.fecha_completado)}</span></div>
               </div>
 
-              {(mostrarDatos.valor_anterior || mostrarDatos.valor_nuevo) && (
+              <div className={styles.infoSection}>
+                <h4 className={styles.sectionSubtitle}>👤 Ejecución</h4>
+                <div className={styles.infoRow}><span className={styles.infoLabel}>Técnico:</span><span className={styles.infoValue}>{mostrarDatos.completado_por || mostrarDatos.tecnico || 'No registrado'}</span></div>
+                {mostrarDatos.duracion && <div className={styles.infoRow}><span className={styles.infoLabel}>Duración:</span><span className={styles.infoValue}>{mostrarDatos.duracion} minutos</span></div>}
+              </div>
+
+              {(mostrarDatos.materiales_usados || mostrarDatos.costo_materiales) && (
                 <div className={styles.infoSection}>
-                  <h4 className={styles.sectionSubtitle}>🔄 Valores del cambio</h4>
-                  {mostrarDatos.valor_anterior && (
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Valor anterior:</span>
-                      <span className={styles.valorAnterior}>{mostrarDatos.valor_anterior}</span>
-                    </div>
-                  )}
-                  {mostrarDatos.valor_nuevo && (
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Valor nuevo:</span>
-                      <span className={styles.valorNuevo}>{mostrarDatos.valor_nuevo}</span>
-                    </div>
-                  )}
+                  <h4 className={styles.sectionSubtitle}>🔧 Materiales y Costos</h4>
+                  {mostrarDatos.materiales_usados && <div className={styles.infoRow}><span className={styles.infoLabel}>Materiales usados:</span><span className={styles.infoValue}>{mostrarDatos.materiales_usados}</span></div>}
+                  {mostrarDatos.costo_materiales && <div className={styles.infoRow}><span className={styles.infoLabel}>Costo de materiales:</span><span className={styles.infoValue}>${Number(mostrarDatos.costo_materiales).toFixed(2)}</span></div>}
                 </div>
               )}
 
-              {mostrarDatos.descripcion && (
+              {mostrarDatos.notas_completado && (
                 <div className={styles.infoSection}>
-                  <h4 className={styles.sectionSubtitle}>📝 Descripción</h4>
-                  <div className={styles.descripcionBox}>{mostrarDatos.descripcion}</div>
+                  <h4 className={styles.sectionSubtitle}>📝 Notas del trabajo</h4>
+                  <div className={styles.notasBox}>{mostrarDatos.notas_completado}</div>
                 </div>
               )}
 
               <div className={styles.infoSection}>
-                <h4 className={styles.sectionSubtitle}>🧾 Facturas / Comprobantes</h4>
-                {loadingFacturas ? (
-                  <p className={styles.loadingText}>Cargando documentos...</p>
-                ) : facturas.length > 0 ? (
-                  <ImageGallery images={facturas} title="Facturas y comprobantes" />
+                <h4 className={styles.sectionSubtitle}>📸 Evidencias</h4>
+                {loadingEvidencias ? (
+                  <p className={styles.loadingText}>Cargando evidencias...</p>
+                ) : evidencias.length > 0 ? (
+                  <ImageGallery images={evidencias} title="Evidencias del mantenimiento" />
                 ) : (
-                  <p className={styles.emptyMessage}>No hay facturas o comprobantes adjuntos</p>
+                  <p className={styles.emptyMessage}>No hay evidencias adjuntas</p>
                 )}
               </div>
             </div>
@@ -375,12 +326,12 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
         </div>
       </div>
 
-      <EditarHistorialModal
+      <EditarMantenimientoModal
         key={refreshKey}
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
-        historialItem={datosMostrar}
+        mantenimiento={datosMostrar}
         equipoNombre={equipoNombre}
       />
     </>
