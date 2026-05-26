@@ -193,14 +193,12 @@ export default function DetalleEquipo() {
   };
 
   // ==========================================
-  // FUNCIONES PARA RECARGAR DESPUÉS DE EDITAR (NO CIERRAN MODALES)
+  // FUNCIONES PARA RECARGAR DESPUÉS DE EDITAR
   // ==========================================
   
-  // Para incidencias - SOLO RECARGA DATOS, NO CIERRA EL MODAL
   const handleIncidenciaEditSuccess = async () => {
     await cargarDatos();
     
-    // Actualizar la incidencia seleccionada con los datos frescos
     if (incidenciaSeleccionada) {
       const incidenciaActualizada = incidencias.find(i => i.id === incidenciaSeleccionada.id);
       if (incidenciaActualizada) {
@@ -213,11 +211,9 @@ export default function DetalleEquipo() {
     setTimeout(() => setShowAlert(false), 3000);
   };
 
-  // Para historial - SOLO RECARGA DATOS, NO CIERRA EL MODAL
   const handleHistorialEditSuccess = async () => {
     await cargarDatos();
     
-    // Actualizar el historial seleccionado con los datos frescos
     if (historialSeleccionado) {
       const historialActualizado = historial.find(h => h.id === historialSeleccionado.id);
       if (historialActualizado) {
@@ -805,9 +801,17 @@ export default function DetalleEquipo() {
       
       <CompletarMantenimientoModal isOpen={showCompletarModal} onClose={() => setShowCompletarModal(false)} onSuccess={handleCompletarSuccess} mantenimiento={mantenimientoACompletar} equipoNombre={equipo?.nombre} />
       
-      <DetalleMantenimientoModal isOpen={showDetalleModal} onClose={() => setShowDetalleModal(false)} mantenimiento={mantenimientoSeleccionado} equipoNombre={equipo?.nombre} onEdit={cargarDatos} />
+      {/* MODAL DE MANTENIMIENTO CON equipoId */}
+      <DetalleMantenimientoModal 
+        isOpen={showDetalleModal} 
+        onClose={() => setShowDetalleModal(false)} 
+        mantenimiento={mantenimientoSeleccionado} 
+        equipoNombre={equipo?.nombre}
+        equipoId={equipo?.id}
+        onEdit={cargarDatos}
+      />
       
-      {/* MODAL DE INCIDENCIA - NO CIERRA AL EDITAR */}
+      {/* MODAL DE INCIDENCIA CON equipoId */}
       <DetalleIncidenciaModal 
         isOpen={showDetalleIncidenciaModal} 
         onClose={() => {
@@ -815,11 +819,12 @@ export default function DetalleEquipo() {
           setIncidenciaSeleccionada(null);
         }} 
         incidencia={incidenciaSeleccionada} 
-        equipoNombre={equipo?.nombre} 
+        equipoNombre={equipo?.nombre}
+        equipoId={equipo?.id}
         onEdit={handleIncidenciaEditSuccess}
       />
       
-      {/* MODAL DE HISTORIAL - NO CIERRA AL EDITAR */}
+      {/* MODAL DE HISTORIAL CON equipoId */}
       <DetalleHistorialModal 
         isOpen={showDetalleHistorialModal} 
         onClose={() => {

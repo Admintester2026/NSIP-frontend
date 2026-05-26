@@ -13,7 +13,7 @@ const getApiBase = () => {
   return `${getBackendBase()}/api`;
 };
 
-export default function DetalleHistorialModal({ isOpen, onClose, historialItem, equipoNombre, onEdit, equipoId }) {
+export default function DetalleHistorialModal({ isOpen, onClose, historialItem, equipoNombre, equipoId, onEdit }) {
   const [facturas, setFacturas] = useState([]);
   const [loadingFacturas, setLoadingFacturas] = useState(false);
   const [versiones, setVersiones] = useState([]);
@@ -27,59 +27,54 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
 
   useEffect(() => {
     if (historialItem) {
-      console.log('📌 [DetalleHistorial] historialItem PROP actualizada:', historialItem.id);
       setHistorialActual(historialItem);
     }
   }, [historialItem]);
 
   useEffect(() => {
     if (isOpen && historialItem?.id) {
-      console.log('🎬 [DetalleHistorial] Modal abierto con historial ID:', historialItem.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setHistorialActual(historialItem);
-      cargarTodo();
+      recargarHistorialCompleto();
     }
   }, [isOpen, historialItem?.id]);
 
-  const cargarTodo = async () => {
-    console.log('🔄 [DetalleHistorial] Iniciando carga completa...');
-    await cargarHistorialDesdeBackend();
-    await cargarFacturas();
-    await cargarVersiones();
+  const recargarHistorialCompleto = async () => {
+    const idActual = historialActual?.id || historialItem?.id;
+    if (!idActual || !equipoId) return;
+    
+    setRecargando(true);
+    try {
+      await cargarHistorialDesdeBackend(idActual, equipoId);
+      await cargarFacturas(idActual);
+      await cargarVersiones(idActual);
+    } catch (err) {
+      console.error('Error recargando historial:', err);
+    } finally {
+      setRecargando(false);
+    }
   };
 
-  const cargarHistorialDesdeBackend = async () => {
-    const idActual = historialActual?.id || historialItem?.id;
-    const equipoIdActual = equipoId || historialItem?.equipo_id;
-    if (!idActual || !equipoIdActual) return;
-    
-    console.log('🔍 [DetalleHistorial] Recargando historial ID:', idActual, 'Equipo ID:', equipoIdActual);
+  const cargarHistorialDesdeBackend = async (idActual, equipoIdActual) => {
     try {
       const API_BASE = getApiBase();
       const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
       const data = await response.json();
-      console.log('📡 [DetalleHistorial] Respuesta del backend:', data);
-      
       if (data.ok && data.datos) {
         const encontrado = data.datos.find(h => h.id === idActual);
         if (encontrado) {
-          console.log('✅ [DetalleHistorial] Historial encontrado:', encontrado);
           setHistorialActual(encontrado);
-        } else {
-          console.log('⚠️ [DetalleHistorial] No se encontró el historial');
         }
       }
     } catch (err) {
-      console.error('❌ [DetalleHistorial] Error cargando historial:', err);
+      console.error('Error cargando historial:', err);
     }
   };
 
-  const cargarFacturas = async () => {
-    const idActual = historialActual?.id || historialItem?.id;
+  const cargarFacturas = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📸 [DetalleHistorial] Cargando facturas para ID:', idActual);
     setLoadingFacturas(true);
     try {
       const API_BASE = getApiBase();
@@ -93,29 +88,22 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             ...fact,
             url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
           }));
-          console.log('✅ [DetalleHistorial] Facturas cargadas:', facturasConUrlAbsoluta.length);
           setFacturas(facturasConUrlAbsoluta);
         }
       }
     } catch (err) {
-      console.error('❌ Error cargando facturas:', err);
+      console.error('Error cargando facturas:', err);
     } finally {
       setLoadingFacturas(false);
     }
   };
 
-  const cargarVersiones = async () => {
-    const idActual = historialActual?.id || historialItem?.id;
+  const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📜 [DetalleHistorial] Cargando versiones para historial ID:', idActual);
     setCargandoVersiones(true);
     try {
-      // Para historial de equipos, las versiones son los propios registros
-      // Cada vez que se edita, se crea un NUEVO registro en historial_equipos
-      // Por ahora, mostramos el registro actual como única versión
-      // En el futuro, si quieres versionado, necesitarías una tabla historial_equipos_historial
-      
+      // Para historial, generamos versiones simuladas basadas en cambios anteriores
       const versionesSimuladas = [];
       const datos = historialActual || historialItem;
       
@@ -131,41 +119,29 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
         });
       }
       
-      console.log('📜 [DetalleHistorial] Versiones generadas:', versionesSimuladas.length);
       setVersiones(versionesSimuladas);
     } catch (err) {
-      console.error('❌ Error cargando versiones:', err);
+      console.error('Error cargando versiones:', err);
     } finally {
       setCargandoVersiones(false);
     }
   };
 
   const verVersionAnterior = (version) => {
-    console.log('👁️ [DetalleHistorial] Viendo versión:', version.version);
     setVistaPreviaVersion(version);
     setMostrarSidebar(false);
   };
 
   const cerrarVistaPrevia = () => {
-    console.log('👁️ [DetalleHistorial] Cerrando vista previa');
     setVistaPreviaVersion(null);
   };
 
   const handleEditSuccess = async () => {
-    console.log('🔵🔵🔵 [DetalleHistorial] handleEditSuccess - INICIADO 🔵🔵🔵');
-    
     if (onEdit) {
-      console.log('📞 [DetalleHistorial] Llamando a onEdit del padre...');
       await onEdit();
     }
-    
-    console.log('🔄 [DetalleHistorial] Recargando todos los datos...');
-    await cargarHistorialDesdeBackend();
-    await cargarFacturas();
-    await cargarVersiones();
-    
+    await recargarHistorialCompleto();
     setRefreshKey(prev => prev + 1);
-    console.log('🔵🔵🔵 [DetalleHistorial] handleEditSuccess - FINALIZADO 🔵🔵🔵');
   };
 
   const formatDate = (dateString) => {
@@ -236,12 +212,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
 
-  console.log('🎨 [DetalleHistorial] Renderizando con datos:', { 
-    id: datosMostrar?.id, 
-    campo: datosMostrar?.campo_modificado,
-    versionesCount: versiones.length 
-  });
-
   return (
     <>
       <div className={styles.modalOverlay} onClick={onClose}>
@@ -255,20 +225,18 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
               <div className={styles.sidebarContent}>
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
-                ) : versiones.length > 1 ? (
+                ) : versiones.length > 0 ? (
                   versiones.map((v, idx) => (
-                    v.version !== 1 && (
-                      <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
-                        <div className={styles.versionHeaderSidebar}>
-                          <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
-                          <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
-                        </div>
-                        <div className={styles.versionPreviewSidebar}>
-                          {v.descripcion?.substring(0, 60) || v.campo_modificado?.substring(0, 60)}...
-                        </div>
-                        <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
+                    <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
+                      <div className={styles.versionHeaderSidebar}>
+                        <span className={styles.versionBadgeSidebar}>Versión {v.version}</span>
+                        <span className={styles.versionDateSidebar}>{formatDateShort(v.fecha_modificacion)}</span>
                       </div>
-                    )
+                      <div className={styles.versionPreviewSidebar}>
+                        {v.descripcion?.substring(0, 60) || v.campo_modificado?.substring(0, 60)}...
+                      </div>
+                      <div className={styles.versionUserSidebar}>👤 {v.modificado_por || 'sistema'}</div>
+                    </div>
                   ))
                 ) : (
                   <p className={styles.emptyMessage}>No hay versiones anteriores</p>
@@ -287,9 +255,9 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                     '📜 Detalle de Cambio Registrado'
                   )}
                 </h2>
-                {versiones.length > 1 && !esVistaPrevia && (
+                {versiones.length > 0 && !esVistaPrevia && (
                   <button className={styles.historyButton} onClick={() => setMostrarSidebar(true)} title="Ver historial de versiones">
-                    ⏱️ {versiones.length - 1}
+                    ⏱️ {versiones.length}
                   </button>
                 )}
                 {esVistaPrevia && (

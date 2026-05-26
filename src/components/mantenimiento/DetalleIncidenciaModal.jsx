@@ -13,7 +13,7 @@ const getApiBase = () => {
   return `${getBackendBase()}/api`;
 };
 
-export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, equipoNombre, onEdit }) {
+export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, equipoNombre, equipoId, onEdit }) {
   const [evidencias, setEvidencias] = useState([]);
   const [loadingEvidencias, setLoadingEvidencias] = useState(false);
   const [versiones, setVersiones] = useState([]);
@@ -38,25 +38,35 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setIncidenciaActual(incidencia);
-      cargarTodo();
+      recargarIncidenciaCompleta();
     }
   }, [isOpen, incidencia?.id]);
 
-  const cargarTodo = async () => {
-    console.log('🔄 [DetalleIncidencia] Iniciando carga completa...');
-    await cargarIncidenciaDesdeBackend();
-    await cargarEvidencias();
-    await cargarVersiones();
+  const recargarIncidenciaCompleta = async () => {
+    const idActual = incidenciaActual?.id || incidencia?.id;
+    if (!idActual || !equipoId) {
+      console.log('⚠️ [DetalleIncidencia] Faltan IDs:', { idActual, equipoId });
+      return;
+    }
+    
+    console.log('🔄 [DetalleIncidencia] Recargando datos de incidencia ID:', idActual, 'Equipo ID:', equipoId);
+    setRecargando(true);
+    try {
+      await cargarIncidenciaDesdeBackend(idActual, equipoId);
+      await cargarEvidencias(idActual);
+      await cargarVersiones(idActual);
+    } catch (err) {
+      console.error('❌ Error recargando incidencia:', err);
+    } finally {
+      setRecargando(false);
+    }
   };
 
-  const cargarIncidenciaDesdeBackend = async () => {
-    const idActual = incidenciaActual?.id || incidencia?.id;
-    if (!idActual) return;
-    
-    console.log('🔍 [DetalleIncidencia] Recargando incidencia ID:', idActual);
+  const cargarIncidenciaDesdeBackend = async (idActual, equipoIdActual) => {
+    console.log('🔍 [DetalleIncidencia] Buscando incidencia ID:', idActual, 'en equipo:', equipoIdActual);
     try {
       const API_BASE = getApiBase();
-      const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${idActual}`);
+      const response = await fetch(`${API_BASE}/mantenimiento/incidencias/equipo/${equipoIdActual}`);
       const data = await response.json();
       console.log('📡 [DetalleIncidencia] Respuesta del backend:', data);
       
@@ -70,12 +80,11 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         }
       }
     } catch (err) {
-      console.error('❌ [DetalleIncidencia] Error cargando incidencia:', err);
+      console.error('❌ Error cargando incidencia:', err);
     }
   };
 
-  const cargarEvidencias = async () => {
-    const idActual = incidenciaActual?.id || incidencia?.id;
+  const cargarEvidencias = async (idActual) => {
     if (!idActual) return;
     
     console.log('📸 [DetalleIncidencia] Cargando evidencias para ID:', idActual);
@@ -97,14 +106,13 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
         }
       }
     } catch (err) {
-      console.error('❌ Error cargando evidencias:', err);
+      console.error('Error cargando evidencias:', err);
     } finally {
       setLoadingEvidencias(false);
     }
   };
 
-  const cargarVersiones = async () => {
-    const idActual = incidenciaActual?.id || incidencia?.id;
+  const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
     console.log('📜 [DetalleIncidencia] Cargando versiones para ID:', idActual);
@@ -135,22 +143,19 @@ export default function DetalleIncidenciaModal({ isOpen, onClose, incidencia, eq
   const handleEditSuccess = async () => {
     console.log('🔵🔵🔵 [DetalleIncidencia] handleEditSuccess - INICIADO 🔵🔵🔵');
     
-    // Notificar al padre
     if (onEdit) {
-      console.log('📞 [DetalleIncidencia] Llamando a onEdit del padre...');
+      console.log('📞 Llamando a onEdit del padre...');
       await onEdit();
     }
     
-    // Recargar TODO
-    console.log('🔄 [DetalleIncidencia] Recargando todos los datos...');
-    await cargarIncidenciaDesdeBackend();
-    await cargarEvidencias();
-    await cargarVersiones();
-    
+    console.log('🔄 Recargando todos los datos...');
+    await recargarIncidenciaCompleta();
     setRefreshKey(prev => prev + 1);
+    
     console.log('🔵🔵🔵 [DetalleIncidencia] handleEditSuccess - FINALIZADO 🔵🔵🔵');
   };
 
+  // Resto del componente igual...
   const formatDate = (dateString) => {
     if (!dateString) return 'No definida';
     const date = new Date(dateString);

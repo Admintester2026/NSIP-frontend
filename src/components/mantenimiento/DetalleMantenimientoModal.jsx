@@ -13,7 +13,7 @@ const getApiBase = () => {
   return `${getBackendBase()}/api`;
 };
 
-export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimiento, equipoNombre, onEdit }) {
+export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimiento, equipoNombre, equipoId, onEdit }) {
   const [evidencias, setEvidencias] = useState([]);
   const [loadingEvidencias, setLoadingEvidencias] = useState(false);
   const [versiones, setVersiones] = useState([]);
@@ -27,14 +27,12 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
 
   useEffect(() => {
     if (mantenimiento) {
-      console.log('📌 [DetalleMantenimiento] mantenimiento PROP actualizada:', mantenimiento.id);
       setMantenimientoActual(mantenimiento);
     }
   }, [mantenimiento]);
 
   useEffect(() => {
     if (isOpen && mantenimiento?.id) {
-      console.log('🎬 [DetalleMantenimiento] Modal abierto con mantenimiento ID:', mantenimiento.id);
       setVistaPreviaVersion(null);
       setMostrarSidebar(false);
       setMantenimientoActual(mantenimiento);
@@ -46,36 +44,37 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
     const idActual = mantenimientoActual?.id || mantenimiento?.id;
     if (!idActual) return;
     
-    console.log('🔄 [DetalleMantenimiento] Recargando datos del mantenimiento ID:', idActual);
     setRecargando(true);
+    try {
+      await cargarMantenimientoDesdeBackend(idActual);
+      await cargarEvidencias(idActual);
+      await cargarVersiones(idActual);
+    } catch (err) {
+      console.error('Error recargando mantenimiento:', err);
+    } finally {
+      setRecargando(false);
+    }
+  };
+
+  const cargarMantenimientoDesdeBackend = async (idActual) => {
     try {
       const API_BASE = getApiBase();
       const response = await fetch(`${API_BASE}/mantenimiento/mantenimientos/equipo/${idActual}`);
       const data = await response.json();
-      console.log('📡 [DetalleMantenimiento] Respuesta del backend:', data);
-      
       if (data.ok && data.datos) {
         const encontrado = data.datos.find(m => m.id === idActual);
         if (encontrado) {
-          console.log('✅ [DetalleMantenimiento] Mantenimiento encontrado:', encontrado);
           setMantenimientoActual(encontrado);
         }
       }
-      
-      await cargarEvidencias(idActual);
-      await cargarVersiones(idActual);
-      
     } catch (err) {
-      console.error('❌ Error recargando mantenimiento:', err);
-    } finally {
-      setRecargando(false);
+      console.error('Error cargando mantenimiento:', err);
     }
   };
 
   const cargarEvidencias = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📸 [DetalleMantenimiento] Cargando evidencias...');
     setLoadingEvidencias(true);
     try {
       const API_BASE = getApiBase();
@@ -89,7 +88,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
             ...ev,
             url: ev.url.startsWith('http') ? ev.url : `${backendBase}${ev.url}`
           }));
-          console.log('✅ [DetalleMantenimiento] Evidencias cargadas:', evidenciasConUrlAbsoluta.length);
           setEvidencias(evidenciasConUrlAbsoluta);
         }
       }
@@ -103,11 +101,9 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const cargarVersiones = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📜 [DetalleMantenimiento] Cargando versiones...');
     setCargandoVersiones(true);
     try {
       const data = await mantenimientoAPI.getHistorialVersiones(idActual);
-      console.log('✅ [DetalleMantenimiento] Versiones cargadas:', data?.length || 0);
       setVersiones(data || []);
     } catch (err) {
       console.error('Error cargando versiones:', err);
@@ -117,29 +113,20 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   };
 
   const verVersionAnterior = (version) => {
-    console.log('👁️ [DetalleMantenimiento] Viendo versión:', version.version);
     setVistaPreviaVersion(version);
     setMostrarSidebar(false);
   };
 
   const cerrarVistaPrevia = () => {
-    console.log('👁️ [DetalleMantenimiento] Cerrando vista previa');
     setVistaPreviaVersion(null);
   };
 
   const handleEditSuccess = async () => {
-    console.log('🔵🔵🔵 [DetalleMantenimiento] handleEditSuccess - INICIADO 🔵🔵🔵');
-    
     if (onEdit) {
-      console.log('📞 Llamando a onEdit del padre...');
       await onEdit();
     }
-    
-    console.log('🔄 Recargando todos los datos...');
     await recargarMantenimientoCompleto();
     setRefreshKey(prev => prev + 1);
-    
-    console.log('🔵🔵🔵 [DetalleMantenimiento] handleEditSuccess - FINALIZADO 🔵🔵🔵');
   };
 
   const formatDate = (dateString) => {
@@ -196,12 +183,6 @@ export default function DetalleMantenimientoModal({ isOpen, onClose, mantenimien
   const datosMostrar = mantenimientoActual || mantenimiento;
   const mostrarDatos = vistaPreviaVersion || datosMostrar;
   const esVistaPrevia = vistaPreviaVersion !== null;
-
-  console.log('🎨 [DetalleMantenimiento] Renderizando con datos:', { 
-    id: datosMostrar?.id, 
-    titulo: datosMostrar?.titulo,
-    versionesCount: versiones.length 
-  });
 
   return (
     <>
