@@ -25,7 +25,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const [historialActual, setHistorialActual] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Limpiar estado cuando se cierra el modal
   useEffect(() => {
     if (!isOpen) {
       setHistorialActual(null);
@@ -73,11 +72,9 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
       const API_BASE = getApiBase();
       const response = await fetch(`${API_BASE}/mantenimiento/equipos/${equipoIdActual}/historial`);
       const data = await response.json();
-      console.log('📡 [Historial] Historial del equipo:', data);
       if (data.ok && data.datos) {
         const encontrado = data.datos.find(h => h.id === idActual);
         if (encontrado) {
-          console.log('✅ [Historial] Historial encontrado:', encontrado);
           setHistorialActual(encontrado);
         }
       }
@@ -89,7 +86,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   const cargarFacturas = async (idActual) => {
     if (!idActual) return;
     
-    console.log('📸 [Historial] Cargando facturas para ID:', idActual);
     setLoadingFacturas(true);
     try {
       const API_BASE = getApiBase();
@@ -103,7 +99,6 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
             ...fact,
             url: fact.url.startsWith('http') ? fact.url : `${backendBase}${fact.url}`
           }));
-          console.log('✅ [Historial] Facturas cargadas:', facturasConUrlAbsoluta.length);
           setFacturas(facturasConUrlAbsoluta);
         }
       }
@@ -114,7 +109,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
     }
   };
 
-  // NUEVA FUNCIÓN: Carga versiones desde la API de versiones
+  // FUNCIÓN CORREGIDA: Usa la API de versiones
   const cargarVersionesDesdeAPI = async (idActual) => {
     if (!idActual) return;
     
@@ -129,24 +124,12 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
       
       if (data.ok && data.datos && data.datos.length > 0) {
         console.log('✅ [Historial] Versiones encontradas:', data.datos.length);
-        setVersiones(data.datos);
+        // Ordenar por versión descendente para que la más reciente sea la primera
+        const versionesOrdenadas = [...data.datos].sort((a, b) => b.version - a.version);
+        setVersiones(versionesOrdenadas);
       } else {
-        console.log('⚠️ [Historial] No hay versiones en la API, usando datos actuales');
-        // Fallback: mostrar solo la versión actual
-        const datos = historialActual || historialItem;
-        if (datos?.campo_modificado) {
-          setVersiones([{
-            version: 1,
-            campo_modificado: datos.campo_modificado,
-            valor_anterior: datos.valor_anterior,
-            valor_nuevo: datos.valor_nuevo,
-            descripcion: datos.descripcion,
-            fecha_modificacion: datos.fecha || new Date().toISOString(),
-            modificado_por: datos.usuario || 'sistema'
-          }]);
-        } else {
-          setVersiones([]);
-        }
+        console.log('⚠️ [Historial] No hay versiones en la API');
+        setVersiones([]);
       }
     } catch (err) {
       console.error('❌ Error cargando versiones desde API:', err);
@@ -157,7 +140,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   };
 
   const verVersionAnterior = (version) => {
-    console.log('👁️ [Historial] Viendo versión:', version);
+    console.log('👁️ [Historial] Viendo versión anterior:', version);
     setVistaPreviaVersion(version);
     setMostrarSidebar(false);
   };
@@ -247,7 +230,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
   // Mostrar el botón si hay más de 1 versión en el array
   const mostrarBotonHistorial = versiones.length > 1;
 
-  console.log('🎨 [Historial] Renderizando - versiones:', versiones.length, 'mostrarBoton:', mostrarBotonHistorial);
+  console.log('🎨 [Historial] Renderizando - total versiones:', versiones.length, 'mostrarBoton:', mostrarBotonHistorial);
 
   return (
     <>
@@ -263,6 +246,7 @@ export default function DetalleHistorialModal({ isOpen, onClose, historialItem, 
                 {cargandoVersiones ? (
                   <p className={styles.loadingText}>Cargando...</p>
                 ) : versiones.length > 1 ? (
+                  // Mostrar todas las versiones EXCEPTO la primera (actual)
                   versiones.filter(v => v.version !== 1).map((v, idx) => (
                     <div key={idx} className={styles.versionItemSidebar} onClick={() => verVersionAnterior(v)}>
                       <div className={styles.versionHeaderSidebar}>
