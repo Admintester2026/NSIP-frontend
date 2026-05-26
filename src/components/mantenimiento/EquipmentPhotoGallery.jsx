@@ -33,21 +33,26 @@ export default function EquipmentPhotoGallery({
   const imageContainerRef = useRef(null);
 
   // Normalizar URLs de las fotos
-  const normalizedPhotos = photos.map(photo => ({
+  const normalizedPhotos = (photos || []).map(photo => ({
     ...photo,
     url: normalizeUrl(photo.foto_url || photo.url)
   }));
 
   const selectedPhotoNormalized = normalizeUrl(selectedPhotoUrl);
 
+  // Si no hay fotos
   if (!normalizedPhotos || normalizedPhotos.length === 0) {
     return (
       <div className={styles.emptyGallery}>
         <div className={styles.emptyIcon}>📷</div>
         <p>No hay fotos de este equipo</p>
         {!readOnly && (
-          <button className={styles.addFirstPhotoBtn} onClick={() => fileInputRef.current?.click()}>
-            + Agregar primera foto
+          <button 
+            className={styles.addFirstPhotoBtn} 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? '📤 Subiendo...' : '+ Agregar primera foto'}
           </button>
         )}
         <input
@@ -192,16 +197,16 @@ export default function EquipmentPhotoGallery({
 
   const handleSelectProfile = (photo) => {
     if (onSelectProfilePhoto) {
-      onSelectProfilePhoto(photo.url);
+      onSelectProfilePhoto(photo.foto_url || photo.url);
     }
   };
 
   const handleDeletePhoto = async (photo, index) => {
     if (window.confirm(`¿Eliminar esta foto permanentemente?`)) {
       if (onDeletePhoto) {
-        await onDeletePhoto(photo.url, index);
+        await onDeletePhoto(photo.foto_url || photo.url, index);
       }
-      if (photo.url === selectedPhotoNormalized && onSelectProfilePhoto) {
+      if ((photo.foto_url || photo.url) === selectedPhotoNormalized && onSelectProfilePhoto) {
         onSelectProfilePhoto(null);
       }
     }
@@ -264,7 +269,7 @@ export default function EquipmentPhotoGallery({
               className={styles.mainImage}
             />
             <div className={styles.imageOverlay}>
-              {normalizedPhotos[currentIndex]?.url === selectedPhotoNormalized && (
+              {(normalizedPhotos[currentIndex]?.foto_url || normalizedPhotos[currentIndex]?.url) === selectedPhotoNormalized && (
                 <span className={styles.profileIndicator}>⭐ Foto de perfil</span>
               )}
               <div className={styles.imageDateBadge}>
@@ -291,7 +296,7 @@ export default function EquipmentPhotoGallery({
                 className={styles.thumbnailImage}
               />
               <div className={styles.thumbnailOverlay}>
-                {photo.url === selectedPhotoNormalized && (
+                {(photo.foto_url || photo.url) === selectedPhotoNormalized && (
                   <span className={styles.thumbnailProfileIcon}>⭐</span>
                 )}
               </div>
@@ -379,7 +384,7 @@ export default function EquipmentPhotoGallery({
 
             <div className={styles.modalInfo}>
               <div className={styles.modalInfoLeft}>
-                {normalizedPhotos[modalIndex]?.url === selectedPhotoNormalized && (
+                {(normalizedPhotos[modalIndex]?.foto_url || normalizedPhotos[modalIndex]?.url) === selectedPhotoNormalized && (
                   <span className={styles.modalProfileBadge}>⭐ Foto de perfil actual</span>
                 )}
               </div>

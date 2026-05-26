@@ -360,6 +360,48 @@ export const mantenimientoAPI = {
   },
 
   // ==========================================
+  // MÚLTIPLES FOTOS DE EQUIPO (NUEVO)
+  // ==========================================
+  
+  getEquipoPhotos: async (equipoId) => {
+    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/fotos`;
+    const response = await fetch(url);
+    const data = await handleResponse(response);
+    const fotos = data.datos || [];
+    // Normalizar URLs de las fotos
+    return fotos.map(foto => ({
+      ...foto,
+      foto_url: normalizeUrl(foto.foto_url)
+    }));
+  },
+
+  addEquipoPhoto: async (equipoId, fotoUrl) => {
+    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/fotos`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto_url: fotoUrl })
+    });
+    return handleResponse(response);
+  },
+
+  setPrincipalPhoto: async (equipoId, fotoUrl) => {
+    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/fotos/principal`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto_url: fotoUrl })
+    });
+    return handleResponse(response);
+  },
+
+  deleteEquipoPhoto: async (equipoId, photoId) => {
+    const url = `${API_BASE}/mantenimiento/equipos/${equipoId}/fotos/${photoId}`;
+    const response = await fetch(url, { method: 'DELETE' });
+    return handleResponse(response);
+  },
+
+  // ==========================================
   // SUBIDA DE ARCHIVOS (UTILIDAD)
   // ==========================================
   
