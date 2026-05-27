@@ -1,14 +1,32 @@
 // src/api/mantenimiento.js
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE_ORIGINAL = import.meta.env.VITE_API_URL;
+
+// Detectar si estamos en Vercel (producción) o en local
+const isVercel = typeof window !== 'undefined' && window.location?.hostname?.includes('vercel.app');
+// Usar la IP directa del backend para Vercel, o la variable de entorno para local
+const BACKEND_IP = 'http://192.168.3.65:3000'; // Tu IP del backend
+
+// Determinar la URL base de la API
+const API_BASE = isVercel ? `${BACKEND_IP}/api` : API_BASE_ORIGINAL;
+
+console.log('🔐 [mantenimientoAPI] isVercel:', isVercel);
+console.log('🔐 [mantenimientoAPI] API_BASE:', API_BASE);
 
 // Normalizar URLs para que apunten al backend correctamente
 function normalizeUrl(url) {
   if (!url) return null;
+  // Si ya es una URL completa, devolverla
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
+  // Si es una URL relativa de uploads
   if (url.startsWith('/uploads')) {
-    const backendBase = API_BASE ? API_BASE.replace('/api', '') : '';
+    // En Vercel, usar la IP directa del backend
+    if (isVercel) {
+      return `${BACKEND_IP}${url}`;
+    }
+    // En local, usar la variable de entorno
+    const backendBase = API_BASE_ORIGINAL ? API_BASE_ORIGINAL.replace('/api', '') : '';
     return `${backendBase}${url}`;
   }
   return url;
@@ -36,6 +54,7 @@ export const mantenimientoAPI = {
   
   getEquipos: async (estado = 'activo') => {
     const url = `${API_BASE}/mantenimiento/equipos${estado ? `?estado=${estado}` : ''}`;
+    console.log('📡 [getEquipos] URL:', url);
     const response = await fetch(url);
     const data = await handleResponse(response);
     const equipos = data.datos || [];
@@ -54,6 +73,7 @@ export const mantenimientoAPI = {
     // Asegurar que el ID sea número
     const numericId = Number(id);
     const url = `${API_BASE}/mantenimiento/equipos/${numericId}`;
+    console.log('📡 [getEquipoById] URL:', url, 'ID:', numericId);
     const response = await fetch(url);
     const data = await handleResponse(response);
     const equipo = data.datos;
@@ -70,17 +90,20 @@ export const mantenimientoAPI = {
 
   createEquipo: async (equipoData) => {
     const url = `${API_BASE}/mantenimiento/equipos`;
+    console.log('📡 [createEquipo] URL:', url);
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(equipoData)
     });
     const result = await handleResponse(response);
+    console.log('✅ [createEquipo] Resultado:', result);
     return result;
   },
 
   updateEquipo: async (id, equipoData) => {
     const url = `${API_BASE}/mantenimiento/equipos/${id}`;
+    console.log('📡 [updateEquipo] URL:', url);
     const response = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -111,6 +134,7 @@ export const mantenimientoAPI = {
   
   getCategorias: async () => {
     const url = `${API_BASE}/mantenimiento/categorias`;
+    console.log('📡 [getCategorias] URL:', url);
     const response = await fetch(url);
     const data = await handleResponse(response);
     return data.datos || [];
@@ -406,11 +430,16 @@ export const mantenimientoAPI = {
     formData.append('tipo', tipo);
     formData.append('entidad_id', entidadId);
     
-    const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
+    const uploadUrl = `${API_BASE}/mantenimiento/upload`;
+    console.log('📤 [uploadFile] URL:', uploadUrl);
+    console.log('📤 [uploadFile] tipo:', tipo, 'entidadId:', entidadId);
+    
+    const response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData
     });
     const result = await handleResponse(response);
+    console.log('✅ [uploadFile] Resultado:', result);
     return normalizeUrl(result.url);
   },
 

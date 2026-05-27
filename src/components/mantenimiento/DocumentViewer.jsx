@@ -4,12 +4,32 @@ import styles from './DocumentViewer.module.css';
 
 // Obtener la base del backend desde la variable de entorno
 const API_BASE = import.meta.env.VITE_API_URL;
-const BACKEND_BASE = API_BASE ? API_BASE.replace('/api', '') : '';
+// Para Vercel (HTTPS), necesitamos la URL completa del backend
+// Si estás en Vercel, usa la IP pública o dominio con HTTPS
+const BACKEND_BASE = API_BASE ? API_BASE.replace('/api', '') : 'http://192.168.3.65:3000';
+
+// Detectar si estamos en Vercel (producción) o local
+const isVercel = window.location.hostname.includes('vercel.app');
+const PRODUCTION_BACKEND = 'http://192.168.3.65:3000'; // Cambia por tu IP pública si es necesario
 
 function normalizeUrl(url) {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/uploads')) return `${BACKEND_BASE}${url}`;
+  
+  // Si ya es una URL completa, devolverla
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Si es una URL relativa de uploads
+  if (url.startsWith('/uploads')) {
+    // En Vercel, usar la IP del backend directamente
+    if (isVercel) {
+      return `${PRODUCTION_BACKEND}${url}`;
+    }
+    // En local, usar la variable de entorno
+    return `${BACKEND_BASE}${url}`;
+  }
+  
   return url;
 }
 
@@ -17,11 +37,20 @@ export default function DocumentViewer({ documents, title = 'Documentos' }) {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  console.log('🔍 [DocumentViewer] isVercel:', isVercel);
+  console.log('🔍 [DocumentViewer] BACKEND_BASE:', BACKEND_BASE);
+  console.log('🔍 [DocumentViewer] PRODUCTION_BACKEND:', PRODUCTION_BACKEND);
+
   // Normalizar URLs de los documentos
-  const normalizedDocuments = documents.map(doc => ({
-    ...doc,
-    url: normalizeUrl(doc.url)
-  }));
+  const normalizedDocuments = documents.map(doc => {
+    const normalizedUrl = normalizeUrl(doc.url);
+    console.log('🔍 [DocumentViewer] Original URL:', doc.url);
+    console.log('🔍 [DocumentViewer] Normalized URL:', normalizedUrl);
+    return {
+      ...doc,
+      url: normalizedUrl
+    };
+  });
 
   if (!normalizedDocuments || normalizedDocuments.length === 0) {
     return (
@@ -71,6 +100,7 @@ export default function DocumentViewer({ documents, title = 'Documentos' }) {
   };
 
   const openDocument = (doc) => {
+    console.log('🔍 [DocumentViewer] Abriendo documento:', doc.url);
     setSelectedDoc(doc);
     setShowModal(true);
   };
