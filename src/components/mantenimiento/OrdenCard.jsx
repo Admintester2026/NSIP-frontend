@@ -2,6 +2,11 @@
 import { useNavigate } from 'react-router-dom';
 import styles from './OrdenCard.module.css';
 
+// Justo después de los imports, antes del componente
+console.log('Estilos de Ordenes:', styles);
+console.log('Clase statsGrid:', styles.statsGrid);
+console.log('Clase statCard:', styles.statCard);
+
 export default function OrdenCard({ orden, onGeneratePDF }) {
   const navigate = useNavigate();
 
