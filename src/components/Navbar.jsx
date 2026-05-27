@@ -9,7 +9,6 @@ export default function Navbar() {
   const [mantenimientoOpen, setMantenimientoOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Cerrar menús al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -21,13 +20,11 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Cerrar menús al cambiar de ruta
   useEffect(() => {
     setModulosOpen(false);
     setMantenimientoOpen(false);
   }, [location]);
 
-  // Verificar si estamos en una ruta de mantenimiento
   const isMantenimientoActive = location.pathname.startsWith('/mantenimiento');
 
   return (
@@ -46,7 +43,6 @@ export default function Navbar() {
             Inicio
           </Link>
 
-          {/* Menú Módulos */}
           <div className={styles.dropdown}>
             <button 
               className={`${styles.dropdownButton} ${modulosOpen ? styles.active : ''}`}
@@ -82,7 +78,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Menú Mantenimiento */}
           <div className={styles.dropdown}>
             <button 
               className={`${styles.dropdownButton} ${mantenimientoOpen || isMantenimientoActive ? styles.active : ''}`}
