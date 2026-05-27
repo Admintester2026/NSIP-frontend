@@ -1,3 +1,4 @@
+/* FRONTEND/src/components/mantenimiento/GenerarPDFModal.module.css */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -13,14 +14,14 @@
 }
 
 .modalContent {
-  background: var(--bg-surface);
-  border-radius: var(--r-lg);
+  background: #1e1e1e;
+  border-radius: 12px;
   width: 90%;
   max-width: 700px;
   max-height: 85vh;
   display: flex;
-flex-direction: column;
-  border: 1px solid var(--border-dim);
+  flex-direction: column;
+  border: 1px solid #333;
 }
 
 .modalHeader {
@@ -28,12 +29,12 @@ flex-direction: column;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--border-dim);
+  border-bottom: 1px solid #333;
 }
 
 .modalHeader h3 {
   margin: 0;
-  color: var(--text-primary);
+  color: #e0e0e0;
 }
 
 .closeBtn {
@@ -41,7 +42,7 @@ flex-direction: column;
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  color: var(--text-muted);
+  color: #888;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -51,7 +52,7 @@ flex-direction: column;
 }
 
 .closeBtn:hover {
-  background: var(--red);
+  background: #ff4d4d;
   color: white;
 }
 
@@ -63,20 +64,25 @@ flex-direction: column;
 
 .pasoContainer h4 {
   margin-bottom: 1rem;
-  color: var(--text-primary);
+  color: #e0e0e0;
 }
 
 .resumenCard {
-  background: var(--bg-raised);
-  border-radius: var(--r-md);
+  background: #252525;
+  border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.5rem;
-  border: 1px solid var(--border-dim);
+  border: 1px solid #333;
 }
 
 .resumenCard p {
   margin: 0.3rem 0;
   font-size: 0.85rem;
+  color: #aaa;
+}
+
+.resumenCard p strong {
+  color: #e0e0e0;
 }
 
 .opcionesContainer {
@@ -94,6 +100,7 @@ flex-direction: column;
   margin-bottom: 0.5rem;
   cursor: pointer;
   font-size: 0.85rem;
+  color: #aaa;
 }
 
 .evidenciasHeader {
@@ -105,11 +112,17 @@ flex-direction: column;
 
 .selectAllBtn {
   padding: 0.25rem 0.75rem;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.75rem;
+  color: #aaa;
+}
+
+.selectAllBtn:hover {
+  border-color: #00ff9d;
+  color: #00ff9d;
 }
 
 .evidenciasGrid {
@@ -138,12 +151,12 @@ flex-direction: column;
   width: 100%;
   padding: 0.5rem;
   border: 2px solid transparent;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .evidenciaItem input:checked + .evidenciaPreview {
-  border-color: var(--green);
+  border-color: #00ff9d;
   background: rgba(0, 255, 157, 0.05);
 }
 
@@ -151,23 +164,23 @@ flex-direction: column;
   width: 100%;
   height: 100px;
   object-fit: cover;
-  border-radius: var(--r-md);
+  border-radius: 8px;
 }
 
 .pdfPreview {
   width: 100%;
   height: 100px;
-  background: var(--bg-raised);
+  background: #252525;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   font-size: 1.5rem;
 }
 
 .evidenciaFilename {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: #888;
   display: block;
   margin-top: 0.25rem;
 }
@@ -178,22 +191,23 @@ flex-direction: column;
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-dim);
+  border-top: 1px solid #333;
 }
 
 .cancelarBtn, .volverBtn {
   padding: 0.5rem 1rem;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 8px;
   cursor: pointer;
+  color: #aaa;
 }
 
 .siguienteBtn, .generarBtn {
   padding: 0.5rem 1.5rem;
-  background: var(--green);
+  background: #00ff9d;
   border: none;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   color: #000;
   cursor: pointer;
   font-weight: 500;
