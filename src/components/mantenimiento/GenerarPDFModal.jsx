@@ -4,6 +4,8 @@ import { ordenesAPI } from '../../api/ordenes';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './GenerarPDFModal.module.css';
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
 export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [incluirImagenes, setIncluirImagenes] = useState(true);
@@ -20,7 +22,7 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
 
   const cargarEvidencias = async () => {
     try {
-      const response = await fetch(`/api/mantenimiento/evidencias/mantenimiento/${orden.id}`);
+      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${orden.id}`);
       const data = await response.json();
       if (data.ok && data.datos) {
         setEvidencias(data.datos);
@@ -61,8 +63,9 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
         evidenciasSeleccionadas: incluirEvidencias ? Array.from(selectedEvidencias) : []
       };
       
-      // Llamar al endpoint para generar PDF
-      const response = await fetch('/api/ordenes/generar-pdf', {
+      console.log('📄 Generando PDF con datos:', { ordenId: orden.id, equipoNombre: equipo?.nombre });
+      
+      const response = await fetch(`${API_BASE}/ordenes/generar-pdf`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pdfData)
@@ -73,7 +76,8 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `orden_${orden.id}_${orden.equipo_nombre}.pdf`;
+        const nombreEquipo = (equipo?.nombre || orden.equipo_nombre || 'equipo').replace(/[^a-z0-9]/gi, '_');
+        a.download = `orden_${orden.id}_${nombreEquipo}.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -82,11 +86,13 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
         if (onSuccess) onSuccess();
         onClose();
       } else {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         throw new Error('Error generando PDF');
       }
     } catch (err) {
       console.error('Error generando PDF:', err);
-      alert('Error al generar el PDF');
+      alert('Error al generar el PDF: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -117,7 +123,7 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
               <h4>📋 Resumen de la orden</h4>
               <div className={styles.resumenCard}>
                 <p><strong>Orden #:</strong> ORD-{orden.id}</p>
-                <p><strong>Equipo:</strong> {orden.equipo_nombre}</p>
+                <p><strong>Equipo:</strong> {equipo?.nombre || orden.equipo_nombre}</p>
                 <p><strong>Título:</strong> {orden.titulo}</p>
                 <p><strong>Estado:</strong> {orden.estado === 'completado' ? '✅ Completado' : '🟡 Pendiente'}</p>
                 <p><strong>Prioridad:</strong> {orden.prioridad}</p>
@@ -191,7 +197,7 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
                       id={`ev-${idx}`}
                     />
                     <label htmlFor={`ev-${idx}`} className={styles.evidenciaPreview}>
-                      {ev.url.match(/\.pdf$/i) ? (
+                      {ev.url?.match(/\.pdf$/i) ? (
                         <div className={styles.pdfPreview}>📄 PDF</div>
                       ) : (
                         <img src={ev.url} alt={`Evidencia ${idx + 1}`} />

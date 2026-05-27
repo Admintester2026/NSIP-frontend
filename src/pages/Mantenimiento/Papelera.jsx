@@ -9,12 +9,14 @@ export default function Papelera() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedEquipos, setSelectedEquipos] = useState(new Set());
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [actionType, setActionType] = useState(null);
+  const [selectedEquipoId, setSelectedEquipoId] = useState(null);
 
   const cargarEquipos = async () => {
     setLoading(true);
     try {
       const data = await papeleraAPI.getEquipos();
-      console.log('📦 Equipos en papelera:', data);
       setEquipos(data);
     } catch (err) {
       setError('Error cargando equipos en papelera');
@@ -39,14 +41,12 @@ export default function Papelera() {
   };
 
   const handleEliminarPermanente = async (id) => {
-    if (window.confirm('¿Eliminar este equipo permanentemente? Esta acción no se puede deshacer.')) {
-      try {
-        await papeleraAPI.eliminarPermanentemente(id);
-        await cargarEquipos();
-        setSelectedEquipos(new Set());
-      } catch (err) {
-        setError('Error al eliminar el equipo');
-      }
+    try {
+      await papeleraAPI.eliminarPermanentemente(id);
+      await cargarEquipos();
+      setSelectedEquipos(new Set());
+    } catch (err) {
+      setError('Error al eliminar el equipo');
     }
   };
 
@@ -83,7 +83,6 @@ export default function Papelera() {
   };
 
   const handleRestaurarSeleccionados = async () => {
-    if (selectedEquipos.size === 0) return;
     for (const id of selectedEquipos) {
       await papeleraAPI.restaurarEquipo(id);
     }
@@ -92,7 +91,6 @@ export default function Papelera() {
   };
 
   const handleEliminarSeleccionados = async () => {
-    if (selectedEquipos.size === 0) return;
     if (window.confirm(`¿Eliminar permanentemente ${selectedEquipos.size} equipo(s)?`)) {
       for (const id of selectedEquipos) {
         await papeleraAPI.eliminarPermanentemente(id);
@@ -121,7 +119,7 @@ export default function Papelera() {
     <div className={styles.papelera}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h1 className={styles.title}>🗑️ Papelera</h1>
+          <h1 className={styles.title}>Papelera</h1>
           <p className={styles.subtitle}>Equipos eliminados y registros históricos</p>
         </div>
         <div className={styles.navTabs}>
@@ -163,14 +161,14 @@ export default function Papelera() {
             onClick={handleRestaurarSeleccionados}
             disabled={selectedEquipos.size === 0}
           >
-            🔄 Restaurar seleccionados
+            🔄 Restaurar
           </button>
           <button 
             className={styles.deletePermBtn}
             onClick={handleEliminarSeleccionados}
             disabled={selectedEquipos.size === 0}
           >
-            🗑️ Eliminar seleccionados
+            🗑️ Eliminar permanentemente
           </button>
           <button 
             className={styles.vaciarBtn}
@@ -217,7 +215,7 @@ export default function Papelera() {
                   <p className={styles.equipoUbicacion}>📍 {equipo.ubicacion || 'Sin ubicación'}</p>
                   <div className={styles.categoriasContainer}>
                     {equipo.categorias?.slice(0, 3).map(cat => (
-                      <span key={cat.id} className={styles.categoriaTag} style={{ borderColor: cat.color || '#00ff9d' }}>
+                      <span key={cat.id} className={styles.categoriaTag} style={{ borderColor: cat.color }}>
                         {cat.nombre}
                       </span>
                     ))}
