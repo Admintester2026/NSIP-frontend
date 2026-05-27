@@ -1,7 +1,9 @@
+/* FRONTEND/src/pages/Mantenimiento/styles/Ordenes.module.css */
 .ordenesContainer {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
@@ -15,38 +17,38 @@
 .title {
   font-size: 1.75rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #e0e0e0;
   margin-bottom: 0.25rem;
 }
 
 .subtitle {
-  color: var(--text-muted);
+  color: #888;
   font-size: 0.85rem;
 }
 
 .navTabs {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
+  border-bottom: 1px solid #333;
   padding-bottom: 0.5rem;
 }
 
 .tab {
   padding: 0.5rem 1rem;
-  color: var(--text-secondary);
+  color: #aaa;
   text-decoration: none;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .tab:hover {
-  background: var(--bg-raised);
-  color: var(--text-primary);
+  background: #2a2a2a;
+  color: #e0e0e0;
 }
 
 .tab.active {
-  background: var(--green-glow);
-  color: var(--green);
+  background: rgba(0, 255, 157, 0.1);
+  color: #00ff9d;
 }
 
 .statsGrid {
@@ -61,9 +63,9 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: var(--bg-surface);
-  border-radius: var(--r-lg);
-  border: 1px solid var(--border-dim);
+  background: #1e1e1e;
+  border-radius: 12px;
+  border: 1px solid #333;
 }
 
 .statIcon {
@@ -82,13 +84,13 @@
 
 .statLabel {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: #888;
 }
 
-.statPendientes .statValue { color: var(--amber); }
-.statAtrasados .statValue { color: var(--red); }
-.statProximos .statValue { color: var(--green); }
-.statCompletados .statValue { color: var(--green); }
+.statPendientes .statValue { color: #ffb340; }
+.statAtrasados .statValue { color: #ff4d4d; }
+.statProximos .statValue { color: #00ff9d; }
+.statCompletados .statValue { color: #00ff9d; }
 
 .seccion {
   margin-bottom: 2rem;
@@ -99,7 +101,8 @@
   font-weight: 600;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border-dim);
+  border-bottom: 2px solid #333;
+  color: #e0e0e0;
 }
 
 .ordenesList {
@@ -111,9 +114,9 @@
 .emptyState {
   text-align: center;
   padding: 3rem;
-  background: var(--bg-raised);
-  border-radius: var(--r-lg);
-  border: 1px dashed var(--border-dim);
+  background: #1e1e1e;
+  border-radius: 12px;
+  border: 1px dashed #333;
 }
 
 .emptyIcon {
@@ -124,25 +127,27 @@
 
 .emptyState h3 {
   margin-bottom: 0.5rem;
-  color: var(--text-primary);
+  color: #e0e0e0;
 }
 
 .emptyState p {
-  color: var(--text-muted);
+  color: #888;
   margin-bottom: 1.5rem;
 }
 
 .resetBtn {
   padding: 0.5rem 1rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #aaa;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .resetBtn:hover {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: #00ff9d;
+  color: #00ff9d;
 }
 
 .errorMessage {
@@ -152,15 +157,15 @@
   padding: 0.75rem 1rem;
   background: rgba(255, 77, 77, 0.1);
   border: 1px solid rgba(255, 77, 77, 0.3);
-  border-radius: var(--r-md);
-  color: var(--red);
+  border-radius: 8px;
+  color: #ff4d4d;
   margin-bottom: 1rem;
 }
 
 .errorMessage button {
   background: none;
   border: none;
-  color: var(--red);
+  color: #ff4d4d;
   cursor: pointer;
   font-size: 1rem;
 }
@@ -177,8 +182,8 @@
 .loadingSpinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--border-dim);
-  border-top-color: var(--green);
+  border: 3px solid #333;
+  border-top-color: #00ff9d;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -187,7 +192,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .ordenesContainer {
     padding: 1rem;

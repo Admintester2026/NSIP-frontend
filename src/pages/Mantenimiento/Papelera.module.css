@@ -1,7 +1,9 @@
+/* FRONTEND/src/pages/Mantenimiento/styles/Papelera.module.css */
 .papelera {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
@@ -15,38 +17,58 @@
 .title {
   font-size: 1.75rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #e0e0e0;
   margin-bottom: 0.25rem;
 }
 
 .subtitle {
-  color: var(--text-muted);
+  color: #888;
   font-size: 0.85rem;
 }
 
 .navTabs {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
+  border-bottom: 1px solid #333;
   padding-bottom: 0.5rem;
 }
 
 .tab {
   padding: 0.5rem 1rem;
-  color: var(--text-secondary);
+  color: #aaa;
   text-decoration: none;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .tab:hover {
-  background: var(--bg-raised);
-  color: var(--text-primary);
+  background: #2a2a2a;
+  color: #e0e0e0;
 }
 
 .tab.active {
-  background: var(--green-glow);
-  color: var(--green);
+  background: rgba(0, 255, 157, 0.1);
+  color: #00ff9d;
+}
+
+.errorMessage {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  border-radius: 8px;
+  color: #ff4d4d;
+  margin-bottom: 1rem;
+}
+
+.errorMessage button {
+  background: none;
+  border: none;
+  color: #ff4d4d;
+  cursor: pointer;
+  font-size: 1rem;
 }
 
 .toolbar {
@@ -54,8 +76,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: var(--bg-raised);
-  border-radius: var(--r-lg);
+  background: #1e1e1e;
+  border-radius: 12px;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
@@ -63,7 +85,7 @@
 
 .selectionInfo {
   font-size: 0.85rem;
-  color: var(--green);
+  color: #00ff9d;
 }
 
 .actions {
@@ -74,13 +96,13 @@
 
 .actions button {
   padding: 0.5rem 1rem;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid var(--border-dim);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  border: 1px solid #333;
+  background: #252525;
+  color: #aaa;
 }
 
 .actions button:hover:not(:disabled) {
@@ -93,25 +115,25 @@
 }
 
 .selectAllBtn:hover:not(:disabled) {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: #00ff9d;
+  color: #00ff9d;
 }
 
 .restaurarBtn:hover:not(:disabled) {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: #00ff9d;
+  color: #00ff9d;
   background: rgba(0, 255, 157, 0.1);
 }
 
 .deletePermBtn:hover:not(:disabled) {
-  border-color: var(--red);
-  color: var(--red);
+  border-color: #ff4d4d;
+  color: #ff4d4d;
   background: rgba(255, 77, 77, 0.1);
 }
 
 .vaciarBtn:hover:not(:disabled) {
-  border-color: var(--orange);
-  color: var(--orange);
+  border-color: #ffaa00;
+  color: #ffaa00;
 }
 
 .equiposGrid {
@@ -121,15 +143,16 @@
 }
 
 .equipoCard {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-lg);
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
   overflow: hidden;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .equipoCard:hover {
-  border-color: var(--green-dim);
+  border-color: #00ff9d;
   box-shadow: 0 4px 12px rgba(0, 255, 157, 0.1);
 }
 
@@ -144,7 +167,7 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: var(--green);
+  accent-color: #00ff9d;
 }
 
 .cardContent {
@@ -158,9 +181,9 @@
 .fotoContainer {
   width: 80px;
   height: 80px;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   overflow: hidden;
-  background: var(--bg-raised);
+  background: #252525;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -185,13 +208,13 @@
 .equipoNombre {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #e0e0e0;
   margin-bottom: 0.25rem;
 }
 
 .equipoUbicacion {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: #888;
   margin-bottom: 0.5rem;
 }
 
@@ -214,7 +237,7 @@
   display: flex;
   gap: 1rem;
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: #888;
 }
 
 .actionsContainer {
@@ -225,30 +248,31 @@
 
 .actionsContainer button {
   padding: 0.4rem 0.8rem;
-  border-radius: var(--r-md);
+  border-radius: 8px;
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid var(--border-dim);
-  background: var(--bg-raised);
+  border: 1px solid #333;
+  background: #252525;
+  color: #aaa;
 }
 
 .actionsContainer .restaurarBtn:hover {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: #00ff9d;
+  color: #00ff9d;
 }
 
 .actionsContainer .deleteBtn:hover {
-  border-color: var(--red);
-  color: var(--red);
+  border-color: #ff4d4d;
+  color: #ff4d4d;
 }
 
 .emptyState {
   text-align: center;
   padding: 3rem;
-  background: var(--bg-raised);
-  border-radius: var(--r-lg);
-  border: 1px dashed var(--border-dim);
+  background: #1e1e1e;
+  border-radius: 12px;
+  border: 1px dashed #333;
 }
 
 .emptyIcon {
@@ -259,30 +283,78 @@
 
 .emptyState h3 {
   margin-bottom: 0.5rem;
-  color: var(--text-primary);
+  color: #e0e0e0;
 }
 
 .emptyState p {
-  color: var(--text-muted);
+  color: #888;
   margin-bottom: 1.5rem;
 }
 
 .backButton {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-md);
-  color: var(--text-secondary);
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #aaa;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .backButton:hover {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: #00ff9d;
+  color: #00ff9d;
 }
 
-.errorMessage {
+.loadingContainer {
   display: flex;
-  justify-content
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-top-color: #00ff9d;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .papelera {
+    padding: 1rem;
+  }
+  
+  .cardContent {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .fotoContainer {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .actionsContainer {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .actions {
+    justify-content: center;
+  }
+}
