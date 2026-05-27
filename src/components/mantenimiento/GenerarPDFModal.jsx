@@ -14,21 +14,29 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
   const [selectedEvidencias, setSelectedEvidencias] = useState(new Set());
   const [paso, setPaso] = useState(1);
 
+  console.log('🔵 [Modal] Renderizando, isOpen:', isOpen);
+  console.log('🔵 [Modal] orden recibida:', orden);
+  console.log('🔵 [Modal] equipo recibido:', equipo);
+
   useEffect(() => {
     if (isOpen && orden && orden.estado === 'completado') {
+      console.log('🔵 [Modal] Cargando evidencias para orden:', orden.id);
       cargarEvidencias();
     }
   }, [isOpen, orden]);
 
   const cargarEvidencias = async () => {
     try {
-      const response = await fetch(`${API_BASE}/mantenimiento/evidencias/mantenimiento/${orden.id}`);
+      const url = `${API_BASE}/mantenimiento/evidencias/mantenimiento/${orden.id}`;
+      console.log('🔵 [Modal] Fetching evidencias desde:', url);
+      const response = await fetch(url);
       const data = await response.json();
+      console.log('🔵 [Modal] Evidencias recibidas:', data);
       if (data.ok && data.datos) {
         setEvidencias(data.datos);
       }
     } catch (err) {
-      console.error('Error cargando evidencias:', err);
+      console.error('🔴 [Modal] Error cargando evidencias:', err);
     }
   };
 
@@ -55,6 +63,10 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
   const generarPDF = async () => {
     setLoading(true);
     try {
+      console.log('🔵 [Modal] === INICIANDO GENERACIÓN DE PDF ===');
+      console.log('🔵 [Modal] Paso 1: Datos de orden:', orden);
+      console.log('🔵 [Modal] Paso 1: Datos de equipo:', equipo);
+      
       const pdfData = {
         orden,
         equipo,
@@ -63,35 +75,44 @@ export default function GenerarPDFModal({ isOpen, onClose, orden, equipo, onSucc
         evidenciasSeleccionadas: incluirEvidencias ? Array.from(selectedEvidencias) : []
       };
       
-      console.log('📄 Generando PDF con datos:', { ordenId: orden.id, equipoNombre: equipo?.nombre });
+      console.log('🔵 [Modal] Paso 2: pdfData a enviar:', JSON.stringify(pdfData, null, 2));
       
-      const response = await fetch(`${API_BASE}/ordenes/generar-pdf`, {
+      const url = `${API_BASE}/ordenes/generar-pdf`;
+      console.log('🔵 [Modal] Paso 3: URL del endpoint:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pdfData)
       });
       
+      console.log('🔵 [Modal] Paso 4: Response status:', response.status);
+      console.log('🔵 [Modal] Paso 5: Response ok?', response.ok);
+      
       if (response.ok) {
+        console.log('🔵 [Modal] Paso 6: Generando blob...');
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        console.log('🔵 [Modal] Paso 7: Blob creado, tamaño:', blob.size, 'bytes');
+        const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
         const nombreEquipo = (equipo?.nombre || orden.equipo_nombre || 'equipo').replace(/[^a-z0-9]/gi, '_');
         a.download = `orden_${orden.id}_${nombreEquipo}.pdf`;
+        a.href = downloadUrl;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        window.URL.revokeObjectURL(downloadUrl);
+        console.log('🔵 [Modal] Paso 8: PDF descargado exitosamente');
         
         if (onSuccess) onSuccess();
         onClose();
       } else {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error('Error generando PDF');
+        console.error('🔴 [Modal] Paso 9: Error response:', errorText);
+        throw new Error(`Error ${response.status}: ${errorText}`);
       }
     } catch (err) {
-      console.error('Error generando PDF:', err);
+      console.error('🔴 [Modal] Paso 10: Error capturado:', err);
       alert('Error al generar el PDF: ' + err.message);
     } finally {
       setLoading(false);
