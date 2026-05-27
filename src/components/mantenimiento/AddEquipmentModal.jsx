@@ -1,4 +1,3 @@
-// FRONTEND/src/components/mantenimiento/AddEquipmentModal.jsx
 import { useState, useEffect, useRef } from 'react';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import styles from './AddEquipmentModal.module.css';
@@ -39,10 +38,12 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
 
   useEffect(() => {
     if (isOpen) {
+      console.log('🔓 [AddModal] Modal abierto, editMode:', editMode);
       cargarCategorias();
       cargarSugerenciasNombres();
       
       if (editMode && equipoData) {
+        console.log('✏️ [AddModal] Editando equipo:', equipoData.id, equipoData.nombre);
         setFormData({
           id: equipoData.id,
           nombre: equipoData.nombre || '',
@@ -57,6 +58,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           manual_url: equipoData.manual_url || ''
         });
       } else {
+        console.log('➕ [AddModal] Creando nuevo equipo');
         setFormData({
           id: null,
           nombre: '',
@@ -168,7 +170,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     formDataFile.append('entidad_id', entidadId);
     
     try {
-      console.log(`📤 Subiendo ${tipo} para equipo ${entidadId}...`);
+      console.log(`📤 [Upload] Subiendo ${tipo} para equipo ${entidadId}...`);
       const response = await fetch(`${API_BASE}/mantenimiento/upload`, {
         method: 'POST',
         body: formDataFile
@@ -180,10 +182,10 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       }
       
       const data = await response.json();
-      console.log(`✅ ${tipo} subido:`, data.url);
+      console.log(`✅ [Upload] ${tipo} subido:`, data.url);
       return data.url;
     } catch (err) {
-      console.error(`Error subiendo ${tipo}:`, err);
+      console.error(`❌ [Upload] Error subiendo ${tipo}:`, err);
       return null;
     }
   };
@@ -231,6 +233,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         // ==========================================
         // MODO EDICIÓN: Actualizar equipo existente
         // ==========================================
+        console.log('✏️ [AddModal] Editando equipo ID:', formData.id);
         
         let fotoUrl = formData.foto_url;
         let fichaUrl = formData.ficha_tecnica_url;
@@ -257,11 +260,34 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         };
 
         await mantenimientoAPI.updateEquipo(formData.id, equipoDataToSend);
+        console.log('✅ [AddModal] Equipo actualizado correctamente');
+        
+        // Limpiar formulario
+        setFormData({
+          id: null,
+          nombre: '',
+          ubicacion: '',
+          descripcion: '',
+          categorias: [],
+          foto: null,
+          foto_url: '',
+          ficha_tecnica: null,
+          ficha_tecnica_url: '',
+          manual: null,
+          manual_url: ''
+        });
+        
+        if (onSuccess) {
+          console.log('📢 [AddModal] Llamando a onSuccess (edición)');
+          onSuccess(formData.id);
+        }
+        onClose();
         
       } else {
         // ==========================================
         // MODO CREACIÓN: Primero crear equipo, luego subir archivos
         // ==========================================
+        console.log('➕ [AddModal] Creando nuevo equipo...');
         
         // Paso 1: Crear equipo sin archivos
         const equipoDataToSend = {
@@ -277,7 +303,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         const result = await mantenimientoAPI.createEquipo(equipoDataToSend);
         const nuevoEquipoId = result.id;
         
-        console.log(`✅ Equipo creado con ID: ${nuevoEquipoId}`);
+        console.log(`✅ [AddModal] Equipo creado con ID: ${nuevoEquipoId} (tipo: ${typeof nuevoEquipoId})`);
         
         // Paso 2: Subir archivos con el nuevo ID
         let fotoUrl = null;
@@ -305,29 +331,35 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
             ficha_tecnica_url: fichaUrl,
             manual_url: manualUrl
           });
-          console.log(`✅ Equipo actualizado con archivos`);
+          console.log(`✅ [AddModal] Equipo actualizado con archivos`);
         }
+        
+        // Limpiar formulario
+        setFormData({
+          id: null,
+          nombre: '',
+          ubicacion: '',
+          descripcion: '',
+          categorias: [],
+          foto: null,
+          foto_url: '',
+          ficha_tecnica: null,
+          ficha_tecnica_url: '',
+          manual: null,
+          manual_url: ''
+        });
+        
+        // Llamar a onSuccess con el ID del nuevo equipo
+        if (onSuccess) {
+          console.log(`📢 [AddModal] Llamando a onSuccess con ID: ${nuevoEquipoId}`);
+          onSuccess(nuevoEquipoId);
+        } else {
+          console.warn('⚠️ [AddModal] onSuccess no está definido');
+        }
+        onClose();
       }
-      
-      // Limpiar formulario
-      setFormData({
-        id: null,
-        nombre: '',
-        ubicacion: '',
-        descripcion: '',
-        categorias: [],
-        foto: null,
-        foto_url: '',
-        ficha_tecnica: null,
-        ficha_tecnica_url: '',
-        manual: null,
-        manual_url: ''
-      });
-      
-      if (onSuccess) onSuccess();
-      onClose();
     } catch (err) {
-      console.error('Error en handleSubmit:', err);
+      console.error('❌ [AddModal] Error en handleSubmit:', err);
       setError(err.message || `Error al ${editMode ? 'actualizar' : 'crear'} el equipo`);
     } finally {
       setLoading(false);

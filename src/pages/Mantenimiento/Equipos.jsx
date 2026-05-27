@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import { usePolling } from '../../hooks/useAsync';
 import EquipmentCard from '../../components/mantenimiento/EquipmentCard';
@@ -8,6 +8,7 @@ import FiltrosBar from '../../components/mantenimiento/FiltrosBar';
 import styles from './styles/Equipos.module.css';
 
 export default function Equipos() {
+  const navigate = useNavigate();
   const [equipos, setEquipos] = useState([]);
   const [filteredEquipos, setFilteredEquipos] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +30,7 @@ export default function Equipos() {
 
   useEffect(() => {
     if (equiposData) {
+      console.log('📋 [Equipos] Datos recibidos:', equiposData.map(e => ({ id: e.id, nombre: e.nombre, tipoId: typeof e.id })));
       setEquipos(equiposData);
       applyFilters(equiposData, searchTerm, selectedCategoria);
       setLoading(false);
@@ -176,11 +178,25 @@ export default function Equipos() {
   };
 
   const handleCloseModal = () => {
+    console.log('🔍 [Equipos] Cerrando modal, editMode:', editMode);
     setShowAddModal(false);
     setEditMode(false);
     setEquipoEditando(null);
     refetch();
     setSelectedEquipos(new Set());
+  };
+
+  const handleModalSuccess = (nuevoId) => {
+    console.log('🎉 [Equipos] onSuccess llamado con ID:', nuevoId);
+    console.log('🎉 [Equipos] Tipo de ID:', typeof nuevoId);
+    console.log('🎉 [Equipos] editMode:', editMode);
+    refetch();
+    // Opcional: navegar al nuevo equipo después de crear
+    if (nuevoId && !editMode) {
+      console.log('🔗 [Equipos] Navegando al nuevo equipo ID:', nuevoId);
+      // Descomentar para navegar automáticamente:
+      // navigate(`/mantenimiento/equipo/${nuevoId}`);
+    }
   };
 
   const clearFilters = () => {
@@ -202,7 +218,6 @@ export default function Equipos() {
 
   return (
     <div className={styles.equipos}>
-      {/* Alerta flotante */}
       {showAlert && (
         <div className={styles.alert}>
           <span>⚠️</span> {alertMessage}
@@ -336,7 +351,7 @@ export default function Equipos() {
         <AddEquipmentModal
           isOpen={showAddModal}
           onClose={handleCloseModal}
-          onSuccess={() => refetch()}
+          onSuccess={handleModalSuccess}
           editMode={editMode}
           equipoData={equipoEditando}
         />
