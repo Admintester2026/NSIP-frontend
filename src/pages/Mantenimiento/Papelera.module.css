@@ -329,6 +329,7 @@
   to { transform: rotate(360deg); }
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .papelera {
     padding: 1rem;
@@ -356,5 +357,9 @@
   
   .actions {
     justify-content: center;
+  }
+  
+  .navTabs {
+    flex-wrap: wrap;
   }
 }

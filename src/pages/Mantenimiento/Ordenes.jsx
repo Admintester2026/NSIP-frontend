@@ -107,6 +107,7 @@ export default function Ordenes() {
         </div>
       </div>
 
+      {/* ESTADÍSTICAS CORREGIDAS */}
       <div className={styles.statsGrid}>
         <div className={`${styles.statCard} ${styles.statPendientes}`}>
           <span className={styles.statIcon}>🟡</span>

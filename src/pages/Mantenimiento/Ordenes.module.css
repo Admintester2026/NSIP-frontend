@@ -51,9 +51,10 @@
   color: #00ff9d;
 }
 
+/* Stats Grid - Versión mejorada */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -62,14 +63,20 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
-  background: #1e1e1e;
-  border-radius: 12px;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #1e1e1e 0%, #252525 100%);
+  border-radius: 16px;
   border: 1px solid #333;
+  transition: all 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  border-color: #00ff9d;
 }
 
 .statIcon {
-  font-size: 2rem;
+  font-size: 2.5rem;
 }
 
 .statInfo {
@@ -78,19 +85,34 @@
 }
 
 .statValue {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .statLabel {
   font-size: 0.75rem;
   color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.statPendientes .statValue { color: #ffb340; }
-.statAtrasados .statValue { color: #ff4d4d; }
-.statProximos .statValue { color: #00ff9d; }
-.statCompletados .statValue { color: #00ff9d; }
+/* Colores específicos para cada tipo de estadística */
+.statPendientes .statValue { 
+  color: #ffb340; 
+}
+
+.statAtrasados .statValue { 
+  color: #ff4d4d; 
+}
+
+.statProximos .statValue { 
+  color: #00ff9d; 
+}
+
+.statCompletados .statValue { 
+  color: #00ff9d; 
+}
 
 .seccion {
   margin-bottom: 2rem;
@@ -192,6 +214,7 @@
   to { transform: rotate(360deg); }
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .ordenesContainer {
     padding: 1rem;
@@ -199,6 +222,7 @@
   
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
   
   .statCard {
@@ -215,74 +239,5 @@
   
   .navTabs {
     flex-wrap: wrap;
-  }
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.statCard {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
-  background: linear-gradient(135deg, #1e1e1e 0%, #252525 100%);
-  border-radius: 16px;
-  border: 1px solid #333;
-  transition: all 0.2s ease;
-}
-
-.statCard:hover {
-  transform: translateY(-2px);
-  border-color: #00ff9d;
-}
-
-.statIcon {
-  font-size: 2.5rem;
-}
-
-.statInfo {
-  display: flex;
-  flex-direction: column;
-}
-
-.statValue {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.statLabel {
-  font-size: 0.75rem;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.statPendientes .statValue { color: #ffb340; }
-.statAtrasados .statValue { color: #ff4d4d; }
-.statProximos .statValue { color: #00ff9d; }
-.statCompletados .statValue { color: #00ff9d; }
-
-@media (max-width: 768px) {
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-  
-  .statCard {
-    padding: 0.75rem;
-  }
-  
-  .statIcon {
-    font-size: 1.5rem;
-  }
-  
-  .statValue {
-    font-size: 1.25rem;
   }
 }
