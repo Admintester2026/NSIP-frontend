@@ -1,3 +1,4 @@
+// FRONTEND/src/pages/Home.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './Home.module.css';
@@ -23,15 +24,15 @@ export default function Home() {
           <span className={styles.buttonDesc}>Accede a todos los sistemas de control disponibles</span>
         </Link>
 
-        <Link to="/mantenimiento" className={styles.secondaryButton}>
+        <Link to="/mantenimiento/equipos" className={styles.secondaryButton}>
           <span className={styles.buttonIcon}>🔧</span>
           <span className={styles.buttonText}>MANTENIMIENTO</span>
-          <span className={styles.buttonDesc}>Gestión de órdenes y mantenimiento (Próximamente)</span>
+          <span className={styles.buttonDesc}>Gestión de equipos, órdenes y mantenimiento</span>
         </Link>
       </div>
 
       <div className={styles.footer}>
-        <p>Backend Industrial v2.0 • Datos en tiempo real desde SQL Server</p>
+        <p>Backend Industrial v2.5 • Datos en tiempo real desde SQL Server</p>
         <p className={styles.footerSmall}>© 2026 - Sistema de Control Industrial</p>
       </div>
     </div>
