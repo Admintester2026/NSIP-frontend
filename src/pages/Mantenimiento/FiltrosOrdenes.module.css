@@ -1,0 +1,104 @@
+.filtrosContainer {
+  background: var(--bg-raised);
+  border-radius: var(--r-lg);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-dim);
+}
+
+.filtrosBasicos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.filtroGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 150px;
+}
+
+.label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input, .select {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--green-dim);
+}
+
+.avanzadoBtn, .limpiarBtn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+.avanzadoBtn:hover, .limpiarBtn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.filtrosAvanzados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+.filtroGroupCheckbox {
+  display: flex;
+  align-items: flex-end;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0;
+}
+
+.checkboxLabel input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--green);
+}
+
+@media (max-width: 768px) {
+  .filtrosBasicos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .avanzadoBtn, .limpiarBtn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,224 @@
+.ordenCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ordenCard:hover {
+  transform: translateX(4px);
+  border-color: var(--green-dim);
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.1);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ordenId {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.prioridadBadge, .estadoBadge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+.prioridadUrgente {
+  background: rgba(255, 77, 77, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+}
+
+.prioridadAlta {
+  background: rgba(255, 128, 0, 0.15);
+  color: #ff8000;
+  border: 1px solid rgba(255, 128, 0, 0.3);
+}
+
+.prioridadMedia {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(255, 179, 64, 0.3);
+}
+
+.prioridadBaja {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+}
+
+.estadoPendiente {
+  background: rgba(255, 179, 64, 0.15);
+  color: var(--amber);
+}
+
+.estadoCompletado {
+  background: rgba(0, 255, 157, 0.15);
+  color: var(--green);
+}
+
+.estadoAtrasado {
+  background: rgba(255, 77, 77, 0.15);
+  color: var(--red);
+}
+
+.headerRight {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pdfBtn, .detalleBtn {
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--r-md);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+}
+
+.pdfBtn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.detalleBtn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.cardBody {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.equipoInfo {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 180px;
+}
+
+.equipoFoto {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--r-md);
+  background: var(--bg-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.equipoFoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.equipoNombre {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.equipoUbicacion {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.ordenInfo {
+  flex: 1;
+  min-width: 200px;
+}
+
+.ordenTitulo {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.ordenDescripcion {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.fechasInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.tecnicoInfo, .materialesInfo {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.cardFooter {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.tipoTag, .costoTag, .duracionTag {
+  padding: 0.15rem 0.4rem;
+  background: var(--bg-raised);
+  border-radius: 20px;
+}
+
+@media (max-width: 768px) {
+  .cardBody {
+    flex-direction: column;
+  }
+  
+  .equipoInfo {
+    min-width: auto;
+  }
+  
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .headerRight {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
