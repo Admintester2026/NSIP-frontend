@@ -1,3 +1,4 @@
+// FRONTEND/src/components/Navbar.jsx
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './Navbar.module.css';
@@ -111,9 +112,7 @@ export default function Navbar() {
                     <span className={styles.dropdownTitle}>Órdenes de Trabajo</span>
                     <span className={styles.dropdownDesc}>Pendientes, urgentes y próximas</span>
                   </div>
-                  <span className={`${styles.statusBadge} ${styles.comingSoon}`}>
-                    PRÓXIMAMENTE
-                  </span>
+                  <span className={styles.statusBadge}>ACTIVO</span>
                 </Link>
                 
                 <div className={styles.dropdownDivider}></div>
@@ -124,9 +123,7 @@ export default function Navbar() {
                     <span className={styles.dropdownTitle}>Papelera</span>
                     <span className={styles.dropdownDesc}>Equipos eliminados</span>
                   </div>
-                  <span className={`${styles.statusBadge} ${styles.comingSoon}`}>
-                    PRÓXIMAMENTE
-                  </span>
+                  <span className={styles.statusBadge}>ACTIVO</span>
                 </Link>
               </div>
             )}
