@@ -62,21 +62,21 @@ export default function VoltajeStats() {
         </div>
         
         <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>Promedio R</span>
+          <span className={styles.summaryLabel}>Promedio 1</span>
           <span className={styles.summaryValue}>
             {general?.PromedioVR?.toFixed(1) || 0} <small>V</small>
           </span>
         </div>
         
         <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>Promedio S</span>
+          <span className={styles.summaryLabel}>Promedio 2</span>
           <span className={styles.summaryValue}>
             {general?.PromedioVS?.toFixed(1) || 0} <small>V</small>
           </span>
         </div>
         
         <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>Promedio T</span>
+          <span className={styles.summaryLabel}>Promedio 3</span>
           <span className={styles.summaryValue}>
             {general?.PromedioVT?.toFixed(1) || 0} <small>V</small>
           </span>
