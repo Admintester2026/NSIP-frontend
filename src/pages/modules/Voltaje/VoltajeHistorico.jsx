@@ -327,13 +327,13 @@ export default function VoltajeHistorico() {
                   Fecha/Hora {getSortIcon('FECHA')}
                 </th>
                 <th onClick={() => requestSort('V_R')} className={styles.sortable}>
-                  Fase R (V) {getSortIcon('V_R')}
+                  Fase 1 (V) {getSortIcon('V_R')}
                 </th>
                 <th onClick={() => requestSort('V_S')} className={styles.sortable}>
-                  Fase S (V) {getSortIcon('V_S')}
+                  Fase 2 (V) {getSortIcon('V_S')}
                 </th>
                 <th onClick={() => requestSort('V_T')} className={styles.sortable}>
-                  Fase T (V) {getSortIcon('V_T')}
+                  Fase 3 (V) {getSortIcon('V_T')}
                 </th>
                 <th>SD Status</th>
                 <th>Notas</th>
