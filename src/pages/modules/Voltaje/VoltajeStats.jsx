@@ -86,7 +86,7 @@ export default function VoltajeStats() {
       {/* Rangos por fase */}
       <div className={styles.rangesGrid}>
         <div className={styles.rangeCard}>
-          <h3 className={styles.rangeTitle}>Fase R</h3>
+          <h3 className={styles.rangeTitle}>Fase 1</h3>
           <div className={styles.rangeRow}>
             <span>Máximo:</span>
             <span className={styles.rangeValue}>{general?.MaxVR?.toFixed(1)} V</span>
@@ -98,7 +98,7 @@ export default function VoltajeStats() {
         </div>
 
         <div className={styles.rangeCard}>
-          <h3 className={styles.rangeTitle}>Fase S</h3>
+          <h3 className={styles.rangeTitle}>Fase 2</h3>
           <div className={styles.rangeRow}>
             <span>Máximo:</span>
             <span className={styles.rangeValue}>{general?.MaxVS?.toFixed(1)} V</span>
@@ -110,7 +110,7 @@ export default function VoltajeStats() {
         </div>
 
         <div className={styles.rangeCard}>
-          <h3 className={styles.rangeTitle}>Fase T</h3>
+          <h3 className={styles.rangeTitle}>Fase 3</h3>
           <div className={styles.rangeRow}>
             <span>Máximo:</span>
             <span className={styles.rangeValue}>{general?.MaxVT?.toFixed(1)} V</span>
@@ -130,9 +130,9 @@ export default function VoltajeStats() {
             <thead>
               <tr>
                 <th>Hora</th>
-                <th>Fase R (V)</th>
-                <th>Fase S (V)</th>
-                <th>Fase T (V)</th>
+                <th>Fase 1 (V)</th>
+                <th>Fase 2 (V)</th>
+                <th>Fase 3 (V)</th>
               </tr>
             </thead>
             <tbody>
