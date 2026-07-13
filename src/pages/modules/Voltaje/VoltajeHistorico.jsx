@@ -199,37 +199,37 @@ export default function VoltajeHistorico() {
         </div>
         
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Promedio R</span>
+          <span className={styles.statLabel}>Promedio 1</span>
           <span className={styles.statValue}>{stats.promedioVR} <small>V</small></span>
         </div>
         
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Promedio S</span>
+          <span className={styles.statLabel}>Promedio 2</span>
           <span className={styles.statValue}>{stats.promedioVS} <small>V</small></span>
         </div>
         
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Promedio T</span>
+          <span className={styles.statLabel}>Promedio 3</span>
           <span className={styles.statValue}>{stats.promedioVT} <small>V</small></span>
         </div>
 
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Máx R</span>
+          <span className={styles.statLabel}>Máx 1</span>
           <span className={styles.statValue}>{stats.maxVR} <small>V</small></span>
         </div>
         
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Máx S</span>
+          <span className={styles.statLabel}>Máx 2</span>
           <span className={styles.statValue}>{stats.maxVS} <small>V</small></span>
         </div>
         
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Máx T</span>
+          <span className={styles.statLabel}>Máx 3</span>
           <span className={styles.statValue}>{stats.maxVT} <small>V</small></span>
         </div>
 
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Mín R</span>
+          <span className={styles.statLabel}>Mín 1</span>
           <span className={styles.statValue}>{stats.minVR} <small>V</small></span>
         </div>
       </div>
