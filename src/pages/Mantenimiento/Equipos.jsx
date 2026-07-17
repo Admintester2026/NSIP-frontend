@@ -191,18 +191,18 @@ export default function Equipos() {
     console.log('🎉 [Equipos] Tipo de ID:', typeof nuevoId);
     console.log('🎉 [Equipos] editMode:', editMode);
     refetch();
-    // Opcional: navegar al nuevo equipo después de crear
     if (nuevoId && !editMode) {
       console.log('🔗 [Equipos] Navegando al nuevo equipo ID:', nuevoId);
-      // Descomentar para navegar automáticamente:
-      // navigate(`/mantenimiento/equipo/${nuevoId}`);
     }
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategoria('todas');
-    applyFilters(equipos, '', 'todas');
+    setSelectedEstado('todos');
+    setOrdenPor('nombre');
+    setOrdenDir('asc');
+    refetch();
   };
 
   if (loading && equipos.length === 0) {

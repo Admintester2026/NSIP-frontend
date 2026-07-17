@@ -1,5 +1,4 @@
-﻿// FRONTEND/src/components/mantenimiento/DetalleEquipo.jsx
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { mantenimientoAPI } from '../../api/mantenimiento';
 import { useDateUtils } from '../../context/DateContext';
