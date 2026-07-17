@@ -101,7 +101,10 @@
   margin-left: 0.25rem;
 }
 
-.input, .textarea {
+/* Campos de texto, área de texto y ahora el select */
+.input,
+.textarea,
+.select {
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
   border-radius: var(--r-md);
@@ -111,7 +114,14 @@
   transition: all 0.2s ease;
 }
 
-.input:focus, .textarea:focus {
+/* El select hereda la apariencia del sistema operativo; puedes personalizarla si quieres */
+.select {
+  appearance: auto; /* o 'none' si deseas quitar la flecha nativa */
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
   outline: none;
   border-color: var(--green);
   box-shadow: 0 0 0 2px var(--green-dim);
@@ -120,11 +130,14 @@
 /* Estilos para campos con error */
 .hasError .input,
 .hasError .textarea,
-.inputError {
+.hasError .select,
+.inputError,
+.select.inputError {
   border-color: var(--red) !important;
 }
 
-.inputError:focus {
+.inputError:focus,
+.select.inputError:focus {
   border-color: var(--red) !important;
   box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.2) !important;
 }
