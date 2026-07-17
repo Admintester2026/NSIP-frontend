@@ -11,6 +11,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     ubicacion: '',
     descripcion: '',
     categorias: [],
+    estado: 'activo',
     foto: null,
     foto_url: '',
     ficha_tecnica: null,
@@ -29,7 +30,8 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
     nombre: false,
     ubicacion: false,
     descripcion: false,
-    categorias: false
+    categorias: false,
+    estado: false
   });
   
   const fotoInputRef = useRef(null);
@@ -50,6 +52,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           ubicacion: equipoData.ubicacion || '',
           descripcion: equipoData.descripcion || '',
           categorias: equipoData.categorias?.map(cat => cat.id) || [],
+          estado: equipoData.estado || 'activo',
           foto: null,
           foto_url: equipoData.foto_url || '',
           ficha_tecnica: null,
@@ -65,6 +68,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           ubicacion: '',
           descripcion: '',
           categorias: [],
+          estado: 'activo',
           foto: null,
           foto_url: '',
           ficha_tecnica: null,
@@ -77,7 +81,8 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
         nombre: false,
         ubicacion: false,
         descripcion: false,
-        categorias: false
+        categorias: false,
+        estado: false
       });
       setError('');
     }
@@ -213,6 +218,11 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
       setTouched(prev => ({ ...prev, categorias: true }));
     }
     
+    if (!formData.estado) {
+      errors.push('Debes seleccionar un estado');
+      setTouched(prev => ({ ...prev, estado: true }));
+    }
+    
     return errors;
   };
 
@@ -254,6 +264,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           ubicacion: formData.ubicacion.trim(),
           descripcion: formData.descripcion.trim(),
           categorias: formData.categorias,
+          estado: formData.estado,
           foto_url: fotoUrl,
           ficha_tecnica_url: fichaUrl,
           manual_url: manualUrl
@@ -269,6 +280,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           ubicacion: '',
           descripcion: '',
           categorias: [],
+          estado: 'activo',
           foto: null,
           foto_url: '',
           ficha_tecnica: null,
@@ -295,6 +307,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           ubicacion: formData.ubicacion.trim(),
           descripcion: formData.descripcion.trim(),
           categorias: formData.categorias,
+          estado: formData.estado,
           foto_url: null,
           ficha_tecnica_url: null,
           manual_url: null
@@ -327,6 +340,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
             ubicacion: formData.ubicacion.trim(),
             descripcion: formData.descripcion.trim(),
             categorias: formData.categorias,
+            estado: formData.estado,
             foto_url: fotoUrl,
             ficha_tecnica_url: fichaUrl,
             manual_url: manualUrl
@@ -341,6 +355,7 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
           ubicacion: '',
           descripcion: '',
           categorias: [],
+          estado: 'activo',
           foto: null,
           foto_url: '',
           ficha_tecnica: null,
@@ -369,7 +384,8 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
   const hasError = (field) => {
     return touched[field] && (
       (field === 'categorias' && formData.categorias.length === 0) ||
-      (field !== 'categorias' && !formData[field]?.trim())
+      (field === 'estado' && !formData.estado) ||
+      (field !== 'categorias' && field !== 'estado' && !formData[field]?.trim())
     );
   };
 
@@ -489,6 +505,28 @@ export default function AddEquipmentModal({ isOpen, onClose, onSuccess, editMode
                 <span className={styles.categoriasCount}>
                   ✅ {formData.categorias.length} categoría(s) seleccionada(s)
                 </span>
+              )}
+            </div>
+
+            {/* NUEVO: Selector de Estado */}
+            <div className={`${styles.formGroup} ${hasError('estado') ? styles.hasError : ''}`}>
+              <label className={styles.label}>
+                Estado <span className={styles.required}>*</span>
+              </label>
+              <select
+                name="estado"
+                value={formData.estado}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur('estado')}
+                className={`${styles.select} ${hasError('estado') ? styles.inputError : ''}`}
+              >
+                <option value="activo">✅ Activo</option>
+                <option value="dañado">⚠️ Dañado</option>
+                <option value="suspension">⏸️ Suspendido</option>
+                <option value="baja">❌ Dado de Baja</option>
+              </select>
+              {hasError('estado') && (
+                <span className={styles.errorText}>El estado es requerido</span>
               )}
             </div>
 
