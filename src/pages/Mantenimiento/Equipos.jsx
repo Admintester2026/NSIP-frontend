@@ -13,10 +13,11 @@ export default function Equipos() {
   const [filteredEquipos, setFilteredEquipos] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('todas');
-  const [selectedEstado, setSelectedEstado] = useState('activo');
+  const [selectedEstado, setSelectedEstado] = useState('todos');
   const [ordenPor, setOrdenPor] = useState('nombre');
   const [ordenDir, setOrdenDir] = useState('asc');
   const [inactivosExpandidos, setInactivosExpandidos] = useState(false);
+  const [activosExpandidos, setActivosExpandidos] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
@@ -292,24 +293,32 @@ export default function Equipos() {
       </div>
 
       <section className={styles.seccionEquipos}>
-        <h2 className={styles.seccionTitulo}>
+        <button 
+          className={styles.seccionTituloCollapsible}
+          onClick={() => setActivosExpandidos(!activosExpandidos)}
+        >
+          <span className={styles.collapseIcon}>
+            {activosExpandidos ? '▼' : '▶'}
+          </span>
           📋 Equipos Activos ({equiposActivos.length})
-        </h2>
-        {equiposActivos.length > 0 ? (
-          <div className={styles.equiposGrid}>
-            {equiposActivos.map(equipo => (
-              <EquipmentCard 
-                key={equipo.id} 
-                equipo={equipo}
-                isSelected={selectedEquipos.has(equipo.id)}
-                onSelect={handleSelectEquipo}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className={styles.emptySubsection}>
-            <p>No hay equipos activos</p>
-          </div>
+        </button>
+        {activosExpandidos && (
+          equiposActivos.length > 0 ? (
+            <div className={styles.equiposGrid}>
+              {equiposActivos.map(equipo => (
+                <EquipmentCard 
+                  key={equipo.id} 
+                  equipo={equipo}
+                  isSelected={selectedEquipos.has(equipo.id)}
+                  onSelect={handleSelectEquipo}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptySubsection}>
+              <p>No hay equipos activos</p>
+            </div>
+          )
         )}
       </section>
 
